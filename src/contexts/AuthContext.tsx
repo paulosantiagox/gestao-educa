@@ -58,7 +58,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await api.login(email, password);
       
       if (response.ok) {
+        // Aguarda carregar o usuário antes de retornar sucesso
         await loadUser();
+        
+        // Pequeno delay para garantir que o estado foi atualizado
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         toast({
           title: "Login realizado com sucesso!",
           description: "Bem-vindo de volta.",
