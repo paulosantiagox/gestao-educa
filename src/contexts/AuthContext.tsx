@@ -28,7 +28,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await api.getMe();
       if (response.ok && response.data) {
-        setUser(response.data as User);
+        // Tolerar diferentes formatos de resposta do backend
+        let userData: any = response.data;
+        if (typeof userData === 'object' && userData !== null) {
+          if ('me' in userData && userData.me) {
+            userData = userData.me;
+          } else if ('user' in userData && userData.user) {
+            userData = userData.user;
+          }
+        }
+        setUser(userData as User);
       } else {
         setUser(null);
       }
