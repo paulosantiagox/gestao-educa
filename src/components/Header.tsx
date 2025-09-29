@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -10,39 +9,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User } from "lucide-react";
-import { api } from "@/lib/api";
-import { useToast } from "@/hooks/use-toast";
-
-interface UserData {
-  id: number;
-  name: string;
-  email: string;
-  avatar_url?: string;
-}
+import { LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function Header() {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [user, setUser] = useState<UserData | null>(null);
-
-  useEffect(() => {
-    loadUser();
-  }, []);
-
-  const loadUser = async () => {
-    const response = await api.getMe();
-    if (response.ok && response.data) {
-      setUser(response.data as UserData);
-    }
-  };
+  const { user, logout } = useAuth();
 
   const handleLogout = async () => {
-    const response = await api.logout();
-    if (response.ok) {
-      toast({ title: "Logout realizado com sucesso" });
-      navigate("/auth");
-    }
+    await logout();
+    navigate("/auth");
   };
 
   const getInitials = (name: string) => {

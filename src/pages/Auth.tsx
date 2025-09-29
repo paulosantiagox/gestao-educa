@@ -5,12 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { api } from "@/lib/api";
 import { GraduationCap } from "lucide-react";
 
 export default function Auth() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -21,17 +22,10 @@ export default function Auth() {
     e.preventDefault();
     setIsLoading(true);
 
-    const response = await api.login(loginForm.email, loginForm.password);
+    const success = await login(loginForm.email, loginForm.password);
 
-    if (response.ok) {
-      toast({ title: "Login realizado com sucesso!" });
+    if (success) {
       navigate("/");
-    } else {
-      toast({
-        title: "Erro no login",
-        description: response.error || "Verifique suas credenciais",
-        variant: "destructive"
-      });
     }
 
     setIsLoading(false);
@@ -60,8 +54,6 @@ export default function Auth() {
 
     setIsLoading(true);
 
-    // Como você não mostrou endpoint de signup, vou usar um genérico
-    // Você pode ajustar conforme sua API
     const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://sistema-educa.autoflixtreinamentos.com'}/api/auth/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -77,7 +69,6 @@ export default function Auth() {
 
     if (response.ok) {
       toast({ title: "Cadastro realizado com sucesso! Faça login." });
-      // Reset form
       setSignupForm({ name: "", email: "", password: "", confirmPassword: "" });
     } else {
       toast({
