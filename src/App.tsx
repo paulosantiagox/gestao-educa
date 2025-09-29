@@ -42,13 +42,12 @@ const App = () => (
                 <ProtectedRoute>
                   <SidebarProvider>
                     <div className="min-h-screen flex w-full flex-col">
-                      <Header />
                       <div className="flex flex-1">
                         <AppSidebar />
                         <main className="flex-1 overflow-auto">
                           <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4">
                             <SidebarTrigger />
-                            <div className="flex-1" />
+                            <h1 className="text-lg font-semibold">Sistema de Gestão Educacional</h1>
                           </header>
                           <div className="p-6">
                             <Routes>
