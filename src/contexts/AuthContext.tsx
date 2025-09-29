@@ -28,7 +28,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await api.getMe();
       if (response.ok && response.data) {
-        // Tolerar diferentes formatos de resposta do backend
+        // Se /me retornar dados parciais, complementa com localStorage
+        const storedUser = localStorage.getItem('user');
+        const fullUser = storedUser ? JSON.parse(storedUser) : {};
+        
         let userData: any = response.data;
         if (typeof userData === 'object' && userData !== null) {
           if ('me' in userData && userData.me) {
@@ -37,13 +40,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             userData = userData.user;
           }
         }
-        setUser(userData as User);
+        
+        // Mescla dados do /me com dados armazenados
+        setUser({ ...fullUser, ...userData } as User);
       } else {
         setUser(null);
+        localStorage.removeItem('user');
       }
     } catch (error) {
       console.error('Error loading user:', error);
       setUser(null);
+      localStorage.removeItem('user');
     } finally {
       setLoading(false);
     }
@@ -57,12 +64,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await api.login(email, password);
       
-      if (response.ok) {
-        // Aguarda carregar o usuário antes de retornar sucesso
-        await loadUser();
-        
-        // Pequeno delay para garantir que o estado foi atualizado
-        await new Promise(resolve => setTimeout(resolve, 100));
+      if (response.ok && response.data) {
+        const data = response.data as any;
+        if (data.user) {
+          // Armazena o usuário que vem completo do login
+          setUser(data.user as User);
+          
+          // Salva no localStorage para persistir mesmo quando /me não retorna todos os dados
+          localStorage.setItem('user', JSON.stringify(data.user));
+        }
         
         toast({
           title: "Login realizado com sucesso!",
@@ -91,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await api.logout();
       setUser(null);
+      localStorage.removeItem('user');
       toast({
         title: "Logout realizado",
         description: "Até logo!",
