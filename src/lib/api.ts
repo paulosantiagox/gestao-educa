@@ -66,14 +66,14 @@ class ApiClient {
     return this.request('/api/auth/me');
   }
 
-  // STUDENTS
+  // STUDENTS (retorna array direto)
   async getStudents(params?: { page?: number; limit?: number; search?: string }) {
     const query = new URLSearchParams();
     if (params?.page) query.append('page', params.page.toString());
     if (params?.limit) query.append('limit', params.limit.toString());
     if (params?.search) query.append('q', params.search);
     
-    return this.request(`/api/students?${query.toString()}`);
+    return this.request<any[]>(`/api/students?${query.toString()}`);
   }
 
   async getStudent(id: number) {
@@ -98,14 +98,14 @@ class ApiClient {
     return this.request(`/api/students/${id}`, { method: 'DELETE' });
   }
 
-  // SALES
+  // SALES (retorna array direto)
   async getSales(params?: { page?: number; limit?: number; search?: string }) {
     const query = new URLSearchParams();
     if (params?.page) query.append('page', params.page.toString());
     if (params?.limit) query.append('limit', params.limit.toString());
     if (params?.search) query.append('q', params.search);
     
-    return this.request(`/api/sales?${query.toString()}`);
+    return this.request<any[]>(`/api/sales?${query.toString()}`);
   }
 
   async getSale(id: number) {
@@ -130,9 +130,9 @@ class ApiClient {
     return this.request(`/api/sales/${id}`, { method: 'DELETE' });
   }
 
-  // CERTIFIERS
+  // CERTIFIERS (retorna array direto)
   async getCertifiers() {
-    return this.request('/api/certifiers');
+    return this.request<any[]>('/api/certifiers');
   }
 
   async createCertifier(data: any) {
@@ -153,9 +153,9 @@ class ApiClient {
     return this.request(`/api/certifiers/${id}`, { method: 'DELETE' });
   }
 
-  // PAYMENT METHODS
+  // PAYMENT METHODS (retorna array direto)
   async getPaymentMethods() {
-    return this.request('/api/payment-methods');
+    return this.request<any[]>('/api/payment-methods');
   }
 
   async createPaymentMethod(data: any) {
