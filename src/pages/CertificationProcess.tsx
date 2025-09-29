@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Search, Eye, FileCheck } from "lucide-react";
+import { Plus, Search, Eye, FileCheck, Settings } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,13 +12,25 @@ import { toast } from "sonner";
 import { CertificationForm } from "@/components/forms/CertificationForm";
 import { CertificationStatusUpdate } from "@/components/forms/CertificationStatusUpdate";
 import { CertificationTimeline } from "@/components/CertificationTimeline";
+import { MiniTimeline } from "@/components/MiniTimeline";
+import { SLAConfigForm } from "@/components/forms/SLAConfigForm";
 
 const CertificationProcess = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedProcess, setSelectedProcess] = useState<any>(null);
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
+  const [isSLADialogOpen, setIsSLADialogOpen] = useState(false);
   const queryClient = useQueryClient();
+
+  // Buscar configurações de SLA
+  const { data: slaConfig = [] } = useQuery({
+    queryKey: ["certification-sla"],
+    queryFn: async () => {
+      const result = await api.getCertificationSLA();
+      return result.ok ? (result.data || []) : [];
+    },
+  });
 
   // Buscar todos os alunos com seus processos de certificação
   const { data: students = [], isLoading } = useQuery({
@@ -100,20 +112,43 @@ const CertificationProcess = () => {
           <h1 className="text-3xl font-bold text-foreground">Processo de Certificação</h1>
           <p className="text-muted-foreground">Acompanhe o processo de certificação dos alunos</p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Iniciar Processo
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Iniciar Processo de Certificação</DialogTitle>
-            </DialogHeader>
-            <CertificationForm onSuccess={handleCloseCreateDialog} />
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2">
+          <Dialog open={isSLADialogOpen} onOpenChange={setIsSLADialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Settings className="mr-2 h-4 w-4" />
+                Configurar Prazos
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Configurar Prazos das Etapas</DialogTitle>
+                <DialogDescription>
+                  Defina o tempo máximo para cada etapa e quando alertar
+                </DialogDescription>
+              </DialogHeader>
+              <SLAConfigForm onSuccess={() => {
+                setIsSLADialogOpen(false);
+                queryClient.invalidateQueries({ queryKey: ["certification-sla"] });
+              }} />
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Iniciar Processo
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Iniciar Processo de Certificação</DialogTitle>
+              </DialogHeader>
+              <CertificationForm onSuccess={handleCloseCreateDialog} />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card>
@@ -150,7 +185,7 @@ const CertificationProcess = () => {
                   <TableHead>Aluno</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Certificadora</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead className="w-[300px]">Progresso</TableHead>
                   <TableHead>Certificado Físico</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -164,7 +199,15 @@ const CertificationProcess = () => {
                       {student.certification?.certifier_name || "-"}
                     </TableCell>
                     <TableCell>
-                      {getStatusBadge(student.certification?.status)}
+                      {student.certification ? (
+                        <MiniTimeline 
+                          currentStatus={student.certification.status}
+                          certification={student.certification}
+                          slaConfig={slaConfig}
+                        />
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Não iniciado</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       {student.certification?.wants_physical ? (

@@ -211,6 +211,18 @@ class ApiClient {
     });
   }
 
+  // CERTIFICATION SLA
+  async getCertificationSLA() {
+    return this.request<any[]>('/api/certification-sla');
+  }
+
+  async updateCertificationSLA(data: any[]) {
+    return this.request('/api/certification-sla', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
   // DASHBOARD
   async getDashboardStats() {
     return this.request('/api/dashboard/stats');
