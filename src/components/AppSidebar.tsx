@@ -6,6 +6,7 @@ import {
   GraduationCap,
   CreditCard,
   Award,
+  FileCheck,
   LogOut,
   UserCog,
 } from "lucide-react";
@@ -45,6 +46,7 @@ const menuItems = [
     items: [
       { title: "Alunos", url: "/students", icon: Users },
       { title: "Vendas", url: "/sales", icon: ShoppingCart },
+      { title: "Processo de Certificação", url: "/certification-process", icon: FileCheck },
     ],
   },
   {
@@ -62,7 +64,7 @@ const menuItems = [
   },
 ];
 
-export function AppSidebar() {
+const AppSidebar = () => {
   const { state } = useSidebar();
   const { user, logout } = useAuth();
   const location = useLocation();
@@ -186,4 +188,6 @@ export function AppSidebar() {
       </SidebarFooter>
     </Sidebar>
   );
-}
+};
+
+export default AppSidebar;

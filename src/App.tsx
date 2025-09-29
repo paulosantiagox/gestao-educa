@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
+import AppSidebar from "@/components/AppSidebar";
 import { Header } from "@/components/Header";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import Students from "./pages/Students";
 import Sales from "./pages/Sales";
 import Certifications from "./pages/Certifications";
+import CertificationProcess from "./pages/CertificationProcess";
 import PaymentMethods from "./pages/PaymentMethods";
 import Users from "./pages/Users";
 import Auth from "./pages/Auth";
@@ -55,6 +56,7 @@ const App = () => (
                               <Route path="/students" element={<Students />} />
                               <Route path="/sales" element={<Sales />} />
                               <Route path="/certifications" element={<Certifications />} />
+                              <Route path="/certification-process" element={<CertificationProcess />} />
                               <Route path="/payment-methods" element={<PaymentMethods />} />
                               <Route path="/users" element={<Users />} />
                               <Route path="*" element={<NotFound />} />
