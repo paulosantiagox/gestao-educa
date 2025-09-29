@@ -1,5 +1,5 @@
 // Configuração e funções para comunicação com o backend
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://sistema-educa.autoflixtreinamentos.com';
 
 interface ApiResponse<T> {
   ok: boolean;

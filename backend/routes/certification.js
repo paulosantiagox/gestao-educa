@@ -1,0 +1,120 @@
+import express from 'express';
+import pool from '../db.js';
+import { requireAuth } from '../middleware/auth.js';
+
+const router = express.Router();
+
+// GET /api/certification/student/:studentId - Busca processo de certificação
+router.get('/student/:studentId', requireAuth, async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    
+    const result = await pool.query(
+      `SELECT cp.*, c.name as certifier_name, s.name as student_name
+       FROM certification_process cp
+       LEFT JOIN certifiers c ON cp.certifier_id = c.id
+       LEFT JOIN students s ON cp.student_id = s.id
+       WHERE cp.student_id = $1`,
+      [studentId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Processo de certificação não encontrado' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching certification:', error);
+    res.status(500).json({ error: 'Erro ao buscar certificação' });
+  }
+});
+
+// POST /api/certification - Criar processo de certificação
+router.post('/', requireAuth, async (req, res) => {
+  try {
+    const { student_id, certifier_id, wants_physical } = req.body;
+
+    if (!student_id || !certifier_id) {
+      return res.status(400).json({ error: 'ID do aluno e certificadora são obrigatórios' });
+    }
+
+    // Verifica se já existe processo
+    const existingResult = await pool.query(
+      'SELECT id FROM certification_process WHERE student_id = $1',
+      [student_id]
+    );
+
+    if (existingResult.rows.length > 0) {
+      return res.status(400).json({ error: 'Já existe processo de certificação para este aluno' });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO certification_process (student_id, certifier_id, wants_physical, status)
+       VALUES ($1, $2, $3, 'pending')
+       RETURNING *`,
+      [student_id, certifier_id, wants_physical || false]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creating certification:', error);
+    res.status(500).json({ error: 'Erro ao criar processo de certificação' });
+  }
+});
+
+// PUT /api/certification/:studentId/status - Atualizar status
+router.put('/:studentId/status', requireAuth, async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const { status, physical_tracking_code } = req.body;
+
+    const validStatuses = [
+      'pending', 'documents_sent', 'under_review', 'approved',
+      'certificate_issued', 'certificate_sent', 'completed'
+    ];
+
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Status inválido' });
+    }
+
+    // Atualiza os campos de data baseado no status
+    let updateQuery = 'UPDATE certification_process SET status = $1, updated_at = CURRENT_TIMESTAMP';
+    const params = [status];
+    let paramIndex = 2;
+
+    if (status === 'documents_sent' && !result.rows[0]?.documents_sent_at) {
+      updateQuery += `, documents_sent_at = CURRENT_TIMESTAMP`;
+    }
+    if (status === 'approved' && !result.rows[0]?.approval_date) {
+      updateQuery += `, approval_date = CURRENT_TIMESTAMP`;
+    }
+    if (status === 'certificate_issued' && !result.rows[0]?.certificate_issued_at) {
+      updateQuery += `, certificate_issued_at = CURRENT_TIMESTAMP`;
+    }
+    if (status === 'certificate_sent' && !result.rows[0]?.certificate_sent_at) {
+      updateQuery += `, certificate_sent_at = CURRENT_TIMESTAMP`;
+    }
+
+    if (physical_tracking_code) {
+      updateQuery += `, physical_tracking_code = $${paramIndex}`;
+      params.push(physical_tracking_code);
+      paramIndex++;
+    }
+
+    updateQuery += ` WHERE student_id = $${paramIndex} RETURNING *`;
+    params.push(studentId);
+
+    const result = await pool.query(updateQuery, params);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Processo de certificação não encontrado' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating certification status:', error);
+    res.status(500).json({ error: 'Erro ao atualizar status de certificação' });
+  }
+});
+
+export default router;
