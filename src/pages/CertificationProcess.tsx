@@ -4,13 +4,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { CertificationForm } from "@/components/forms/CertificationForm";
 import { CertificationStatusUpdate } from "@/components/forms/CertificationStatusUpdate";
+import { CertificationTimeline } from "@/components/CertificationTimeline";
 
 const CertificationProcess = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -217,24 +218,29 @@ const CertificationProcess = () => {
 
       {/* Dialog para visualizar detalhes */}
       <Dialog open={!!selectedProcess && !isStatusDialogOpen} onOpenChange={() => setSelectedProcess(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Detalhes do Processo de Certificação</DialogTitle>
+            <DialogTitle>Processo de Certificação</DialogTitle>
+            <DialogDescription>
+              Acompanhe todo o fluxo do processo de certificação do aluno
+            </DialogDescription>
           </DialogHeader>
           {selectedProcess?.certification && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-6">
+              {/* Informações gerais */}
+              <div className="grid grid-cols-2 gap-4 p-4 rounded-lg border bg-muted/50">
                 <div>
                   <p className="text-sm text-muted-foreground">Aluno</p>
                   <p className="font-medium">{selectedProcess.name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Status</p>
-                  {getStatusBadge(selectedProcess.certification.status)}
+                  <p className="text-sm text-muted-foreground">{selectedProcess.email}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Certificadora</p>
                   <p className="font-medium">{selectedProcess.certification.certifier_name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Status Atual</p>
+                  {getStatusBadge(selectedProcess.certification.status)}
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Certificado Físico</p>
@@ -244,58 +250,22 @@ const CertificationProcess = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <h3 className="font-semibold">Timeline</h3>
-                <div className="space-y-2 border-l-2 pl-4">
-                  <div>
-                    <p className="text-sm font-medium">Criado em</p>
-                    <p className="text-sm text-muted-foreground">
-                      {formatDate(selectedProcess.certification.created_at)}
-                    </p>
-                  </div>
-                  {selectedProcess.certification.documents_sent_at && (
-                    <div>
-                      <p className="text-sm font-medium">Documentos Enviados</p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatDate(selectedProcess.certification.documents_sent_at)}
-                      </p>
-                    </div>
-                  )}
-                  {selectedProcess.certification.approval_date && (
-                    <div>
-                      <p className="text-sm font-medium">Aprovado</p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatDate(selectedProcess.certification.approval_date)}
-                      </p>
-                    </div>
-                  )}
-                  {selectedProcess.certification.certificate_issued_at && (
-                    <div>
-                      <p className="text-sm font-medium">Certificado Emitido</p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatDate(selectedProcess.certification.certificate_issued_at)}
-                      </p>
-                    </div>
-                  )}
-                  {selectedProcess.certification.certificate_sent_at && (
-                    <div>
-                      <p className="text-sm font-medium">Certificado Enviado</p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatDate(selectedProcess.certification.certificate_sent_at)}
-                      </p>
-                    </div>
-                  )}
-                </div>
+              {/* Timeline */}
+              <div>
+                <h3 className="font-semibold mb-4 text-lg">Linha do Tempo</h3>
+                <CertificationTimeline 
+                  currentStatus={selectedProcess.certification.status}
+                  certification={selectedProcess.certification}
+                />
               </div>
 
-              {selectedProcess.certification.physical_tracking_code && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Código de Rastreio</p>
-                  <p className="font-mono font-medium">
-                    {selectedProcess.certification.physical_tracking_code}
-                  </p>
-                </div>
-              )}
+              {/* Botão para atualizar status */}
+              <div className="flex justify-end">
+                <Button onClick={() => handleUpdateStatus(selectedProcess)}>
+                  <FileCheck className="mr-2 h-4 w-4" />
+                  Atualizar Status
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>

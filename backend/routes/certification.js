@@ -77,24 +77,44 @@ router.put('/:studentId/status', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Status inválido' });
     }
 
-    // Atualiza os campos de data baseado no status
+    // Primeiro busca o registro atual para verificar quais datas já existem
+    const currentResult = await pool.query(
+      'SELECT * FROM certification_process WHERE student_id = $1',
+      [studentId]
+    );
+
+    if (currentResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Processo de certificação não encontrado' });
+    }
+
+    const current = currentResult.rows[0];
+
+    // Monta a query de atualização baseada no status e nas datas existentes
     let updateQuery = 'UPDATE certification_process SET status = $1, updated_at = CURRENT_TIMESTAMP';
     const params = [status];
     let paramIndex = 2;
 
-    if (status === 'documents_sent' && !result.rows[0]?.documents_sent_at) {
+    // Atualiza a data específica apenas se ainda não existir
+    if (status === 'documents_sent' && !current.documents_sent_at) {
       updateQuery += `, documents_sent_at = CURRENT_TIMESTAMP`;
     }
-    if (status === 'approved' && !result.rows[0]?.approval_date) {
+    if (status === 'under_review' && !current.under_review_at) {
+      updateQuery += `, under_review_at = CURRENT_TIMESTAMP`;
+    }
+    if (status === 'approved' && !current.approval_date) {
       updateQuery += `, approval_date = CURRENT_TIMESTAMP`;
     }
-    if (status === 'certificate_issued' && !result.rows[0]?.certificate_issued_at) {
+    if (status === 'certificate_issued' && !current.certificate_issued_at) {
       updateQuery += `, certificate_issued_at = CURRENT_TIMESTAMP`;
     }
-    if (status === 'certificate_sent' && !result.rows[0]?.certificate_sent_at) {
+    if (status === 'certificate_sent' && !current.certificate_sent_at) {
       updateQuery += `, certificate_sent_at = CURRENT_TIMESTAMP`;
     }
+    if (status === 'completed' && !current.completed_at) {
+      updateQuery += `, completed_at = CURRENT_TIMESTAMP`;
+    }
 
+    // Adiciona código de rastreio se fornecido
     if (physical_tracking_code) {
       updateQuery += `, physical_tracking_code = $${paramIndex}`;
       params.push(physical_tracking_code);
@@ -105,10 +125,6 @@ router.put('/:studentId/status', requireAuth, async (req, res) => {
     params.push(studentId);
 
     const result = await pool.query(updateQuery, params);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Processo de certificação não encontrado' });
-    }
 
     res.json(result.rows[0]);
   } catch (error) {
