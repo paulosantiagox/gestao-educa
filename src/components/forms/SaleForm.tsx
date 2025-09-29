@@ -73,10 +73,51 @@ export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
     },
   });
 
-  const addStudent = (student: any) => {
-    if (!selectedStudents.find(s => s.id === student.id)) {
-      setSelectedStudents([...selectedStudents, student]);
+  // Buscar todas as vendas para verificar alunos já associados
+  const { data: allSales = [] } = useQuery({
+    queryKey: ['all-sales-for-validation'],
+    queryFn: async () => {
+      const result = await api.getSales({});
+      return result.ok ? (result.data || []) : [];
+    },
+  });
+
+  // Função para verificar se um aluno já está em uma venda paga
+  const isStudentInPaidSale = async (studentId: number) => {
+    for (const sale of allSales) {
+      // Pular a venda atual se estiver editando
+      if (saleId && sale.id === saleId) continue;
+      
+      // Se a venda está paga, verificar se o aluno está nela
+      if (sale.payment_status === 'paid') {
+        const saleDetails = await api.getSale(sale.id);
+        if (saleDetails.ok && saleDetails.data) {
+          const saleData = saleDetails.data as any;
+          const hasStudent = saleData.students?.some((s: any) => s.student_id === studentId);
+          if (hasStudent) {
+            return { blocked: true, saleCode: sale.sale_code };
+          }
+        }
+      }
     }
+    return { blocked: false };
+  };
+
+  const addStudent = async (student: any) => {
+    if (selectedStudents.find(s => s.id === student.id)) {
+      toast.error("Este aluno já está selecionado nesta venda");
+      return;
+    }
+
+    // Verificar se o aluno já está em uma venda paga
+    const validation = await isStudentInPaidSale(student.id);
+    if (validation.blocked) {
+      toast.error(`${student.name} já está associado à venda ${validation.saleCode} que foi paga. Um aluno só pode estar em múltiplas vendas se houver pagamento pendente.`);
+      return;
+    }
+
+    setSelectedStudents([...selectedStudents, student]);
+    toast.success(`${student.name} adicionado com sucesso!`);
     setStudentSearch("");
   };
 
@@ -316,11 +357,10 @@ export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
                           <CommandItem
                             key={student.id}
                             value={student.id.toString()}
-                            onSelect={() => {
+                            onSelect={async () => {
                               if (!isSelected) {
-                                addStudent(student);
+                                await addStudent(student);
                                 setOpenStudentCombobox(false);
-                                setStudentSearch("");
                               }
                             }}
                             disabled={!!isSelected}
