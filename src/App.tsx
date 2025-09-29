@@ -14,6 +14,7 @@ import Students from "./pages/Students";
 import Sales from "./pages/Sales";
 import Certifications from "./pages/Certifications";
 import PaymentMethods from "./pages/PaymentMethods";
+import Users from "./pages/Users";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -56,6 +57,7 @@ const App = () => (
                               <Route path="/sales" element={<Sales />} />
                               <Route path="/certifications" element={<Certifications />} />
                               <Route path="/payment-methods" element={<PaymentMethods />} />
+                              <Route path="/users" element={<Users />} />
                               <Route path="*" element={<NotFound />} />
                             </Routes>
                           </div>

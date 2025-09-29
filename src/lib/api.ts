@@ -7,6 +7,15 @@ interface ApiResponse<T> {
   error?: string;
 }
 
+interface User {
+  id: number;
+  email: string;
+  name: string;
+  role: string;
+  active: boolean;
+  created_at: string;
+}
+
 class ApiClient {
   private baseUrl: string;
 
@@ -205,6 +214,18 @@ class ApiClient {
   // DASHBOARD
   async getDashboardStats() {
     return this.request('/api/dashboard/stats');
+  }
+
+  // Users
+  async getUsers(): Promise<ApiResponse<{ users: User[] }>> {
+    return this.request("/api/users");
+  }
+
+  async createUser(data: { email: string; name: string; password: string; role?: string }): Promise<ApiResponse<{ user: User }>> {
+    return this.request("/api/users", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   }
 }
 

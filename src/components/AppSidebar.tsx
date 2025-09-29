@@ -7,6 +7,7 @@ import {
   CreditCard,
   Award,
   LogOut,
+  UserCog,
 } from "lucide-react";
 import {
   Sidebar,
@@ -51,6 +52,12 @@ const menuItems = [
     items: [
       { title: "Certificadoras", url: "/certifications", icon: Award },
       { title: "Formas de Pagamento", url: "/payment-methods", icon: CreditCard },
+    ],
+  },
+  {
+    title: "Sistema",
+    items: [
+      { title: "Usuários", url: "/users", icon: UserCog },
     ],
   },
 ];
