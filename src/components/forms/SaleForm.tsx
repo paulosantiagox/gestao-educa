@@ -3,11 +3,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const saleSchema = z.object({
   sale_code: z.string().min(3, "Código deve ter no mínimo 3 caracteres"),
@@ -16,18 +19,24 @@ const saleSchema = z.object({
   payer_phone: z.string().optional(),
   payer_cpf: z.string().optional(),
   total_amount: z.string().min(1, "Valor total é obrigatório"),
+  paid_amount: z.string().optional(),
   payment_method_id: z.string().min(1, "Método de pagamento é obrigatório"),
+  payment_status: z.string().optional(),
+  sale_date: z.string().optional(),
 });
 
 type SaleFormData = z.infer<typeof saleSchema>;
 
 interface SaleFormProps {
   onSuccess?: () => void;
-  initialData?: Partial<SaleFormData>;
+  initialData?: Partial<SaleFormData & { students?: any[] }>;
   saleId?: number;
 }
 
 export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
+  const [selectedStudents, setSelectedStudents] = useState<any[]>(initialData?.students || []);
+  const [studentSearch, setStudentSearch] = useState("");
+
   const form = useForm<SaleFormData>({
     resolver: zodResolver(saleSchema),
     defaultValues: initialData || {
@@ -37,24 +46,48 @@ export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
       payer_phone: "",
       payer_cpf: "",
       total_amount: "",
+      paid_amount: "0",
       payment_method_id: "",
+      payment_status: "pending",
+      sale_date: new Date().toISOString().split('T')[0],
     },
   });
 
-  const { data: paymentMethodsData } = useQuery({
+  const { data: paymentMethods = [] } = useQuery({
     queryKey: ['payment-methods'],
     queryFn: async () => {
       const result = await api.getPaymentMethods();
-      return result.ok && result.data ? result.data : { payment_methods: [] };
+      return result.ok ? (result.data || []) : [];
     },
   });
+
+  const { data: students = [] } = useQuery({
+    queryKey: ['students', studentSearch],
+    queryFn: async () => {
+      const result = await api.getStudents({ search: studentSearch });
+      return result.ok ? (result.data || []) : [];
+    },
+  });
+
+  const addStudent = (student: any) => {
+    if (!selectedStudents.find(s => s.id === student.id)) {
+      setSelectedStudents([...selectedStudents, student]);
+    }
+    setStudentSearch("");
+  };
+
+  const removeStudent = (studentId: number) => {
+    setSelectedStudents(selectedStudents.filter(s => s.id !== studentId));
+  };
 
   const onSubmit = async (data: SaleFormData) => {
     try {
       const payload = {
         ...data,
         total_amount: parseFloat(data.total_amount),
+        paid_amount: data.paid_amount ? parseFloat(data.paid_amount) : 0,
         payment_method_id: parseInt(data.payment_method_id),
+        student_ids: selectedStudents.map(s => s.id),
       };
 
       const result = saleId
@@ -64,6 +97,7 @@ export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
       if (result.ok) {
         toast.success(saleId ? "Venda atualizada com sucesso!" : "Venda cadastrada com sucesso!");
         form.reset();
+        setSelectedStudents([]);
         onSuccess?.();
       } else {
         toast.error(result.error || "Erro ao salvar venda");
@@ -93,6 +127,20 @@ export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
 
           <FormField
             control={form.control}
+            name="sale_date"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Data da Venda</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name="total_amount"
             render={({ field }) => (
               <FormItem>
@@ -107,22 +155,60 @@ export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
 
           <FormField
             control={form.control}
+            name="paid_amount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Valor Pago</FormLabel>
+                <FormControl>
+                  <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name="payment_method_id"
             render={({ field }) => (
-              <FormItem className="md:col-span-2">
+              <FormItem>
                 <FormLabel>Método de Pagamento *</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione o método de pagamento" />
+                      <SelectValue placeholder="Selecione o método" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {(paymentMethodsData as any)?.payment_methods?.map((method: any) => (
+                    {paymentMethods.map((method: any) => (
                       <SelectItem key={method.id} value={method.id.toString()}>
                         {method.name}
                       </SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="payment_status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status do Pagamento</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="pending">Pendente</SelectItem>
+                    <SelectItem value="partial">Parcial</SelectItem>
+                    <SelectItem value="paid">Pago</SelectItem>
+                    <SelectItem value="cancelled">Cancelado</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -191,6 +277,49 @@ export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
               )}
             />
           </div>
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Alunos Associados</h3>
+          
+          <div className="space-y-2">
+            <FormLabel>Adicionar Aluno</FormLabel>
+            <Select onValueChange={(value) => {
+              const student = students.find((s: any) => s.id.toString() === value);
+              if (student) addStudent(student);
+            }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um aluno" />
+              </SelectTrigger>
+              <SelectContent>
+                {students.map((student: any) => (
+                  <SelectItem key={student.id} value={student.id.toString()}>
+                    {student.name} - {student.email}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormDescription>
+              Selecione os alunos que fazem parte desta venda
+            </FormDescription>
+          </div>
+
+          {selectedStudents.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {selectedStudents.map((student) => (
+                <Badge key={student.id} variant="secondary" className="text-sm">
+                  {student.name}
+                  <button
+                    type="button"
+                    onClick={() => removeStudent(student.id)}
+                    className="ml-2 hover:text-destructive"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end gap-4">
