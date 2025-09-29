@@ -5,12 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, Check, ChevronsUpDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 const saleSchema = z.object({
   sale_code: z.string().min(3, "Código deve ter no mínimo 3 caracteres"),
@@ -36,6 +39,7 @@ interface SaleFormProps {
 export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
   const [selectedStudents, setSelectedStudents] = useState<any[]>(initialData?.students || []);
   const [studentSearch, setStudentSearch] = useState("");
+  const [openStudentCombobox, setOpenStudentCombobox] = useState(false);
 
   const form = useForm<SaleFormData>({
     resolver: zodResolver(saleSchema),
@@ -284,23 +288,63 @@ export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
           
           <div className="space-y-2">
             <FormLabel>Adicionar Aluno</FormLabel>
-            <Select onValueChange={(value) => {
-              const student = students.find((s: any) => s.id.toString() === value);
-              if (student) addStudent(student);
-            }}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um aluno" />
-              </SelectTrigger>
-              <SelectContent>
-                {students.map((student: any) => (
-                  <SelectItem key={student.id} value={student.id.toString()}>
-                    {student.name} - {student.email}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={openStudentCombobox} onOpenChange={setOpenStudentCombobox}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openStudentCombobox}
+                  className="w-full justify-between"
+                >
+                  Selecione um aluno
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0" align="start">
+                <Command shouldFilter={false}>
+                  <CommandInput 
+                    placeholder="Buscar aluno por nome, email ou CPF..." 
+                    value={studentSearch}
+                    onValueChange={setStudentSearch}
+                  />
+                  <CommandList>
+                    <CommandEmpty>Nenhum aluno encontrado.</CommandEmpty>
+                    <CommandGroup>
+                      {students.map((student: any) => {
+                        const isSelected = selectedStudents.find(s => s.id === student.id);
+                        return (
+                          <CommandItem
+                            key={student.id}
+                            value={student.id.toString()}
+                            onSelect={() => {
+                              if (!isSelected) {
+                                addStudent(student);
+                                setOpenStudentCombobox(false);
+                                setStudentSearch("");
+                              }
+                            }}
+                            disabled={!!isSelected}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                isSelected ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            <div className="flex flex-col">
+                              <span className="font-medium">{student.name}</span>
+                              <span className="text-sm text-muted-foreground">{student.email}</span>
+                            </div>
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
             <FormDescription>
-              Selecione os alunos que fazem parte desta venda
+              Busque e selecione os alunos que fazem parte desta venda
             </FormDescription>
           </div>
 
