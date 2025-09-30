@@ -115,6 +115,15 @@ class ApiClient {
     return this.request(`/api/students/${id}`, { method: 'DELETE' });
   }
 
+  async getStudentsWithSales(params?: { page?: number; limit?: number; search?: string }) {
+    const query = new URLSearchParams();
+    if (params?.page) query.append('page', params.page.toString());
+    if (params?.limit) query.append('limit', params.limit.toString());
+    if (params?.search) query.append('q', params.search);
+    
+    return this.request<any[]>(`/api/students/with-sales?${query.toString()}`);
+  }
+
   // SALES (retorna array direto)
   async getSales(params?: { page?: number; limit?: number; search?: string }) {
     const query = new URLSearchParams();

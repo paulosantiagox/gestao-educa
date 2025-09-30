@@ -71,7 +71,10 @@ router.get('/:id', requireAuth, async (req, res) => {
 
 // POST /api/sales - Criar nova venda
 router.post('/', requireAuth, async (req, res) => {
+  const client = await pool.connect();
   try {
+    await client.query('BEGIN');
+
     const {
       sale_code, payer_name, payer_email, payer_phone, payer_cpf,
       total_amount, payment_method_id, sale_date
@@ -82,7 +85,45 @@ router.post('/', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Código da venda, nome do pagador e valor total são obrigatórios' });
     }
 
-    const result = await pool.query(
+    // 1. Criar ou buscar aluno com os dados do pagador
+    let studentId;
+    const cpfClean = payer_cpf?.replace(/\D/g, '');
+    
+    if (cpfClean) {
+      // Verificar se já existe aluno com este CPF
+      const existingStudent = await client.query(
+        'SELECT id FROM students WHERE cpf = $1',
+        [cpfClean]
+      );
+
+      if (existingStudent.rows.length > 0) {
+        studentId = existingStudent.rows[0].id;
+        console.log('✅ Aluno existente encontrado:', studentId);
+      } else {
+        // Criar novo aluno
+        const newStudent = await client.query(
+          `INSERT INTO students (name, email, phone, cpf, active)
+           VALUES ($1, $2, $3, $4, true)
+           RETURNING id`,
+          [payer_name, payer_email || null, payer_phone || null, cpfClean]
+        );
+        studentId = newStudent.rows[0].id;
+        console.log('✅ Novo aluno criado:', studentId);
+      }
+    } else {
+      // Criar aluno sem CPF (temporário)
+      const newStudent = await client.query(
+        `INSERT INTO students (name, email, phone, active)
+         VALUES ($1, $2, $3, true)
+         RETURNING id`,
+        [payer_name, payer_email || null, payer_phone || null]
+      );
+      studentId = newStudent.rows[0].id;
+      console.log('✅ Novo aluno criado (sem CPF):', studentId);
+    }
+
+    // 2. Criar a venda
+    const result = await client.query(
       `INSERT INTO sales (
         sale_code, payer_name, payer_email, payer_phone, payer_cpf,
         total_amount, paid_amount, payment_method_id, payment_status, sale_date
@@ -94,13 +135,29 @@ router.post('/', requireAuth, async (req, res) => {
       ]
     );
 
+    const saleId = result.rows[0].id;
+
+    // 3. Associar aluno à venda
+    await client.query(
+      `INSERT INTO student_sales (student_id, sale_id)
+       VALUES ($1, $2)
+       ON CONFLICT (student_id, sale_id) DO NOTHING`,
+      [studentId, saleId]
+    );
+
+    await client.query('COMMIT');
+    console.log('✅ Venda criada e aluno associado:', { saleId, studentId });
+
     res.status(201).json(result.rows[0]);
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('Error creating sale:', error);
     if (error.code === '23505') { // Unique violation
       return res.status(400).json({ error: 'Código de venda já existe' });
     }
     res.status(500).json({ error: 'Erro ao criar venda' });
+  } finally {
+    client.release();
   }
 });
 

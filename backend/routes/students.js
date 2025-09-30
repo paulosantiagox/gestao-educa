@@ -38,6 +38,41 @@ router.get('/', requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/students/with-sales - Lista apenas alunos que têm vendas associadas
+router.get('/with-sales', requireAuth, async (req, res) => {
+  try {
+    const { page = 1, limit = 10000, q = '' } = req.query;
+    const offset = (page - 1) * limit;
+    const searchQuery = `%${q}%`;
+    
+    const result = await pool.query(
+      `SELECT DISTINCT s.* FROM students s
+       INNER JOIN student_sales ss ON s.id = ss.student_id
+       WHERE s.name ILIKE $1 OR s.email ILIKE $1 OR s.cpf ILIKE $1
+       ORDER BY s.created_at DESC
+       LIMIT $2 OFFSET $3`,
+      [searchQuery, limit, offset]
+    );
+
+    const countResult = await pool.query(
+      `SELECT COUNT(DISTINCT s.id) FROM students s
+       INNER JOIN student_sales ss ON s.id = ss.student_id
+       WHERE s.name ILIKE $1 OR s.email ILIKE $1 OR s.cpf ILIKE $1`,
+      [searchQuery]
+    );
+
+    res.json({
+      students: result.rows,
+      total: parseInt(countResult.rows[0].count),
+      page: parseInt(page),
+      limit: parseInt(limit)
+    });
+  } catch (error) {
+    console.error('Error fetching students with sales:', error);
+    res.status(500).json({ error: 'Erro ao buscar alunos com vendas' });
+  }
+});
+
 // GET /api/students/:id - Busca aluno por ID
 router.get('/:id', requireAuth, async (req, res) => {
   try {
@@ -68,6 +103,17 @@ router.post('/', requireAuth, async (req, res) => {
     // Validação básica
     if (!name || !email || !cpf) {
       return res.status(400).json({ error: 'Nome, email e CPF são obrigatórios' });
+    }
+
+    // Verificar se já existe aluno com este CPF
+    if (cpf) {
+      const cpfCheck = await pool.query(
+        'SELECT id FROM students WHERE cpf = $1',
+        [cpf.replace(/\D/g, '')]
+      );
+      if (cpfCheck.rows.length > 0) {
+        return res.status(400).json({ error: 'Já existe um aluno cadastrado com este CPF' });
+      }
     }
 
     const result = await pool.query(
@@ -106,6 +152,17 @@ router.put('/:id', requireAuth, async (req, res) => {
       neighborhood, city, state,
       documents_link, active
     } = req.body;
+
+    // Verificar se já existe outro aluno com este CPF
+    if (cpf) {
+      const cpfCheck = await pool.query(
+        'SELECT id FROM students WHERE cpf = $1 AND id != $2',
+        [cpf.replace(/\D/g, ''), id]
+      );
+      if (cpfCheck.rows.length > 0) {
+        return res.status(400).json({ error: 'Já existe outro aluno cadastrado com este CPF' });
+      }
+    }
 
     const result = await pool.query(
       `UPDATE students SET

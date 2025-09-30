@@ -52,7 +52,7 @@ const CertificationProcess = () => {
   const { data: allStudents = [], isLoading } = useQuery({
     queryKey: ["students-with-certification", searchTerm],
     queryFn: async () => {
-      const result = await api.getStudents({ search: searchTerm });
+      const result = await api.getStudentsWithSales({ search: searchTerm });
       if (!result.ok) return [];
       
       const studentsData = ((result.data as any)?.students || []);
