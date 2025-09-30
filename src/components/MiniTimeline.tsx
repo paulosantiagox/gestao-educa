@@ -8,13 +8,14 @@ interface MiniTimelineProps {
 }
 
 const MINI_STEPS = [
-  { status: "pending", short: "P" },
-  { status: "documents_sent", short: "D" },
-  { status: "under_review", short: "A" },
-  { status: "approved", short: "AP" },
-  { status: "certificate_issued", short: "E" },
-  { status: "certificate_sent", short: "EN" },
-  { status: "completed", short: "C" },
+  { status: "welcome", short: "BV" },
+  { status: "exam_in_progress", short: "PA" },
+  { status: "documents_requested", short: "DS" },
+  { status: "documents_under_review", short: "DA" },
+  { status: "certification_started", short: "CI" },
+  { status: "digital_certificate_sent", short: "CD" },
+  { status: "physical_certificate_sent", short: "CF" },
+  { status: "completed", short: "OK" },
 ];
 
 const getStepState = (step: string, currentStatus: string) => {
@@ -34,12 +35,14 @@ const checkSLA = (certification: any, currentStatus: string, slaConfig?: any[]) 
   
   // Pegar a data de quando entrou neste status
   const dateMap: Record<string, string> = {
-    pending: certification.created_at,
-    documents_sent: certification.documents_sent_at,
-    under_review: certification.under_review_at,
-    approved: certification.approval_date,
-    certificate_issued: certification.certificate_issued_at,
-    certificate_sent: certification.certificate_sent_at,
+    welcome: certification.created_at,
+    exam_in_progress: certification.exam_started_at,
+    documents_requested: certification.documents_requested_at,
+    documents_under_review: certification.documents_under_review_at,
+    certification_started: certification.certification_started_at,
+    digital_certificate_sent: certification.digital_certificate_sent_at,
+    physical_certificate_sent: certification.physical_certificate_sent_at,
+    completed: certification.completed_at,
   };
   
   const statusDate = dateMap[currentStatus];

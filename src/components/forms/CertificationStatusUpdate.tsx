@@ -25,13 +25,13 @@ export function CertificationStatusUpdate({ studentId, currentStatus, onSuccess 
   const form = useForm<StatusUpdateFormData>({
     resolver: zodResolver(statusUpdateSchema),
     defaultValues: {
-      status: currentStatus || "pending",
+      status: currentStatus || "welcome",
       physical_tracking_code: "",
     },
   });
 
   const selectedStatus = form.watch("status");
-  const needsTracking = selectedStatus === "certificate_sent";
+  const needsTracking = selectedStatus === "physical_certificate_sent";
 
   const onSubmit = async (data: StatusUpdateFormData) => {
     try {
@@ -65,12 +65,13 @@ export function CertificationStatusUpdate({ studentId, currentStatus, onSuccess 
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="pending">Pendente</SelectItem>
-                  <SelectItem value="documents_sent">Documentos Enviados</SelectItem>
-                  <SelectItem value="under_review">Em Análise</SelectItem>
-                  <SelectItem value="approved">Aprovado</SelectItem>
-                  <SelectItem value="certificate_issued">Certificado Emitido</SelectItem>
-                  <SelectItem value="certificate_sent">Certificado Enviado</SelectItem>
+                  <SelectItem value="welcome">Boas-Vindas</SelectItem>
+                  <SelectItem value="exam_in_progress">Prova em Andamento</SelectItem>
+                  <SelectItem value="documents_requested">Documentação Solicitada</SelectItem>
+                  <SelectItem value="documents_under_review">Documentação em Análise</SelectItem>
+                  <SelectItem value="certification_started">Certificação Iniciada</SelectItem>
+                  <SelectItem value="digital_certificate_sent">Certificado Digital Enviado</SelectItem>
+                  <SelectItem value="physical_certificate_sent">Certificado Físico Enviado</SelectItem>
                   <SelectItem value="completed">Concluído</SelectItem>
                 </SelectContent>
               </Select>
@@ -104,13 +105,14 @@ export function CertificationStatusUpdate({ studentId, currentStatus, onSuccess 
         <div className="rounded-lg border p-4 bg-muted/50">
           <h4 className="font-medium mb-2">Fluxo do Processo</h4>
           <ol className="text-sm space-y-1 list-decimal list-inside text-muted-foreground">
-            <li>Pendente - Processo iniciado</li>
-            <li>Documentos Enviados - Documentos enviados para certificadora</li>
-            <li>Em Análise - Certificadora está analisando</li>
-            <li>Aprovado - Documentos aprovados</li>
-            <li>Certificado Emitido - Certificado gerado</li>
-            <li>Certificado Enviado - Enviado para o aluno (se físico)</li>
-            <li>Concluído - Processo finalizado</li>
+            <li>Boas-Vindas - Aluno recebe dados de acesso</li>
+            <li>Prova em Andamento - Aluno realiza e conclui a prova</li>
+            <li>Documentação Solicitada - Solicitação dos documentos</li>
+            <li>Documentação em Análise - Equipe verifica documentos</li>
+            <li>Certificação Iniciada - Enviado à certificadora</li>
+            <li>Certificado Digital Enviado - Certificado digital emitido e enviado</li>
+            <li>Certificado Físico Enviado - Certificado físico enviado (se aplicável)</li>
+            <li>Concluído - Processo finalizado com sucesso</li>
           </ol>
         </div>
 

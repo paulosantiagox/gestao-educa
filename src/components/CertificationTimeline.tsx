@@ -15,39 +15,44 @@ interface CertificationTimelineProps {
 
 const TIMELINE_STEPS: TimelineStep[] = [
   {
-    status: "pending",
-    label: "Pendente",
-    description: "Processo iniciado",
+    status: "welcome",
+    label: "Boas-Vindas",
+    description: "Aluno recebe dados de acesso e mensagem de recepção",
   },
   {
-    status: "documents_sent",
-    label: "Documentos Enviados",
-    description: "Documentos enviados para certificadora",
+    status: "exam_in_progress",
+    label: "Prova em Andamento",
+    description: "Aluno é notificado sobre realização e conclusão da prova",
   },
   {
-    status: "under_review",
-    label: "Em Análise",
-    description: "Certificadora está analisando",
+    status: "documents_requested",
+    label: "Documentação Solicitada",
+    description: "Solicitação de envio dos documentos necessários",
   },
   {
-    status: "approved",
-    label: "Aprovado",
-    description: "Documentos aprovados pela certificadora",
+    status: "documents_under_review",
+    label: "Documentação em Análise",
+    description: "Equipe verifica documentos recebidos ou aguarda pendências",
   },
   {
-    status: "certificate_issued",
-    label: "Certificado Emitido",
-    description: "Certificado digital gerado",
+    status: "certification_started",
+    label: "Certificação Iniciada",
+    description: "Documentos enviados à certificadora para processar",
   },
   {
-    status: "certificate_sent",
-    label: "Certificado Enviado",
-    description: "Certificado enviado ao aluno",
+    status: "digital_certificate_sent",
+    label: "Certificado Digital Emitido e Enviado",
+    description: "Certificado digital emitido e enviado ao aluno",
+  },
+  {
+    status: "physical_certificate_sent",
+    label: "Certificado Físico Enviado",
+    description: "Certificado impresso e enviado fisicamente ao aluno",
   },
   {
     status: "completed",
     label: "Concluído",
-    description: "Processo finalizado com sucesso",
+    description: "Processo de certificação finalizado com sucesso",
   },
 ];
 
@@ -65,12 +70,13 @@ const formatDateTime = (date?: string) => {
 
 const getStepDate = (step: TimelineStep, certification: any) => {
   const dateMap: Record<string, string> = {
-    pending: certification.created_at,
-    documents_sent: certification.documents_sent_at,
-    under_review: certification.under_review_at,
-    approved: certification.approval_date,
-    certificate_issued: certification.certificate_issued_at,
-    certificate_sent: certification.certificate_sent_at,
+    welcome: certification.created_at,
+    exam_in_progress: certification.exam_started_at,
+    documents_requested: certification.documents_requested_at,
+    documents_under_review: certification.documents_under_review_at,
+    certification_started: certification.certification_started_at,
+    digital_certificate_sent: certification.digital_certificate_sent_at,
+    physical_certificate_sent: certification.physical_certificate_sent_at,
     completed: certification.completed_at,
   };
   
@@ -156,7 +162,7 @@ export function CertificationTimeline({ currentStatus, certification }: Certific
                 </p>
                 
                 {/* Código de rastreio */}
-                {step.status === "certificate_sent" && certification.physical_tracking_code && (
+                {step.status === "physical_certificate_sent" && certification.physical_tracking_code && (
                   <div className="mt-2 p-2 rounded-lg bg-muted">
                     <p className="text-xs text-muted-foreground mb-1">Código de Rastreio</p>
                     <p className="font-mono text-sm font-medium">{certification.physical_tracking_code}</p>

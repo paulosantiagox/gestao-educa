@@ -358,24 +358,27 @@ const Dashboard = () => {
 // Helper functions
 function getStatusDateField(status: string): string {
   const fieldMap: Record<string, string> = {
-    pending: 'created_at',
-    documents_sent: 'documents_sent_at',
-    under_review: 'under_review_at',
-    approved: 'under_review_at',
-    certificate_issued: 'digital_delivered_at',
-    certificate_sent: 'physical_shipping_at',
+    welcome: 'created_at',
+    exam_in_progress: 'exam_started_at',
+    documents_requested: 'documents_requested_at',
+    documents_under_review: 'documents_under_review_at',
+    certification_started: 'certification_started_at',
+    digital_certificate_sent: 'digital_certificate_sent_at',
+    physical_certificate_sent: 'physical_certificate_sent_at',
+    completed: 'completed_at',
   };
   return fieldMap[status] || 'created_at';
 }
 
 function getStatusLabel(status: string): string {
   const labels: Record<string, string> = {
-    pending: 'Pendente',
-    documents_sent: 'Documentos Enviados',
-    under_review: 'Em Análise',
-    approved: 'Aprovado',
-    certificate_issued: 'Certificado Emitido',
-    certificate_sent: 'Certificado Enviado',
+    welcome: 'Boas-Vindas',
+    exam_in_progress: 'Prova em Andamento',
+    documents_requested: 'Documentação Solicitada',
+    documents_under_review: 'Documentação em Análise',
+    certification_started: 'Certificação Iniciada',
+    digital_certificate_sent: 'Certificado Digital Enviado',
+    physical_certificate_sent: 'Certificado Físico Enviado',
     completed: 'Concluído',
   };
   return labels[status] || status;

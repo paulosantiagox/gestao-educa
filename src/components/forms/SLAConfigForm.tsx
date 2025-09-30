@@ -10,27 +10,35 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const slaSchema = z.object({
-  pending: z.object({
+  welcome: z.object({
     days_limit: z.string().min(1, "Obrigatório"),
     warning_days: z.string().min(1, "Obrigatório"),
   }),
-  documents_sent: z.object({
+  exam_in_progress: z.object({
     days_limit: z.string().min(1, "Obrigatório"),
     warning_days: z.string().min(1, "Obrigatório"),
   }),
-  under_review: z.object({
+  documents_requested: z.object({
     days_limit: z.string().min(1, "Obrigatório"),
     warning_days: z.string().min(1, "Obrigatório"),
   }),
-  approved: z.object({
+  documents_under_review: z.object({
     days_limit: z.string().min(1, "Obrigatório"),
     warning_days: z.string().min(1, "Obrigatório"),
   }),
-  certificate_issued: z.object({
+  certification_started: z.object({
     days_limit: z.string().min(1, "Obrigatório"),
     warning_days: z.string().min(1, "Obrigatório"),
   }),
-  certificate_sent: z.object({
+  digital_certificate_sent: z.object({
+    days_limit: z.string().min(1, "Obrigatório"),
+    warning_days: z.string().min(1, "Obrigatório"),
+  }),
+  physical_certificate_sent: z.object({
+    days_limit: z.string().min(1, "Obrigatório"),
+    warning_days: z.string().min(1, "Obrigatório"),
+  }),
+  completed: z.object({
     days_limit: z.string().min(1, "Obrigatório"),
     warning_days: z.string().min(1, "Obrigatório"),
   }),
@@ -43,12 +51,25 @@ interface SLAConfigFormProps {
 }
 
 const STEP_LABELS: Record<string, string> = {
-  pending: "Pendente",
-  documents_sent: "Documentos Enviados",
-  under_review: "Em Análise",
-  approved: "Aprovado",
-  certificate_issued: "Certificado Emitido",
-  certificate_sent: "Certificado Enviado",
+  welcome: "Boas-Vindas",
+  exam_in_progress: "Prova em Andamento",
+  documents_requested: "Documentação Solicitada",
+  documents_under_review: "Documentação em Análise",
+  certification_started: "Certificação Iniciada",
+  digital_certificate_sent: "Certificado Digital Emitido e Enviado",
+  physical_certificate_sent: "Certificado Físico Enviado",
+  completed: "Concluído",
+};
+
+const DEFAULT_DAYS: Record<string, { days_limit: string; warning_days: string }> = {
+  welcome: { days_limit: "1", warning_days: "1" },
+  exam_in_progress: { days_limit: "7", warning_days: "2" },
+  documents_requested: { days_limit: "7", warning_days: "2" },
+  documents_under_review: { days_limit: "7", warning_days: "2" },
+  certification_started: { days_limit: "45", warning_days: "7" },
+  digital_certificate_sent: { days_limit: "2", warning_days: "1" },
+  physical_certificate_sent: { days_limit: "45", warning_days: "7" },
+  completed: { days_limit: "0", warning_days: "0" },
 };
 
 export function SLAConfigForm({ onSuccess }: SLAConfigFormProps) {
@@ -65,8 +86,8 @@ export function SLAConfigForm({ onSuccess }: SLAConfigFormProps) {
     Object.keys(STEP_LABELS).forEach((status) => {
       const config = slaConfig.find((s: any) => s.status === status);
       defaults[status] = {
-        days_limit: config?.days_limit?.toString() || "7",
-        warning_days: config?.warning_days?.toString() || "2",
+        days_limit: config?.days_limit?.toString() || DEFAULT_DAYS[status]?.days_limit || "7",
+        warning_days: config?.warning_days?.toString() || DEFAULT_DAYS[status]?.warning_days || "2",
       };
     });
     return defaults;

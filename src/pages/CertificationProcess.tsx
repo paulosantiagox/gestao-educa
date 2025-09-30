@@ -179,12 +179,13 @@ const CertificationProcess = () => {
     if (!status) return <Badge variant="secondary">Não Iniciado</Badge>;
     
     const statusConfig: Record<string, { label: string; variant: any }> = {
-      pending: { label: "Pendente", variant: "secondary" },
-      documents_sent: { label: "Documentos Enviados", variant: "outline" },
-      under_review: { label: "Em Análise", variant: "default" },
-      approved: { label: "Aprovado", variant: "default" },
-      certificate_issued: { label: "Certificado Emitido", variant: "default" },
-      certificate_sent: { label: "Certificado Enviado", variant: "default" },
+      welcome: { label: "Boas-Vindas", variant: "secondary" },
+      exam_in_progress: { label: "Prova em Andamento", variant: "outline" },
+      documents_requested: { label: "Documentação Solicitada", variant: "outline" },
+      documents_under_review: { label: "Documentação em Análise", variant: "default" },
+      certification_started: { label: "Certificação Iniciada", variant: "default" },
+      digital_certificate_sent: { label: "Certificado Digital Enviado", variant: "default" },
+      physical_certificate_sent: { label: "Certificado Físico Enviado", variant: "default" },
       completed: { label: "Concluído", variant: "default" },
     };
 
@@ -212,9 +213,11 @@ const CertificationProcess = () => {
       "Certificado Físico",
       "Código de Rastreio",
       "Data de Criação",
-      "Documentos Enviados",
-      "Em Análise",
-      "Certificado Digital Emitido",
+      "Prova Iniciada",
+      "Documentação Solicitada",
+      "Documentação em Análise",
+      "Certificação Iniciada",
+      "Certificado Digital Enviado",
       "Certificado Físico Enviado",
       "Concluído"
     ];
@@ -232,10 +235,12 @@ const CertificationProcess = () => {
         cert?.wants_physical ? "Sim" : cert ? "Não" : "-",
         `"${cert?.physical_tracking_code || '-'}"`,
         cert?.created_at ? formatDate(cert.created_at) : "-",
-        cert?.documents_sent_at ? formatDate(cert.documents_sent_at) : "-",
-        cert?.under_review_at ? formatDate(cert.under_review_at) : "-",
-        cert?.digital_delivered_at ? formatDate(cert.digital_delivered_at) : "-",
-        cert?.physical_shipping_at ? formatDate(cert.physical_shipping_at) : "-",
+        cert?.exam_started_at ? formatDate(cert.exam_started_at) : "-",
+        cert?.documents_requested_at ? formatDate(cert.documents_requested_at) : "-",
+        cert?.documents_under_review_at ? formatDate(cert.documents_under_review_at) : "-",
+        cert?.certification_started_at ? formatDate(cert.certification_started_at) : "-",
+        cert?.digital_certificate_sent_at ? formatDate(cert.digital_certificate_sent_at) : "-",
+        cert?.physical_certificate_sent_at ? formatDate(cert.physical_certificate_sent_at) : "-",
         cert?.completed_at ? formatDate(cert.completed_at) : "-"
       ].join(",");
     });
@@ -275,10 +280,12 @@ const CertificationProcess = () => {
         "Certificado Físico": cert?.wants_physical ? "Sim" : cert ? "Não" : "-",
         "Código de Rastreio": cert?.physical_tracking_code || '-',
         "Data de Criação": cert?.created_at ? formatDate(cert.created_at) : "-",
-        "Documentos Enviados": cert?.documents_sent_at ? formatDate(cert.documents_sent_at) : "-",
-        "Em Análise": cert?.under_review_at ? formatDate(cert.under_review_at) : "-",
-        "Certificado Digital Emitido": cert?.digital_delivered_at ? formatDate(cert.digital_delivered_at) : "-",
-        "Certificado Físico Enviado": cert?.physical_shipping_at ? formatDate(cert.physical_shipping_at) : "-",
+        "Prova Iniciada": cert?.exam_started_at ? formatDate(cert.exam_started_at) : "-",
+        "Documentação Solicitada": cert?.documents_requested_at ? formatDate(cert.documents_requested_at) : "-",
+        "Documentação em Análise": cert?.documents_under_review_at ? formatDate(cert.documents_under_review_at) : "-",
+        "Certificação Iniciada": cert?.certification_started_at ? formatDate(cert.certification_started_at) : "-",
+        "Certificado Digital Enviado": cert?.digital_certificate_sent_at ? formatDate(cert.digital_certificate_sent_at) : "-",
+        "Certificado Físico Enviado": cert?.physical_certificate_sent_at ? formatDate(cert.physical_certificate_sent_at) : "-",
         "Concluído": cert?.completed_at ? formatDate(cert.completed_at) : "-"
       };
     });
@@ -298,8 +305,10 @@ const CertificationProcess = () => {
       { wch: 18 }, // Certificado Físico
       { wch: 20 }, // Código de Rastreio
       { wch: 15 }, // Data de Criação
-      { wch: 18 }, // Documentos Enviados
-      { wch: 15 }, // Em Análise
+      { wch: 18 }, // Prova Iniciada
+      { wch: 22 }, // Documentação Solicitada
+      { wch: 22 }, // Documentação em Análise
+      { wch: 20 }, // Certificação Iniciada
       { wch: 25 }, // Certificado Digital
       { wch: 25 }, // Certificado Físico Enviado
       { wch: 15 }, // Concluído
@@ -313,12 +322,13 @@ const CertificationProcess = () => {
     if (!status) return "Não Iniciado";
     
     const statusConfig: Record<string, string> = {
-      pending: "Pendente",
-      documents_sent: "Documentos Enviados",
-      under_review: "Em Análise",
-      approved: "Aprovado",
-      certificate_issued: "Certificado Emitido",
-      certificate_sent: "Certificado Enviado",
+      welcome: "Boas-Vindas",
+      exam_in_progress: "Prova em Andamento",
+      documents_requested: "Documentação Solicitada",
+      documents_under_review: "Documentação em Análise",
+      certification_started: "Certificação Iniciada",
+      digital_certificate_sent: "Certificado Digital Enviado",
+      physical_certificate_sent: "Certificado Físico Enviado",
       completed: "Concluído",
     };
 
