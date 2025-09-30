@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Search, Eye, FileCheck, Settings, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, Eye, FileCheck, Settings, Edit, Trash2, X } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -24,6 +25,12 @@ const CertificationProcess = () => {
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSLADialogOpen, setIsSLADialogOpen] = useState(false);
+  
+  // Filtros
+  const [filterCertifier, setFilterCertifier] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterPhysical, setFilterPhysical] = useState<string>("all");
+  
   const queryClient = useQueryClient();
 
   // Buscar configurações de SLA
@@ -66,8 +73,47 @@ const CertificationProcess = () => {
     },
   });
 
-  // Mostrar todos os alunos (com e sem processo de certificação)
-  const students = allStudents;
+  // Buscar certificadoras para o filtro
+  const { data: certifiers = [] } = useQuery({
+    queryKey: ["certifiers"],
+    queryFn: async () => {
+      const result = await api.getCertifiers();
+      return result.ok ? (result.data || []) : [];
+    },
+  });
+
+  // Aplicar filtros aos alunos
+  const students = allStudents.filter((student: any) => {
+    // Filtro por certificadora
+    if (filterCertifier !== "all") {
+      if (!student.certification) return filterCertifier === "none";
+      if (filterCertifier === "none") return false;
+      if (student.certification.certifier_id?.toString() !== filterCertifier) return false;
+    }
+
+    // Filtro por status
+    if (filterStatus !== "all") {
+      if (!student.certification) return filterStatus === "not_started";
+      if (filterStatus === "not_started") return false;
+      if (student.certification.status !== filterStatus) return false;
+    }
+
+    // Filtro por certificado físico
+    if (filterPhysical !== "all") {
+      if (!student.certification) return false;
+      const wantsPhysical = student.certification.wants_physical;
+      if (filterPhysical === "yes" && !wantsPhysical) return false;
+      if (filterPhysical === "no" && wantsPhysical) return false;
+    }
+
+    return true;
+  });
+
+  const clearFilters = () => {
+    setFilterCertifier("all");
+    setFilterStatus("all");
+    setFilterPhysical("all");
+  };
 
   const deleteMutation = useMutation({
     mutationFn: (studentId: number) => api.deleteCertificationProcess(studentId),
@@ -189,9 +235,9 @@ const CertificationProcess = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Pesquisar Alunos</CardTitle>
+          <CardTitle>Pesquisar e Filtrar</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
@@ -200,6 +246,60 @@ const CertificationProcess = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Select value={filterCertifier} onValueChange={setFilterCertifier}>
+              <SelectTrigger>
+                <SelectValue placeholder="Certificadora" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas certificadoras</SelectItem>
+                <SelectItem value="none">Sem certificadora</SelectItem>
+                {certifiers.map((certifier: any) => (
+                  <SelectItem key={certifier.id} value={certifier.id.toString()}>
+                    {certifier.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger>
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os status</SelectItem>
+                <SelectItem value="not_started">Não Iniciado</SelectItem>
+                <SelectItem value="pending">Pendente</SelectItem>
+                <SelectItem value="documents_sent">Documentos Enviados</SelectItem>
+                <SelectItem value="under_review">Em Análise</SelectItem>
+                <SelectItem value="approved">Aprovado</SelectItem>
+                <SelectItem value="certificate_issued">Certificado Emitido</SelectItem>
+                <SelectItem value="certificate_sent">Certificado Enviado</SelectItem>
+                <SelectItem value="completed">Concluído</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={filterPhysical} onValueChange={setFilterPhysical}>
+              <SelectTrigger>
+                <SelectValue placeholder="Certificado Físico" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="yes">Sim</SelectItem>
+                <SelectItem value="no">Não</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Button 
+              variant="outline" 
+              onClick={clearFilters}
+              className="w-full"
+            >
+              <X className="mr-2 h-4 w-4" />
+              Limpar Filtros
+            </Button>
           </div>
         </CardContent>
       </Card>
