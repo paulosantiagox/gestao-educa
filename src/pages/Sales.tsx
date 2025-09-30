@@ -23,7 +23,7 @@ const Sales = () => {
     queryKey: ["sales", searchTerm],
     queryFn: async () => {
       const result = await api.getSales({ search: searchTerm });
-      return result.ok ? (result.data || []) : [];
+      return result.ok ? ((result.data as any)?.sales || []) : [];
     },
   });
 
