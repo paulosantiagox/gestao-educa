@@ -24,7 +24,7 @@ const TIMELINE_STEPS = [
   { status: "certification_started", label: "⚙️ Certificação Iniciada", field: "certification_started_at" },
   { status: "digital_certificate_sent", label: "📧 Certificado Digital Enviado", field: "digital_certificate_sent_at" },
   { status: "physical_certificate_sent", label: "📦 Certificado Físico Enviado", field: "physical_certificate_sent_at" },
-  { status: "completed", label: "✅ Concluído", field: "completed_at" },
+  { status: "completed", label: "🎓 Concluído", field: "completed_at" },
 ];
 
 export function WhatsAppMessageDialog({
@@ -69,10 +69,10 @@ export function WhatsAppMessageDialog({
       
       if (isCompleted) {
         timeline += `${step.label}\n`;
-        timeline += `✓ ${formatDateTimeSP(dateValue)}\n\n`;
+        timeline += `✅ ${formatDateTimeSP(dateValue)}\n\n`;
       } else if (isCurrent) {
         timeline += `${step.label}\n`;
-        timeline += dateValue ? `✓ ${formatDateTimeSP(dateValue)}\n\n` : `⏳ Em andamento...\n\n`;
+        timeline += dateValue ? `✅ ${formatDateTimeSP(dateValue)}\n\n` : `⏳ Em andamento...\n\n`;
       } else {
         timeline += `${step.label}\n`;
         timeline += `○ Aguardando...\n\n`;
