@@ -25,14 +25,16 @@ const maskData = (data: string, type: 'name' | 'cpf' | 'email' | 'phone' = 'name
   if (type === 'email') {
     const [user, domain] = data.split('@');
     if (!domain) return data;
-    const visible = user.slice(0, 2);
-    return `${visible}***@${domain}`;
+    if (user.length <= 4) return `${user}@${domain}`;
+    const start = user.slice(0, 2);
+    const end = user.slice(-2);
+    return `${start}***${end}@${domain}`;
   }
 
   if (type === 'phone') {
     const cleaned = data.replace(/\D/g, '');
-    if (cleaned.length <= 4) return data;
-    return `${cleaned.slice(0, 2)}***${cleaned.slice(-2)}`;
+    if (cleaned.length <= 6) return data;
+    return `${cleaned.slice(0, 2)}***${cleaned.slice(-4)}`;
   }
   
   // Para nome
