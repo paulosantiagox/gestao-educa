@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Search, Send, Loader2, CheckCircle2, Clock, Circle } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDateTimeSP } from '@/lib/date-utils';
+import ejaLogo from '@/assets/eja-logo.png';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sistema-educa.autoflixtreinamentos.com';
 
@@ -231,17 +232,26 @@ export default function StudentStatusCheck() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl space-y-8">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            Consultar Status de Certificação
-          </h1>
-          <p className="text-muted-foreground">
-            Digite seu CPF para acompanhar o processo de certificação
-          </p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex flex-col">
+      <div className="w-full flex justify-center py-4 px-4">
+        <img 
+          src={ejaLogo} 
+          alt="EJA Educa Brasil" 
+          className="h-12 md:h-16 w-auto object-contain opacity-90"
+        />
+      </div>
+      
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-4xl space-y-8">
+          {/* Header */}
+          <div className="text-center space-y-2">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              Consultar Status de Certificação
+            </h1>
+            <p className="text-muted-foreground">
+              Digite seu CPF para acompanhar o processo de certificação
+            </p>
+          </div>
 
         {/* Search Card */}
         <Card>
@@ -374,7 +384,22 @@ export default function StudentStatusCheck() {
             </CardContent>
           </Card>
         )}
+        </div>
       </div>
+
+      {/* Footer */}
+      <footer className="w-full border-t bg-background/50 backdrop-blur-sm mt-8">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex flex-col items-center justify-center space-y-2 text-center">
+            <p className="text-sm font-medium text-foreground">
+              EJA EDUCA BRASIL EAD LTDA
+            </p>
+            <p className="text-xs text-muted-foreground">
+              CNPJ: 59.905.568/0001-02
+            </p>
+          </div>
+        </div>
+      </footer>
 
       {/* WhatsApp Dialog */}
       <Dialog open={showWhatsAppDialog} onOpenChange={setShowWhatsAppDialog}>
