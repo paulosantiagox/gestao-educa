@@ -231,19 +231,18 @@ export default function StudentStatusCheck() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex flex-col">
-      <div className="w-full flex justify-center py-4 px-4">
-        <img 
-          src={ejaLogo} 
-          alt="EJA Educa Brasil" 
-          className="h-12 md:h-16 w-auto object-contain opacity-90"
-        />
-      </div>
-      
-      <div className="flex-1 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex flex-col p-4">
+      <div className="flex-1 flex items-center justify-center">
         <div className="w-full max-w-4xl space-y-8">
-          {/* Header */}
-          <div className="text-center space-y-2">
+          {/* Header with Logo */}
+          <div className="text-center space-y-4">
+            <div className="flex justify-center mb-4">
+              <img 
+                src={ejaLogo} 
+                alt="EJA Educa Brasil" 
+                className="h-16 md:h-20 w-auto object-contain"
+              />
+            </div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
               Consultar Status de Certificação
             </h1>
@@ -327,22 +326,29 @@ export default function StudentStatusCheck() {
                       <div key={step.status} className="relative pb-8">
                         {!isLast && (
                           <div
-                            className={`absolute left-4 top-8 h-full w-0.5 transition-colors duration-300 ${
-                              state === 'completed' ? 'bg-green-500' : 'bg-muted'
-                            }`}
+                            className={`absolute left-4 top-8 h-full w-0.5 transition-colors duration-500`}
+                            style={{
+                              backgroundColor: state === 'completed' ? '#22c55e' : 'hsl(var(--muted))'
+                            }}
                           />
                         )}
                         
                         <div className="relative flex items-start gap-4">
-                          <div className={`
-                            flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-300
-                            ${state === 'completed' 
-                              ? 'border-green-500 bg-green-500 text-white shadow-lg shadow-green-500/50 animate-pulse' 
-                              : state === 'current'
-                              ? 'border-primary bg-background text-primary'
-                              : 'border-muted bg-background text-muted-foreground'
-                            }
-                          `}>
+                          <div 
+                            className={`
+                              flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-500
+                              ${state === 'completed' 
+                                ? 'border-green-500 bg-green-500 text-white shadow-[0_0_15px_rgba(34,197,94,0.5)]' 
+                                : state === 'current'
+                                ? 'border-primary bg-background text-primary'
+                                : 'border-muted bg-background text-muted-foreground'
+                              }
+                            `}
+                            style={state === 'completed' ? {
+                              backgroundColor: '#22c55e',
+                              borderColor: '#22c55e'
+                            } : {}}
+                          >
                             {state === 'completed' ? (
                               <CheckCircle2 className="h-4 w-4" />
                             ) : state === 'current' ? (
@@ -353,17 +359,21 @@ export default function StudentStatusCheck() {
                           </div>
 
                           <div className="flex-1 pt-0.5">
-                            <p className={`font-medium ${
-                              state === 'completed' ? 'text-green-600 dark:text-green-400' :
-                              state === 'current' ? 'text-primary' :
-                              'text-muted-foreground'
-                            }`}>
+                            <p 
+                              className={`font-medium transition-colors duration-300`}
+                              style={{
+                                color: state === 'completed' ? '#16a34a' : state === 'current' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'
+                              }}
+                            >
                               {step.label}
                             </p>
                             {stepDate && (
-                              <p className={`text-sm mt-1 ${
-                                state === 'completed' ? 'text-green-600/80 dark:text-green-400/80' : 'text-muted-foreground'
-                              }`}>
+                              <p 
+                                className="text-sm mt-1"
+                                style={{
+                                  color: state === 'completed' ? '#16a34a' : 'hsl(var(--muted-foreground))'
+                                }}
+                              >
                                 {formatDateTimeSP(stepDate)}
                               </p>
                             )}
@@ -398,10 +408,9 @@ export default function StudentStatusCheck() {
             <p className="text-xs text-muted-foreground">
               CNPJ: 59.905.568/0001-02
             </p>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs text-muted-foreground mt-2">
-              <p>📧 contato@ejaeducabrasil.com</p>
-              <p>📞 (11) 4200-2991</p>
-            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              📧 contato@ejaeducabrasil.com
+            </p>
           </div>
         </div>
       </footer>
