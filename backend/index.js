@@ -1,3 +1,4 @@
+// server/index.js
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -14,10 +15,11 @@ import studentSales from "./routes/student-sales.js";
 import payments from "./routes/payments.js";
 import certification from "./routes/certification.js";
 import dashboard from "./routes/dashboard.js";
-import certificationSLA from './routes/certification-sla.js';
+import certificationSLA from "./routes/certification-sla.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 const app = express();
 
 // middlewares globais
@@ -44,9 +46,9 @@ app.use("/api/student-sales", studentSales);
 app.use("/api/payments", payments);
 app.use("/api/certification", certification);
 app.use("/api/dashboard", dashboard);
-app.use('/api/certification-sla', certificationSLA);
+app.use("/api/certification-sla", certificationSLA);
 
-// healthcheck simples
+// healthcheck
 app.get("/api/ping", (_req, res) => res.json({ ok: true }));
 
 // ===== FRONT ESTÁTICO (DEPOIS da API) =====
