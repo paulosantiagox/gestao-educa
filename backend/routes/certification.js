@@ -101,14 +101,14 @@ router.put('/:studentId/status', requireAuth, async (req, res) => {
     if (status === 'under_review' && !current.under_review_at) {
       updateQuery += `, under_review_at = CURRENT_TIMESTAMP`;
     }
-    if (status === 'approved' && !current.approval_date) {
-      updateQuery += `, approval_date = CURRENT_TIMESTAMP`;
+    if (status === 'approved') {
+      // Sem coluna específica para data de aprovação no schema atual
     }
-    if (status === 'certificate_issued' && !current.certificate_issued_at) {
-      updateQuery += `, certificate_issued_at = CURRENT_TIMESTAMP`;
+    if (status === 'certificate_issued' && !current.digital_delivered_at) {
+      updateQuery += `, digital_delivered_at = CURRENT_TIMESTAMP`;
     }
-    if (status === 'certificate_sent' && !current.certificate_sent_at) {
-      updateQuery += `, certificate_sent_at = CURRENT_TIMESTAMP`;
+    if (status === 'certificate_sent' && !current.physical_shipping_at) {
+      updateQuery += `, physical_shipping_at = CURRENT_TIMESTAMP`;
     }
     if (status === 'completed' && !current.completed_at) {
       updateQuery += `, completed_at = CURRENT_TIMESTAMP`;

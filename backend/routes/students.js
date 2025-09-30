@@ -60,9 +60,9 @@ router.post('/', requireAuth, async (req, res) => {
   try {
     const {
       name, email, phone, cpf, birth_date,
-      address_street, address_number, address_complement,
-      address_neighborhood, address_city, address_state,
-      address_zip, documents_link
+      zip_code, street, number, complement,
+      neighborhood, city, state,
+      documents_link
     } = req.body;
 
     // Validação básica
@@ -73,16 +73,16 @@ router.post('/', requireAuth, async (req, res) => {
     const result = await pool.query(
       `INSERT INTO students (
         name, email, phone, cpf, birth_date,
-        address_street, address_number, address_complement,
-        address_neighborhood, address_city, address_state,
-        address_zip, documents_link
+        zip_code, street, number, complement,
+        neighborhood, city, state,
+        documents_link
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *`,
       [
         name, email, phone, cpf, birth_date,
-        address_street, address_number, address_complement,
-        address_neighborhood, address_city, address_state,
-        address_zip, documents_link
+        zip_code, street, number, complement,
+        neighborhood, city, state,
+        documents_link
       ]
     );
 
@@ -102,25 +102,25 @@ router.put('/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
     const {
       name, email, phone, cpf, birth_date,
-      address_street, address_number, address_complement,
-      address_neighborhood, address_city, address_state,
-      address_zip, documents_link, active
+      zip_code, street, number, complement,
+      neighborhood, city, state,
+      documents_link, active
     } = req.body;
 
     const result = await pool.query(
       `UPDATE students SET
         name = $1, email = $2, phone = $3, cpf = $4, birth_date = $5,
-        address_street = $6, address_number = $7, address_complement = $8,
-        address_neighborhood = $9, address_city = $10, address_state = $11,
-        address_zip = $12, documents_link = $13, active = $14,
+        zip_code = $6, street = $7, number = $8,
+        complement = $9, neighborhood = $10, city = $11, state = $12,
+        documents_link = $13, active = $14,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = $15
       RETURNING *`,
       [
         name, email, phone, cpf, birth_date,
-        address_street, address_number, address_complement,
-        address_neighborhood, address_city, address_state,
-        address_zip, documents_link, active,
+        zip_code, street, number,
+        complement, neighborhood, city, state,
+        documents_link, active,
         id
       ]
     );
