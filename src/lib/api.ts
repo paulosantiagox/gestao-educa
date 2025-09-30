@@ -37,6 +37,13 @@ class ApiClient {
         credentials: 'include', // Para enviar cookies (JWT)
       });
 
+      // Verificar se a resposta é JSON válida
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('API returned non-JSON response:', await response.text());
+        return { ok: false, error: 'Erro no servidor - resposta inválida' };
+      }
+
       const data = await response.json();
 
       if (!response.ok) {

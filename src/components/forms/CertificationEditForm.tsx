@@ -41,10 +41,18 @@ export function CertificationEditForm({ studentId, certification, onSuccess }: C
 
   const onSubmit = async (data: CertificationEditFormData) => {
     try {
+      // Validação adicional
+      if (!data.certifier_id || isNaN(parseInt(data.certifier_id))) {
+        toast.error("Por favor, selecione uma certificadora válida");
+        return;
+      }
+
       const payload = {
         certifier_id: parseInt(data.certifier_id),
         wants_physical: data.wants_physical,
       };
+
+      console.log('Enviando dados:', payload, 'para studentId:', studentId);
 
       const result = await api.updateCertificationProcess(studentId, payload);
 
@@ -52,9 +60,11 @@ export function CertificationEditForm({ studentId, certification, onSuccess }: C
         toast.success("Processo atualizado com sucesso!");
         onSuccess?.();
       } else {
+        console.error('Erro na API:', result.error);
         toast.error(result.error || "Erro ao atualizar processo");
       }
     } catch (error) {
+      console.error('Erro na requisição:', error);
       toast.error("Erro ao processar requisição");
     }
   };
