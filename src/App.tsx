@@ -25,59 +25,59 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <SettingsProvider>
-      <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route 
-              path="/auth" 
-              element={
-                <PublicRoute>
-                  <Auth />
-                </PublicRoute>
-              } 
-            />
-            <Route
-              path="/*"
-              element={
-                <ProtectedRoute>
-                  <SidebarProvider>
-                    <div className="min-h-screen flex w-full flex-col">
-                      <div className="flex flex-1">
-                        <AppSidebar />
-                        <main className="flex-1 overflow-auto">
-                          <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4">
-                            <SidebarTrigger />
-                            <h1 className="text-lg font-semibold">Sistema de Gestão Educacional</h1>
-                          </header>
-                          <div className="p-6">
-                            <Routes>
-                              <Route path="/" element={<Dashboard />} />
-                              <Route path="/students" element={<Students />} />
-                              <Route path="/sales" element={<Sales />} />
-                              <Route path="/certifications" element={<Certifications />} />
-                              <Route path="/certification-process" element={<CertificationProcess />} />
-                              <Route path="/payment-methods" element={<PaymentMethods />} />
-                              <Route path="/users" element={<Users />} />
-                              <Route path="/settings" element={<Settings />} />
-                              <Route path="*" element={<NotFound />} />
-                            </Routes>
-                          </div>
-                        </main>
+    <TooltipProvider>
+      <SettingsProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route 
+                path="/auth" 
+                element={
+                  <PublicRoute>
+                    <Auth />
+                  </PublicRoute>
+                } 
+              />
+              <Route
+                path="/*"
+                element={
+                  <ProtectedRoute>
+                    <SidebarProvider>
+                      <div className="min-h-screen flex w-full flex-col">
+                        <div className="flex flex-1">
+                          <AppSidebar />
+                          <main className="flex-1 overflow-auto">
+                            <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4">
+                              <SidebarTrigger />
+                              <h1 className="text-lg font-semibold">Sistema de Gestão Educacional</h1>
+                            </header>
+                            <div className="p-6">
+                              <Routes>
+                                <Route path="/" element={<Dashboard />} />
+                                <Route path="/students" element={<Students />} />
+                                <Route path="/sales" element={<Sales />} />
+                                <Route path="/certifications" element={<Certifications />} />
+                                <Route path="/certification-process" element={<CertificationProcess />} />
+                                <Route path="/payment-methods" element={<PaymentMethods />} />
+                                <Route path="/users" element={<Users />} />
+                                <Route path="/settings" element={<Settings />} />
+                                <Route path="*" element={<NotFound />} />
+                              </Routes>
+                            </div>
+                          </main>
+                        </div>
                       </div>
-                    </div>
-                  </SidebarProvider>
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-    </SettingsProvider>
+                    </SidebarProvider>
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </SettingsProvider>
+    </TooltipProvider>
   </QueryClientProvider>
 );
 
