@@ -39,7 +39,7 @@ const CertificationProcess = () => {
       const result = await api.getStudents({ search: searchTerm });
       if (!result.ok) return [];
       
-      const studentsData = result.data || [];
+      const studentsData = ((result.data as any)?.students || []);
       
       // Para cada aluno, tentar buscar o processo de certificação
       const studentsWithCertification = await Promise.all(
