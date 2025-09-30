@@ -50,7 +50,7 @@ router.post('/', requireAuth, async (req, res) => {
 
     const result = await pool.query(
       `INSERT INTO certification_process (student_id, certifier_id, wants_physical, status)
-       VALUES ($1, $2, $3, 'pending')
+       VALUES ($1, $2, $3, 'welcome')
        RETURNING *`,
       [student_id, certifier_id, wants_physical || false]
     );
@@ -69,8 +69,8 @@ router.put('/:studentId/status', requireAuth, async (req, res) => {
     const { status, physical_tracking_code } = req.body;
 
     const validStatuses = [
-      'pending', 'documents_sent', 'under_review', 'approved',
-      'certificate_issued', 'certificate_sent', 'completed'
+      'welcome', 'exam_in_progress', 'documents_requested', 'documents_under_review',
+      'certification_started', 'digital_certificate_sent', 'physical_certificate_sent', 'completed'
     ];
 
     if (!validStatuses.includes(status)) {
@@ -95,20 +95,26 @@ router.put('/:studentId/status', requireAuth, async (req, res) => {
     let paramIndex = 2;
 
     // Atualiza a data específica apenas se ainda não existir
-    if (status === 'documents_sent' && !current.documents_sent_at) {
-      updateQuery += `, documents_sent_at = CURRENT_TIMESTAMP`;
+    if (status === 'welcome' && !current.created_at) {
+      // welcome usa created_at como data de referência
     }
-    if (status === 'under_review' && !current.under_review_at) {
-      updateQuery += `, under_review_at = CURRENT_TIMESTAMP`;
+    if (status === 'exam_in_progress' && !current.exam_started_at) {
+      updateQuery += `, exam_started_at = CURRENT_TIMESTAMP`;
     }
-    if (status === 'approved') {
-      // Sem coluna específica para data de aprovação no schema atual
+    if (status === 'documents_requested' && !current.documents_requested_at) {
+      updateQuery += `, documents_requested_at = CURRENT_TIMESTAMP`;
     }
-    if (status === 'certificate_issued' && !current.digital_delivered_at) {
-      updateQuery += `, digital_delivered_at = CURRENT_TIMESTAMP`;
+    if (status === 'documents_under_review' && !current.documents_under_review_at) {
+      updateQuery += `, documents_under_review_at = CURRENT_TIMESTAMP`;
     }
-    if (status === 'certificate_sent' && !current.physical_shipping_at) {
-      updateQuery += `, physical_shipping_at = CURRENT_TIMESTAMP`;
+    if (status === 'certification_started' && !current.certification_started_at) {
+      updateQuery += `, certification_started_at = CURRENT_TIMESTAMP`;
+    }
+    if (status === 'digital_certificate_sent' && !current.digital_certificate_sent_at) {
+      updateQuery += `, digital_certificate_sent_at = CURRENT_TIMESTAMP`;
+    }
+    if (status === 'physical_certificate_sent' && !current.physical_certificate_sent_at) {
+      updateQuery += `, physical_certificate_sent_at = CURRENT_TIMESTAMP`;
     }
     if (status === 'completed' && !current.completed_at) {
       updateQuery += `, completed_at = CURRENT_TIMESTAMP`;
