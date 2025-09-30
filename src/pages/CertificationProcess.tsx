@@ -733,6 +733,8 @@ const CertificationProcess = () => {
                 <CertificationTimeline 
                   currentStatus={selectedProcess.certification.status}
                   certification={selectedProcess.certification}
+                  studentName={selectedProcess.name}
+                  studentPhone={selectedProcess.phone}
                 />
               </div>
 

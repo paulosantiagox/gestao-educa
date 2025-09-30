@@ -1,6 +1,10 @@
-import { CheckCircle2, Circle, Clock } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle2, Circle, Clock, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDateTimeSP } from "@/lib/date-utils";
+import { Button } from "@/components/ui/button";
+import { useWhatsAppTemplates } from "@/contexts/WhatsAppTemplatesContext";
+import { WhatsAppMessageDialog } from "@/components/WhatsAppMessageDialog";
 
 interface TimelineStep {
   status: string;
@@ -12,6 +16,8 @@ interface TimelineStep {
 interface CertificationTimelineProps {
   currentStatus: string;
   certification: any;
+  studentName: string;
+  studentPhone: string;
 }
 
 const TIMELINE_STEPS: TimelineStep[] = [
@@ -72,13 +78,27 @@ const getStepDate = (step: TimelineStep, certification: any) => {
   return dateMap[step.status];
 };
 
-export function CertificationTimeline({ currentStatus, certification }: CertificationTimelineProps) {
+export function CertificationTimeline({ currentStatus, certification, studentName, studentPhone }: CertificationTimelineProps) {
   const currentIndex = TIMELINE_STEPS.findIndex((s) => s.status === currentStatus);
+  const { getTemplate } = useWhatsAppTemplates();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedStep, setSelectedStep] = useState<TimelineStep | null>(null);
 
   const getStepState = (index: number) => {
     if (index < currentIndex) return "completed";
     if (index === currentIndex) return "current";
     return "upcoming";
+  };
+
+  const handleSendMessage = (step: TimelineStep) => {
+    setSelectedStep(step);
+    setDialogOpen(true);
+  };
+
+  const formatMessage = (template: string) => {
+    return template
+      .replace(/\{\{nome\}\}/g, studentName)
+      .replace(/\{\{codigo_rastreio\}\}/g, certification.physical_tracking_code || 'Não disponível');
   };
 
   return (
@@ -124,7 +144,7 @@ export function CertificationTimeline({ currentStatus, certification }: Certific
                 "flex-1 transition-all duration-300",
                 state === "upcoming" && "opacity-50"
               )}>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h4
                     className={cn(
                       "font-semibold transition-colors",
@@ -139,6 +159,17 @@ export function CertificationTimeline({ currentStatus, certification }: Certific
                     <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
                       {formatDateTimeSP(stepDate)}
                     </span>
+                  )}
+                  {(state === "completed" || state === "current") && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="ml-auto"
+                      onClick={() => handleSendMessage(step)}
+                    >
+                      <MessageSquare className="h-4 w-4 mr-1" />
+                      Enviar WhatsApp
+                    </Button>
                   )}
                 </div>
                 <p
@@ -162,6 +193,17 @@ export function CertificationTimeline({ currentStatus, certification }: Certific
           </div>
         );
       })}
+      
+      {selectedStep && (
+        <WhatsAppMessageDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          studentName={studentName}
+          studentPhone={studentPhone}
+          initialMessage={formatMessage(getTemplate(selectedStep.status))}
+          statusLabel={selectedStep.label}
+        />
+      )}
     </div>
   );
 }

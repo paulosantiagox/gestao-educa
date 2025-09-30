@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useSettings } from "@/contexts/SettingsContext";
+import { WhatsAppTemplatesSettings } from "@/components/WhatsAppTemplatesSettings";
 import { toast } from "sonner";
 
 const Settings = () => {
@@ -60,6 +61,8 @@ const Settings = () => {
           </div>
         </CardContent>
       </Card>
+
+      <WhatsAppTemplatesSettings />
 
       <Card>
         <CardHeader>

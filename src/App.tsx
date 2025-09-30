@@ -8,6 +8,7 @@ import AppSidebar from "@/components/AppSidebar";
 import { Header } from "@/components/Header";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
+import { WhatsAppTemplatesProvider } from "@/contexts/WhatsAppTemplatesContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PublicRoute } from "@/components/PublicRoute";
 import Dashboard from "./pages/Dashboard";
@@ -27,11 +28,12 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <SettingsProvider>
-        <AuthProvider>
-          <BrowserRouter>
-            <Toaster />
-            <Sonner />
-            <Routes>
+        <WhatsAppTemplatesProvider>
+          <AuthProvider>
+            <BrowserRouter>
+              <Toaster />
+              <Sonner />
+              <Routes>
               <Route 
                 path="/auth" 
                 element={
@@ -76,9 +78,10 @@ const App = () => (
             </Routes>
           </BrowserRouter>
         </AuthProvider>
-      </SettingsProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+      </WhatsAppTemplatesProvider>
+    </SettingsProvider>
+  </TooltipProvider>
+</QueryClientProvider>
 );
 
 export default App;
