@@ -69,7 +69,7 @@ export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
     queryKey: ['students', studentSearch],
     queryFn: async () => {
       const result = await api.getStudents({ search: studentSearch });
-      return result.ok ? (result.data || []) : [];
+      return result.ok ? (((result.data as any)?.students) || []) : [];
     },
   });
 
@@ -78,7 +78,7 @@ export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
     queryKey: ['all-sales-for-validation'],
     queryFn: async () => {
       const result = await api.getSales({});
-      return result.ok ? (result.data || []) : [];
+      return result.ok ? (((result.data as any)?.sales) || []) : [];
     },
   });
 
