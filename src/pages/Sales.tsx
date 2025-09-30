@@ -155,6 +155,7 @@ const Sales = () => {
                 <TableRow>
                   <TableHead>Código</TableHead>
                   <TableHead>Pagador</TableHead>
+                  <TableHead>Alunos</TableHead>
                   <TableHead className="min-w-[140px]">Data/Hora</TableHead>
                   <TableHead>Valor Total</TableHead>
                   <TableHead>Valor Pago</TableHead>
@@ -167,6 +168,17 @@ const Sales = () => {
                   <TableRow key={sale.id}>
                     <TableCell className="font-medium">{sale.sale_code}</TableCell>
                     <TableCell>{sale.payer_name}</TableCell>
+                    <TableCell>
+                      {sale.students_count > 0 ? (
+                        <Badge variant="default" className="bg-green-500 hover:bg-green-600">
+                          {sale.students_count} aluno{sale.students_count > 1 ? 's' : ''}
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary">
+                          Sem alunos
+                        </Badge>
+                      )}
+                    </TableCell>
                     <TableCell>{formatDate(sale.created_at)}</TableCell>
                     <TableCell>{formatCurrency(sale.total_amount)}</TableCell>
                     <TableCell>{formatCurrency(sale.paid_amount)}</TableCell>

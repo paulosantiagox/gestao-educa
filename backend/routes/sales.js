@@ -13,10 +13,13 @@ router.get('/', requireAuth, async (req, res) => {
     const searchQuery = `%${q}%`;
     
     const result = await pool.query(
-      `SELECT s.*, pm.name as payment_method_name 
+      `SELECT s.*, pm.name as payment_method_name,
+              COUNT(DISTINCT ss.student_id) as students_count
        FROM sales s
        LEFT JOIN payment_methods pm ON s.payment_method_id = pm.id
+       LEFT JOIN student_sales ss ON s.id = ss.sale_id
        WHERE s.sale_code ILIKE $1 OR s.payer_name ILIKE $1 OR s.payer_email ILIKE $1
+       GROUP BY s.id, pm.name
        ORDER BY s.created_at DESC, s.id DESC
        LIMIT $2 OFFSET $3`,
       [searchQuery, limit, offset]
@@ -25,7 +28,8 @@ router.get('/', requireAuth, async (req, res) => {
     console.log('📋 Sales query result (primeiras 3):', result.rows.slice(0, 3).map(s => ({ 
       id: s.id, 
       code: s.sale_code, 
-      created_at: s.created_at 
+      created_at: s.created_at,
+      students_count: s.students_count
     })));
 
     const countResult = await pool.query(
