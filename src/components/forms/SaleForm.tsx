@@ -85,6 +85,19 @@ export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
     },
   });
 
+  // Pagamentos da venda atual (para calcular valor já pago)
+  const { data: paymentsData } = useQuery({
+    queryKey: ['payments-by-sale', saleId],
+    queryFn: async () => {
+      if (!saleId) return [] as any[];
+      const res = await api.getPaymentsBySale(saleId);
+      return res.ok ? ((res.data as any) || []) : [];
+    },
+    enabled: !!saleId,
+  });
+
+  const currentPaid = (paymentsData as any[])?.reduce((sum, p: any) => sum + parseFloat(p.amount || 0), 0) || 0;
+
   // Função para verificar se um aluno já está em uma venda paga
   const isStudentInPaidSale = async (studentId: number) => {
     for (const sale of allSales) {
@@ -146,26 +159,55 @@ export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
 
   const onSubmit = async (data: SaleFormData) => {
     try {
+      const totalAmountNumber = parseFloat(data.total_amount);
+      const targetPaid = data.paid_amount ? parseFloat(data.paid_amount) : 0;
+      const delta = saleId ? targetPaid - currentPaid : targetPaid; // na criação, insere tudo como pagamento
+
+      // Definir status baseado no valor pago desejado
+      let finalStatus: string = 'pending';
+      if (targetPaid >= totalAmountNumber && targetPaid > 0) finalStatus = 'paid';
+      else if (targetPaid > 0 && targetPaid < totalAmountNumber) finalStatus = 'partial';
+
+      // Atualizar venda (sem depender do backend para calcular status)
       const payload = {
         ...data,
-        total_amount: parseFloat(data.total_amount),
-        paid_amount: data.paid_amount ? parseFloat(data.paid_amount) : 0,
+        total_amount: totalAmountNumber,
+        paid_amount: targetPaid, // backend pode ignorar; mantemos para compatibilidade
+        payment_status: finalStatus,
         payment_method_id: parseInt(data.payment_method_id),
         student_ids: selectedStudents.map(s => s.id),
-      };
+      } as any;
 
       const result = saleId
         ? await api.updateSale(saleId, payload)
         : await api.createSale(payload);
 
-      if (result.ok) {
-        toast.success(saleId ? "Venda atualizada com sucesso!" : "Venda cadastrada com sucesso!");
-        form.reset();
-        setSelectedStudents([]);
-        onSuccess?.();
-      } else {
+      if (!result.ok) {
         toast.error(result.error || "Erro ao salvar venda");
+        return;
       }
+
+      // Criar pagamento automático quando necessário (workaround para backends que calculam paid_amount via /payments)
+      if (delta > 0) {
+        const paymentRes = await api.createPayment({
+          sale_id: saleId || (result.data as any)?.id,
+          amount: delta,
+          payment_date: data.sale_date || new Date().toISOString().split('T')[0],
+          payment_method_id: parseInt(data.payment_method_id),
+          notes: 'Ajuste automático via formulário de venda',
+        });
+        if (!paymentRes.ok) {
+          toast.error('Venda salva, mas falhou ao registrar o pagamento.');
+        }
+      } else if (delta < 0) {
+        // Não vamos remover pagamentos automaticamente para evitar inconsistências
+        toast.message('Para reduzir o valor pago, ajuste os pagamentos na seção de pagamentos.');
+      }
+
+      toast.success(saleId ? "Venda atualizada com sucesso!" : "Venda cadastrada com sucesso!");
+      form.reset();
+      setSelectedStudents([]);
+      onSuccess?.();
     } catch (error) {
       toast.error("Erro ao processar requisição");
     }
