@@ -86,7 +86,13 @@ const Sales = () => {
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('pt-BR');
+    return new Date(date).toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
@@ -153,7 +159,7 @@ const Sales = () => {
                 <TableRow>
                   <TableHead>Código</TableHead>
                   <TableHead>Pagador</TableHead>
-                  <TableHead>Data</TableHead>
+                  <TableHead className="min-w-[140px]">Data/Hora</TableHead>
                   <TableHead>Valor Total</TableHead>
                   <TableHead>Valor Pago</TableHead>
                   <TableHead>Status</TableHead>

@@ -17,7 +17,7 @@ router.get('/', requireAuth, async (req, res) => {
        FROM sales s
        LEFT JOIN payment_methods pm ON s.payment_method_id = pm.id
        WHERE s.sale_code ILIKE $1 OR s.payer_name ILIKE $1 OR s.payer_email ILIKE $1
-       ORDER BY s.sale_date DESC
+       ORDER BY s.created_at DESC, s.sale_date DESC
        LIMIT $2 OFFSET $3`,
       [searchQuery, limit, offset]
     );
