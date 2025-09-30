@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Search, Eye, FileCheck, Settings, Edit, Trash2, X } from "lucide-react";
+import { Plus, Search, Eye, FileCheck, Settings, Edit, Trash2, X, Download } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -179,6 +179,86 @@ const CertificationProcess = () => {
     return new Date(date).toLocaleDateString('pt-BR');
   };
 
+  const exportToCSV = () => {
+    if (students.length === 0) {
+      toast.error("Não há dados para exportar");
+      return;
+    }
+
+    // Cabeçalhos do CSV
+    const headers = [
+      "Nome do Aluno",
+      "Email",
+      "CPF",
+      "Certificadora",
+      "Status",
+      "Certificado Físico",
+      "Código de Rastreio",
+      "Data de Criação",
+      "Documentos Enviados",
+      "Em Análise",
+      "Certificado Digital Emitido",
+      "Certificado Físico Enviado",
+      "Concluído"
+    ];
+
+    // Converter dados para CSV
+    const csvRows = students.map((student: any) => {
+      const cert = student.certification;
+      const statusLabel = cert ? getStatusLabel(cert.status) : "Não Iniciado";
+      
+      return [
+        `"${student.name || ''}"`,
+        `"${student.email || ''}"`,
+        `"${student.cpf || ''}"`,
+        `"${cert?.certifier_name || '-'}"`,
+        `"${statusLabel}"`,
+        cert?.wants_physical ? "Sim" : cert ? "Não" : "-",
+        `"${cert?.physical_tracking_code || '-'}"`,
+        cert?.created_at ? formatDate(cert.created_at) : "-",
+        cert?.documents_sent_at ? formatDate(cert.documents_sent_at) : "-",
+        cert?.under_review_at ? formatDate(cert.under_review_at) : "-",
+        cert?.digital_delivered_at ? formatDate(cert.digital_delivered_at) : "-",
+        cert?.physical_shipping_at ? formatDate(cert.physical_shipping_at) : "-",
+        cert?.completed_at ? formatDate(cert.completed_at) : "-"
+      ].join(",");
+    });
+
+    // Montar CSV completo
+    const csvContent = [headers.join(","), ...csvRows].join("\n");
+
+    // Criar blob e fazer download
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", `processos_certificacao_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = "hidden";
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success("CSV exportado com sucesso!");
+  };
+
+  const getStatusLabel = (status?: string) => {
+    if (!status) return "Não Iniciado";
+    
+    const statusConfig: Record<string, string> = {
+      pending: "Pendente",
+      documents_sent: "Documentos Enviados",
+      under_review: "Em Análise",
+      approved: "Aprovado",
+      certificate_issued: "Certificado Emitido",
+      certificate_sent: "Certificado Enviado",
+      completed: "Concluído",
+    };
+
+    return statusConfig[status] || status;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -234,8 +314,17 @@ const CertificationProcess = () => {
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle>Pesquisar e Filtrar</CardTitle>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={exportToCSV}
+            disabled={students.length === 0}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Exportar CSV
+          </Button>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="relative">
