@@ -165,6 +165,9 @@ export default function StudentStatusCheck() {
       timeline += `📦 *Código de Rastreio:*\n${certification.physical_tracking_code}\n`;
     }
 
+    timeline += "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
+    timeline += "🔍 *Consulte seu status a qualquer momento:*\n";
+    timeline += "https://sistema-educa.lovable.app/consultar-aluno\n\n";
     timeline += "━━━━━━━━━━━━━━━━━━━━━━━━━\n";
     
     return timeline;

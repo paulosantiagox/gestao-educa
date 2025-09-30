@@ -48,7 +48,6 @@ export function WhatsAppMessageDialog({
   }, [open, initialMessage, certification]);
 
   const generateTimeline = (cert: any) => {
-    const currentUrl = window.location.origin;
     let timeline = "━━━━━━━━━━━━━━━━━━━━━━━━━\n";
     timeline += "📊 *RESUMO DO PROCESSO*\n";
     timeline += "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
@@ -87,7 +86,7 @@ export function WhatsAppMessageDialog({
 
     timeline += "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
     timeline += "🔍 *Consulte seu status a qualquer momento:*\n";
-    timeline += `${currentUrl}/consultar-aluno\n\n`;
+    timeline += "https://sistema-educa.lovable.app/consultar-aluno\n\n";
     timeline += "━━━━━━━━━━━━━━━━━━━━━━━━━\n";
     
     return timeline;
