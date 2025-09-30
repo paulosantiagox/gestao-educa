@@ -220,10 +220,9 @@ export default function StudentStatusCheck() {
     });
 
     const currentIndex = filteredSteps.findIndex(s => s.status === certification.status);
-    const step = filteredSteps[index];
-    const dateValue = certification[step.field];
     
-    if (index < currentIndex || (index === currentIndex && dateValue)) {
+    // Todas as etapas anteriores ao status atual são marcadas como concluídas
+    if (index < currentIndex) {
       return 'completed';
     } else if (index === currentIndex) {
       return 'current';
