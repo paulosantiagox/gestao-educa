@@ -7,6 +7,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/AppSidebar";
 import { Header } from "@/components/Header";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SettingsProvider } from "@/contexts/SettingsContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PublicRoute } from "@/components/PublicRoute";
 import Dashboard from "./pages/Dashboard";
@@ -16,6 +17,7 @@ import Certifications from "./pages/Certifications";
 import CertificationProcess from "./pages/CertificationProcess";
 import PaymentMethods from "./pages/PaymentMethods";
 import Users from "./pages/Users";
+import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -23,7 +25,8 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
+    <SettingsProvider>
+      <AuthProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -59,6 +62,7 @@ const App = () => (
                               <Route path="/certification-process" element={<CertificationProcess />} />
                               <Route path="/payment-methods" element={<PaymentMethods />} />
                               <Route path="/users" element={<Users />} />
+                              <Route path="/settings" element={<Settings />} />
                               <Route path="*" element={<NotFound />} />
                             </Routes>
                           </div>
@@ -73,6 +77,7 @@ const App = () => (
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
+    </SettingsProvider>
   </QueryClientProvider>
 );
 

@@ -11,9 +11,11 @@ import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { X, Check, ChevronsUpDown } from "lucide-react";
+import { X, Check, ChevronsUpDown, Beaker } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useSettings } from "@/contexts/SettingsContext";
+import { generateSaleData } from "@/lib/test-data";
 
 const saleSchema = z.object({
   sale_code: z.string().min(3, "Código deve ter no mínimo 3 caracteres"),
@@ -37,6 +39,7 @@ interface SaleFormProps {
 }
 
 export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
+  const { settings } = useSettings();
   const [selectedStudents, setSelectedStudents] = useState<any[]>(initialData?.students || []);
   const [studentSearch, setStudentSearch] = useState("");
   const [openStudentCombobox, setOpenStudentCombobox] = useState(false);
@@ -123,6 +126,22 @@ export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
 
   const removeStudent = (studentId: number) => {
     setSelectedStudents(selectedStudents.filter(s => s.id !== studentId));
+  };
+
+  const fillTestData = () => {
+    const testData = generateSaleData();
+    Object.keys(testData).forEach((key) => {
+      if (key === 'payment_method_id') {
+        // Pegar um método de pagamento aleatório se existir
+        if (paymentMethods.length > 0) {
+          const randomMethod = paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
+          form.setValue('payment_method_id', randomMethod.id.toString());
+        }
+      } else {
+        form.setValue(key as keyof SaleFormData, testData[key as keyof typeof testData]);
+      }
+    });
+    toast.success("Dados de teste preenchidos!");
   };
 
   const onSubmit = async (data: SaleFormData) => {
@@ -407,6 +426,12 @@ export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
         </div>
 
         <div className="flex justify-end gap-4">
+          {settings.testMode && !saleId && (
+            <Button type="button" variant="outline" onClick={fillTestData}>
+              <Beaker className="mr-2 h-4 w-4" />
+              Preencher com Dados de Teste
+            </Button>
+          )}
           <Button type="submit" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting ? "Salvando..." : saleId ? "Atualizar Venda" : "Cadastrar Venda"}
           </Button>

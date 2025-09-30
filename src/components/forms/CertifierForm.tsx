@@ -7,6 +7,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import { useSettings } from "@/contexts/SettingsContext";
+import { generateCertifierData } from "@/lib/test-data";
+import { Beaker } from "lucide-react";
 
 const certifierSchema = z.object({
   name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
@@ -24,6 +27,8 @@ interface CertifierFormProps {
 }
 
 export function CertifierForm({ onSuccess, initialData, certifierId }: CertifierFormProps) {
+  const { settings } = useSettings();
+  
   const form = useForm<CertifierFormData>({
     resolver: zodResolver(certifierSchema),
     defaultValues: initialData || {
@@ -33,6 +38,14 @@ export function CertifierForm({ onSuccess, initialData, certifierId }: Certifier
       active: true,
     },
   });
+
+  const fillTestData = () => {
+    const testData = generateCertifierData();
+    Object.keys(testData).forEach((key) => {
+      form.setValue(key as keyof CertifierFormData, testData[key as keyof typeof testData]);
+    });
+    toast.success("Dados de teste preenchidos!");
+  };
 
   const onSubmit = async (data: CertifierFormData) => {
     try {
@@ -113,6 +126,12 @@ export function CertifierForm({ onSuccess, initialData, certifierId }: Certifier
         />
 
         <div className="flex justify-end gap-4">
+          {settings.testMode && !certifierId && (
+            <Button type="button" variant="outline" onClick={fillTestData}>
+              <Beaker className="mr-2 h-4 w-4" />
+              Preencher com Dados de Teste
+            </Button>
+          )}
           <Button type="submit" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting ? "Salvando..." : certifierId ? "Atualizar" : "Cadastrar"}
           </Button>

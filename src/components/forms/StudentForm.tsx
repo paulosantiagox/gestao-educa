@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import { useSettings } from "@/contexts/SettingsContext";
+import { generateStudentData } from "@/lib/test-data";
+import { Beaker } from "lucide-react";
 
 const studentSchema = z.object({
   name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
@@ -32,6 +35,8 @@ interface StudentFormProps {
 }
 
 export function StudentForm({ onSuccess, initialData, studentId }: StudentFormProps) {
+  const { settings } = useSettings();
+  
   const form = useForm<StudentFormData>({
     resolver: zodResolver(studentSchema),
     defaultValues: initialData || {
@@ -50,6 +55,14 @@ export function StudentForm({ onSuccess, initialData, studentId }: StudentFormPr
       documents_link: "",
     },
   });
+
+  const fillTestData = () => {
+    const testData = generateStudentData();
+    Object.keys(testData).forEach((key) => {
+      form.setValue(key as keyof StudentFormData, testData[key as keyof typeof testData]);
+    });
+    toast.success("Dados de teste preenchidos!");
+  };
 
   const onSubmit = async (data: StudentFormData) => {
     try {
@@ -263,6 +276,12 @@ export function StudentForm({ onSuccess, initialData, studentId }: StudentFormPr
         </div>
 
         <div className="flex justify-end gap-4">
+          {settings.testMode && !studentId && (
+            <Button type="button" variant="outline" onClick={fillTestData}>
+              <Beaker className="mr-2 h-4 w-4" />
+              Preencher com Dados de Teste
+            </Button>
+          )}
           <Button type="submit" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting ? "Salvando..." : studentId ? "Atualizar Aluno" : "Cadastrar Aluno"}
           </Button>

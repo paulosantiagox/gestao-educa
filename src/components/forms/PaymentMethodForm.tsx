@@ -8,6 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import { useSettings } from "@/contexts/SettingsContext";
+import { generatePaymentMethodData } from "@/lib/test-data";
+import { Beaker } from "lucide-react";
 
 const paymentMethodSchema = z.object({
   name: z.string().min(2, "Nome deve ter no mínimo 2 caracteres"),
@@ -24,6 +27,8 @@ interface PaymentMethodFormProps {
 }
 
 export function PaymentMethodForm({ onSuccess, initialData, paymentMethodId }: PaymentMethodFormProps) {
+  const { settings } = useSettings();
+  
   const form = useForm<PaymentMethodFormData>({
     resolver: zodResolver(paymentMethodSchema),
     defaultValues: initialData || {
@@ -32,6 +37,14 @@ export function PaymentMethodForm({ onSuccess, initialData, paymentMethodId }: P
       active: true,
     },
   });
+
+  const fillTestData = () => {
+    const testData = generatePaymentMethodData();
+    Object.keys(testData).forEach((key) => {
+      form.setValue(key as keyof PaymentMethodFormData, testData[key as keyof typeof testData]);
+    });
+    toast.success("Dados de teste preenchidos!");
+  };
 
   const onSubmit = async (data: PaymentMethodFormData) => {
     try {
@@ -109,6 +122,12 @@ export function PaymentMethodForm({ onSuccess, initialData, paymentMethodId }: P
         />
 
         <div className="flex justify-end gap-4">
+          {settings.testMode && !paymentMethodId && (
+            <Button type="button" variant="outline" onClick={fillTestData}>
+              <Beaker className="mr-2 h-4 w-4" />
+              Preencher com Dados de Teste
+            </Button>
+          )}
           <Button type="submit" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting ? "Salvando..." : paymentMethodId ? "Atualizar" : "Cadastrar"}
           </Button>

@@ -9,6 +9,7 @@ import {
   FileCheck,
   LogOut,
   UserCog,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import {
   Sidebar,
@@ -60,6 +61,7 @@ const menuItems = [
     title: "Sistema",
     items: [
       { title: "Usuários", url: "/users", icon: UserCog },
+      { title: "Configurações", url: "/settings", icon: SettingsIcon },
     ],
   },
 ];
