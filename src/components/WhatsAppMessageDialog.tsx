@@ -52,9 +52,17 @@ export function WhatsAppMessageDialog({
     timeline += "📊 *RESUMO DO PROCESSO*\n";
     timeline += "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
 
-    const currentIndex = TIMELINE_STEPS.findIndex(s => s.status === cert.status);
+    // Filtrar etapas - remover certificado físico se o aluno não quiser
+    const filteredSteps = TIMELINE_STEPS.filter(step => {
+      if (step.status === "physical_certificate_sent" && !cert.wants_physical) {
+        return false;
+      }
+      return true;
+    });
 
-    TIMELINE_STEPS.forEach((step, index) => {
+    const currentIndex = filteredSteps.findIndex(s => s.status === cert.status);
+
+    filteredSteps.forEach((step, index) => {
       const dateValue = cert[step.field];
       const isCompleted = index < currentIndex || (index === currentIndex && dateValue);
       const isCurrent = index === currentIndex;

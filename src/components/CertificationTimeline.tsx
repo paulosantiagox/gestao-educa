@@ -106,10 +106,16 @@ export function CertificationTimeline({ currentStatus, certification, studentNam
 
   return (
     <div className="relative">
-      {TIMELINE_STEPS.map((step, index) => {
+      {TIMELINE_STEPS.filter(step => {
+        // Remove etapa do certificado físico se o aluno não quiser
+        if (step.status === "physical_certificate_sent" && !certification.wants_physical) {
+          return false;
+        }
+        return true;
+      }).map((step, index, filteredSteps) => {
         const state = getStepState(index);
         const stepDate = getStepDate(step, certification);
-        const isLast = index === TIMELINE_STEPS.length - 1;
+        const isLast = index === filteredSteps.length - 1;
 
         return (
           <div key={step.status} className="relative pb-8">
