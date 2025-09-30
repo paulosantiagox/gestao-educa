@@ -3,13 +3,22 @@ import { toZonedTime, fromZonedTime, formatInTimeZone } from "date-fns-tz";
 
 const SAO_PAULO_TZ = "America/Sao_Paulo";
 
-// Detecta se a string possui informação explícita de timezone
-const hasTZ = (s: string) => /Z$|[+-]\d{2}:\d{2}$/.test(s);
+// Detecta se a string possui informação explícita de timezone (offset somente)
+const hasOffsetTZ = (s: string) => /[+-]\d{2}:\d{2}$/.test(s);
 
 // Converte qualquer entrada para um Date em UTC, tratando strings SEM timezone como horário de São Paulo
 const parseToUTC = (date: string | Date): Date => {
   if (typeof date === "string") {
-    return hasTZ(date) ? parseISO(date) : fromZonedTime(date, SAO_PAULO_TZ);
+    // Se vier com offset explícito, confiar nele
+    if (hasOffsetTZ(date)) return parseISO(date);
+    // Caso comum no Postgres: "2025-09-30T16:55:53.000Z" vindo de TIMESTAMP (sem tz)
+    // Interpretamos como horário local de São Paulo e então convertemos para UTC
+    if (/Z$/.test(date)) {
+      const naive = date.replace(/Z$/, "");
+      return fromZonedTime(naive, SAO_PAULO_TZ);
+    }
+    // Sem info de TZ: tratar como horário de São Paulo
+    return fromZonedTime(date, SAO_PAULO_TZ);
   }
   return date;
 };

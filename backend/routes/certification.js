@@ -2,6 +2,36 @@ import express from 'express';
 import { pool } from '../db.js';
 import { requireAuth } from '../requireAuth.js';
 
+import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
+
+const SAO_PAULO_TZ = 'America/Sao_Paulo';
+const DATE_FIELDS = [
+  'created_at','updated_at',
+  'enrolled_at','welcomed_at','exam_taken_at','exam_result_at','documents_sent_at',
+  'requested_to_certifier_at','in_certification_at','digital_delivered_at',
+  'physical_shipping_at','physical_delivered_at','completed_at','under_review_at',
+  'exam_started_at','documents_requested_at','documents_under_review_at',
+  'certification_started_at','digital_certificate_sent_at','physical_certificate_sent_at'
+];
+
+function fixTimestampsSP(row) {
+  if (!row) return row;
+  const out = { ...row };
+  for (const key of DATE_FIELDS) {
+    const val = out[key];
+    if (!val) continue;
+    try {
+      // Reinterpreta o valor "Z" como horário local de SP e converte para UTC correto
+      const naive = formatInTimeZone(new Date(val), 'UTC', "yyyy-MM-dd HH:mm:ss.SSS");
+      const correctedUTC = fromZonedTime(naive, SAO_PAULO_TZ);
+      out[key] = formatInTimeZone(correctedUTC, SAO_PAULO_TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
+    } catch (e) {
+      // Mantém original em caso de erro
+    }
+  }
+  return out;
+}
+
 const router = express.Router();
 
 // GET /api/certification/student/:studentId - Busca processo de certificação
@@ -22,7 +52,7 @@ router.get('/student/:studentId', requireAuth, async (req, res) => {
       return res.status(404).json({ error: 'Processo de certificação não encontrado' });
     }
 
-    res.json(result.rows[0]);
+    res.json(fixTimestampsSP(result.rows[0]));
   } catch (error) {
     console.error('Error fetching certification:', error);
     res.status(500).json({ error: 'Erro ao buscar certificação' });
@@ -55,7 +85,7 @@ router.post('/', requireAuth, async (req, res) => {
       [student_id, certifier_id, wants_physical || false]
     );
 
-    res.status(201).json(result.rows[0]);
+    res.status(201).json(fixTimestampsSP(result.rows[0]));
   } catch (error) {
     console.error('Error creating certification:', error);
     res.status(500).json({ error: 'Erro ao criar processo de certificação' });
@@ -132,7 +162,7 @@ router.put('/:studentId/status', requireAuth, async (req, res) => {
 
     const result = await pool.query(updateQuery, params);
 
-    res.json(result.rows[0]);
+    res.json(fixTimestampsSP(result.rows[0]));
   } catch (error) {
     console.error('Error updating certification status:', error);
     res.status(500).json({ error: 'Erro ao atualizar status de certificação' });
@@ -166,7 +196,7 @@ router.put('/:studentId/update', requireAuth, async (req, res) => {
       return res.status(404).json({ error: 'Processo de certificação não encontrado' });
     }
 
-    res.json({ ok: true, data: result.rows[0] });
+    res.json({ ok: true, data: fixTimestampsSP(result.rows[0]) });
   } catch (error) {
     console.error('Error updating certification process:', error);
     res.status(500).json({ error: 'Erro ao atualizar processo de certificação' });
