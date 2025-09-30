@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { toSaoPaulo } from "@/lib/date-utils";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82ca9d', '#ffc658'];
 
@@ -108,7 +109,9 @@ const Dashboard = () => {
     const statusDate = cert[statusDateField];
     if (!statusDate) return false;
 
-    const daysSince = Math.floor((Date.now() - new Date(statusDate).getTime()) / (1000 * 60 * 60 * 24));
+    const startDate = toSaoPaulo(statusDate);
+    const now = toSaoPaulo(new Date());
+    const daysSince = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
     return daysSince >= sla.days_limit;
   });
 
@@ -321,7 +324,9 @@ const Dashboard = () => {
                   const sla = slaConfig.find((s: any) => s.status === cert.status);
                   const statusDateField = getStatusDateField(cert.status);
                   const statusDate = cert[statusDateField];
-                  const daysSince = Math.floor((Date.now() - new Date(statusDate).getTime()) / (1000 * 60 * 60 * 24));
+                  const startDate = toSaoPaulo(statusDate);
+                  const now = toSaoPaulo(new Date());
+                  const daysSince = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
                   const daysDelayed = daysSince - (sla?.days_limit || 0);
 
                   return (

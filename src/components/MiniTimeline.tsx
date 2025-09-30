@@ -1,5 +1,6 @@
 import { CheckCircle2, Circle, Clock, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toSaoPaulo } from "@/lib/date-utils";
 
 interface MiniTimelineProps {
   currentStatus: string;
@@ -48,8 +49,8 @@ const checkSLA = (certification: any, currentStatus: string, slaConfig?: any[]) 
   const statusDate = dateMap[currentStatus];
   if (!statusDate) return null;
   
-  const startDate = new Date(statusDate);
-  const now = new Date();
+  const startDate = toSaoPaulo(statusDate);
+  const now = toSaoPaulo(new Date());
   const daysPassed = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
   
   const daysRemaining = stepConfig.days_limit - daysPassed;

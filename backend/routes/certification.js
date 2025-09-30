@@ -89,34 +89,34 @@ router.put('/:studentId/status', requireAuth, async (req, res) => {
 
     const current = currentResult.rows[0];
 
-    // Monta a query de atualização baseada no status e nas datas existentes
+    // Monta a query de atualização - SEMPRE atualiza a data do status atual
     let updateQuery = 'UPDATE certification_process SET status = $1, updated_at = CURRENT_TIMESTAMP';
     const params = [status];
     let paramIndex = 2;
 
-    // Atualiza a data específica apenas se ainda não existir
-    if (status === 'welcome' && !current.created_at) {
-      // welcome usa created_at como data de referência
+    // SEMPRE atualiza a data específica quando o status for mudado
+    if (status === 'welcome') {
+      // welcome usa created_at como data de referência (não atualiza created_at)
     }
-    if (status === 'exam_in_progress' && !current.exam_started_at) {
+    if (status === 'exam_in_progress') {
       updateQuery += `, exam_started_at = CURRENT_TIMESTAMP`;
     }
-    if (status === 'documents_requested' && !current.documents_requested_at) {
+    if (status === 'documents_requested') {
       updateQuery += `, documents_requested_at = CURRENT_TIMESTAMP`;
     }
-    if (status === 'documents_under_review' && !current.documents_under_review_at) {
+    if (status === 'documents_under_review') {
       updateQuery += `, documents_under_review_at = CURRENT_TIMESTAMP`;
     }
-    if (status === 'certification_started' && !current.certification_started_at) {
+    if (status === 'certification_started') {
       updateQuery += `, certification_started_at = CURRENT_TIMESTAMP`;
     }
-    if (status === 'digital_certificate_sent' && !current.digital_certificate_sent_at) {
+    if (status === 'digital_certificate_sent') {
       updateQuery += `, digital_certificate_sent_at = CURRENT_TIMESTAMP`;
     }
-    if (status === 'physical_certificate_sent' && !current.physical_certificate_sent_at) {
+    if (status === 'physical_certificate_sent') {
       updateQuery += `, physical_certificate_sent_at = CURRENT_TIMESTAMP`;
     }
-    if (status === 'completed' && !current.completed_at) {
+    if (status === 'completed') {
       updateQuery += `, completed_at = CURRENT_TIMESTAMP`;
     }
 

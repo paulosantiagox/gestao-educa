@@ -1,5 +1,6 @@
 import { CheckCircle2, Circle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatDateTimeSP } from "@/lib/date-utils";
 
 interface TimelineStep {
   status: string;
@@ -55,18 +56,6 @@ const TIMELINE_STEPS: TimelineStep[] = [
     description: "Processo de certificação finalizado com sucesso",
   },
 ];
-
-const formatDateTime = (date?: string) => {
-  if (!date) return null;
-  const d = new Date(date);
-  return d.toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
 
 const getStepDate = (step: TimelineStep, certification: any) => {
   const dateMap: Record<string, string> = {
@@ -148,7 +137,7 @@ export function CertificationTimeline({ currentStatus, certification }: Certific
                   </h4>
                   {stepDate && (
                     <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-                      {formatDateTime(stepDate)}
+                      {formatDateTimeSP(stepDate)}
                     </span>
                   )}
                 </div>

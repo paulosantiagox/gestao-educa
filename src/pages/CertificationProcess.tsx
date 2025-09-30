@@ -18,6 +18,7 @@ import { CertificationEditForm } from "@/components/forms/CertificationEditForm"
 import { CertificationTimeline } from "@/components/CertificationTimeline";
 import { MiniTimeline } from "@/components/MiniTimeline";
 import { SLAConfigForm } from "@/components/forms/SLAConfigForm";
+import { formatDateSP, formatDateTimeSP } from "@/lib/date-utils";
 
 const CertificationProcess = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -194,8 +195,7 @@ const CertificationProcess = () => {
   };
 
   const formatDate = (date?: string) => {
-    if (!date) return "-";
-    return new Date(date).toLocaleDateString('pt-BR');
+    return formatDateSP(date);
   };
 
   const exportToCSV = () => {
