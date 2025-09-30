@@ -36,7 +36,7 @@ export function CertificationForm({ onSuccess, preSelectedStudentId }: Certifica
     queryKey: ['students-for-certification'],
     queryFn: async () => {
       const result = await api.getStudents({});
-      return result.ok ? (result.data || []) : [];
+      return result.ok ? ((result.data as any)?.students || []) : [];
     },
   });
 
