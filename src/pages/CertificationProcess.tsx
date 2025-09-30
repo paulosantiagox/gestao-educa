@@ -66,8 +66,8 @@ const CertificationProcess = () => {
     },
   });
 
-  // Filtrar apenas alunos com processo iniciado para a tabela
-  const students = allStudents.filter((student: any) => student.certification !== null);
+  // Mostrar todos os alunos (com e sem processo de certificação)
+  const students = allStudents;
 
   const deleteMutation = useMutation({
     mutationFn: (studentId: number) => api.deleteCertificationProcess(studentId),
