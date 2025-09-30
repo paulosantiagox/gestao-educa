@@ -32,11 +32,31 @@ export function CertificationForm({ onSuccess, preSelectedStudentId }: Certifica
     },
   });
 
-  const { data: students = [] } = useQuery({
-    queryKey: ['students-for-certification'],
+  // Buscar alunos sem processo de certificação
+  const { data: studentsWithoutCertification = [] } = useQuery({
+    queryKey: ['students-without-certification'],
     queryFn: async () => {
       const result = await api.getStudents({});
-      return result.ok ? ((result.data as any)?.students || []) : [];
+      if (!result.ok) return [];
+      
+      const studentsData = ((result.data as any)?.students || []);
+      
+      // Para cada aluno, verificar se já tem certificação
+      const studentsFiltered = await Promise.all(
+        studentsData.map(async (student: any) => {
+          try {
+            const certResult = await api.getCertificationProcess(student.id);
+            // Retornar null se já tem certificação
+            return certResult.ok ? null : student;
+          } catch {
+            // Se der erro (404), o aluno não tem certificação
+            return student;
+          }
+        })
+      );
+      
+      // Filtrar nulls (alunos que já têm certificação)
+      return studentsFiltered.filter(s => s !== null);
     },
   });
 
@@ -48,7 +68,21 @@ export function CertificationForm({ onSuccess, preSelectedStudentId }: Certifica
     },
   });
 
-  const studentsOptions = Array.isArray(students) ? students : (students as any)?.students ?? [];
+  // Se tem um aluno pré-selecionado, buscar esse aluno específico
+  const { data: preSelectedStudent } = useQuery({
+    queryKey: ['student', preSelectedStudentId],
+    queryFn: async () => {
+      if (!preSelectedStudentId) return null;
+      const result = await api.getStudent(preSelectedStudentId);
+      return result.ok ? result.data : null;
+    },
+    enabled: !!preSelectedStudentId,
+  });
+
+  // Combinar alunos disponíveis com o pré-selecionado (caso ele já tenha certificação)
+  const studentsOptions = preSelectedStudentId && preSelectedStudent
+    ? [preSelectedStudent]
+    : studentsWithoutCertification;
 
   const onSubmit = async (data: CertificationFormData) => {
     try {

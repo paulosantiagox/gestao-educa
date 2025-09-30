@@ -91,6 +91,14 @@ export function generateCertifierData() {
   };
 }
 
+const avatarUrls = [
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Bailey",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Max",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Luna",
+];
+
 export function generateUserData() {
   const firstName = randomItem(firstNames);
   const lastName = randomItem(lastNames);
@@ -101,6 +109,7 @@ export function generateUserData() {
     email: generateEmail(name),
     password: `Teste@${randomNumber(1000, 9999)}`,
     role: randomItem(['admin', 'user']),
+    avatar: avatarUrls[Math.floor(Math.random() * avatarUrls.length)],
   };
 }
 

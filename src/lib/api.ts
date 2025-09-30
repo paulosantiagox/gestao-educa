@@ -247,10 +247,16 @@ class ApiClient {
     return this.request("/api/users");
   }
 
-  async createUser(data: { email: string; name: string; password: string; role?: string }): Promise<ApiResponse<{ user: User }>> {
+  async createUser(data: { email: string; name: string; password: string; role?: string; avatar?: string }): Promise<ApiResponse<{ user: User }>> {
     return this.request("/api/users", {
       method: "POST",
       body: JSON.stringify(data),
+    });
+  }
+
+  async deleteUser(id: string): Promise<ApiResponse<any>> {
+    return this.request(`/api/users/${id}`, {
+      method: "DELETE",
     });
   }
 }

@@ -14,7 +14,7 @@ const studentSchema = z.object({
   name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
   email: z.string().email("Email inválido"),
   phone: z.string().optional(),
-  cpf: z.string().min(11, "CPF inválido").optional(),
+  cpf: z.string().optional(),
   birth_date: z.string().optional(),
   zip_code: z.string().optional(),
   street: z.string().optional(),
@@ -22,7 +22,7 @@ const studentSchema = z.object({
   complement: z.string().optional(),
   neighborhood: z.string().optional(),
   city: z.string().optional(),
-  state: z.string().max(2, "Estado deve ter 2 caracteres").optional(),
+  state: z.string().optional(),
   documents_link: z.string().url("Link inválido").optional().or(z.literal("")),
 });
 

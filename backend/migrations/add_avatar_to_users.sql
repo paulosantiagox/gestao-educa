@@ -1,6 +1,8 @@
--- Adiciona campo avatar_url na tabela users
-ALTER TABLE users 
-ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500);
+-- Migration: Add avatar field to users table
+-- This migration adds an avatar column to store user profile picture URLs
 
--- Atualiza a trigger para incluir o novo campo
--- (não precisa alterar a trigger, ela já pega todos os campos automaticamente)
+-- Add avatar column to users table
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT;
+
+-- Add comment for documentation
+COMMENT ON COLUMN users.avatar IS 'URL of user profile picture/avatar';

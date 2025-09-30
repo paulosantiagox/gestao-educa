@@ -28,12 +28,13 @@ const userSchema = z.object({
   email: z.string().email("Email inválido").max(255),
   password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres").max(100),
   role: z.enum(["admin", "user"]).default("user"),
+  avatar: z.string().url("URL inválida").optional().or(z.literal("")),
 });
 
 type UserFormValues = z.infer<typeof userSchema>;
 
 interface UserFormProps {
-  onSubmit: (data: { email: string; name: string; password: string; role: string }) => void;
+  onSubmit: (data: { email: string; name: string; password: string; role: string; avatar?: string }) => void;
   isLoading?: boolean;
 }
 
@@ -47,6 +48,7 @@ export function UserForm({ onSubmit, isLoading }: UserFormProps) {
       email: "",
       password: "",
       role: "user",
+      avatar: "",
     },
   });
 
@@ -60,7 +62,7 @@ export function UserForm({ onSubmit, isLoading }: UserFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit((data) => onSubmit(data as { email: string; name: string; password: string; role: string }))} className="space-y-4">
+      <form onSubmit={form.handleSubmit((data) => onSubmit(data as { email: string; name: string; password: string; role: string; avatar?: string }))} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
@@ -128,6 +130,24 @@ export function UserForm({ onSubmit, isLoading }: UserFormProps) {
                   <SelectItem value="admin">Administrador</SelectItem>
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="avatar"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>URL da Foto (Avatar)</FormLabel>
+              <FormControl>
+                <Input
+                  type="url"
+                  placeholder="https://exemplo.com/foto.jpg"
+                  {...field}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

@@ -104,19 +104,20 @@ router.put('/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
     const {
       sale_code, payer_name, payer_email, payer_phone, payer_cpf,
-      total_amount, payment_method_id, sale_date
+      total_amount, paid_amount, payment_method_id, payment_status, sale_date
     } = req.body;
 
     const result = await pool.query(
       `UPDATE sales SET
         sale_code = $1, payer_name = $2, payer_email = $3, payer_phone = $4,
-        payer_cpf = $5, total_amount = $6, payment_method_id = $7, sale_date = $8,
+        payer_cpf = $5, total_amount = $6, paid_amount = $7, payment_method_id = $8, 
+        payment_status = $9, sale_date = $10,
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $9
+      WHERE id = $11
       RETURNING *`,
       [
         sale_code, payer_name, payer_email, payer_phone, payer_cpf,
-        total_amount, payment_method_id, sale_date,
+        total_amount, paid_amount || 0, payment_method_id, payment_status || 'pending', sale_date,
         id
       ]
     );

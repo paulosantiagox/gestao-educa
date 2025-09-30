@@ -35,7 +35,7 @@ const CertificationProcess = () => {
   });
 
   // Buscar todos os alunos com seus processos de certificação
-  const { data: students = [], isLoading } = useQuery({
+  const { data: allStudents = [], isLoading } = useQuery({
     queryKey: ["students-with-certification", searchTerm],
     queryFn: async () => {
       const result = await api.getStudents({ search: searchTerm });
@@ -64,6 +64,9 @@ const CertificationProcess = () => {
       return studentsWithCertification;
     },
   });
+
+  // Filtrar apenas alunos com processo iniciado para a tabela
+  const students = allStudents.filter((student: any) => student.certification !== null);
 
   const handleViewDetails = (student: any) => {
     setSelectedProcess(student);
@@ -157,8 +160,16 @@ const CertificationProcess = () => {
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Iniciar Processo de Certificação</DialogTitle>
+                <DialogDescription>
+                  {selectedProcess?.studentName && (
+                    <span className="text-sm">Aluno: <strong>{selectedProcess.studentName}</strong></span>
+                  )}
+                </DialogDescription>
               </DialogHeader>
-              <CertificationForm onSuccess={handleCloseCreateDialog} />
+              <CertificationForm 
+                onSuccess={handleCloseCreateDialog}
+                preSelectedStudentId={selectedProcess?.studentId}
+              />
             </DialogContent>
           </Dialog>
         </div>
