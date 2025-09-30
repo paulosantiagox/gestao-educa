@@ -172,7 +172,7 @@ const Sales = () => {
                   <TableRow key={sale.id}>
                     <TableCell className="font-medium">{sale.sale_code}</TableCell>
                     <TableCell>{sale.payer_name}</TableCell>
-                    <TableCell>{formatDate(sale.sale_date || sale.created_at)}</TableCell>
+                    <TableCell>{formatDate(sale.created_at)}</TableCell>
                     <TableCell>{formatCurrency(sale.total_amount)}</TableCell>
                     <TableCell>{formatCurrency(sale.paid_amount)}</TableCell>
                     <TableCell>{getStatusBadge(sale.payment_status)}</TableCell>
