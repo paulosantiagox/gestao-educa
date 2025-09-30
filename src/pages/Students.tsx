@@ -21,7 +21,7 @@ const Students = () => {
     queryKey: ["students", searchTerm],
     queryFn: async () => {
       const result = await api.getStudents({ search: searchTerm });
-      return result.ok ? (result.data || []) : [];
+      return result.ok ? ((result.data as any)?.students || []) : [];
     },
   });
 
