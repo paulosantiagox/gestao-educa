@@ -7,7 +7,7 @@ interface User {
   name: string;
   email: string;
   role?: string;
-  avatar_url?: string;
+  avatar?: string;
 }
 
 interface AuthContextType {
@@ -29,21 +29,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await api.getMe();
       if (response.ok && response.data) {
-        // Se /me retornar dados parciais, complementa com localStorage
-        const storedUser = localStorage.getItem('user');
-        const fullUser = storedUser ? JSON.parse(storedUser) : {};
-        
         let userData: any = response.data;
+        
+        // O backend pode retornar { user: {...} } ou diretamente os dados
         if (typeof userData === 'object' && userData !== null) {
-          if ('me' in userData && userData.me) {
-            userData = userData.me;
-          } else if ('user' in userData && userData.user) {
+          if ('user' in userData && userData.user) {
             userData = userData.user;
           }
         }
         
-        // Mescla dados do /me com dados armazenados
-        setUser({ ...fullUser, ...userData } as User);
+        setUser(userData as User);
+        // Salva no localStorage para persistir
+        localStorage.setItem('user', JSON.stringify(userData));
       } else {
         setUser(null);
         localStorage.removeItem('user');
