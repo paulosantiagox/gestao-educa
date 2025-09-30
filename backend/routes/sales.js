@@ -17,10 +17,16 @@ router.get('/', requireAuth, async (req, res) => {
        FROM sales s
        LEFT JOIN payment_methods pm ON s.payment_method_id = pm.id
        WHERE s.sale_code ILIKE $1 OR s.payer_name ILIKE $1 OR s.payer_email ILIKE $1
-       ORDER BY s.created_at DESC, s.sale_date DESC
+       ORDER BY s.created_at DESC
        LIMIT $2 OFFSET $3`,
       [searchQuery, limit, offset]
     );
+    
+    console.log('📋 Sales query result (primeiras 3):', result.rows.slice(0, 3).map(s => ({ 
+      id: s.id, 
+      code: s.sale_code, 
+      created_at: s.created_at 
+    })));
 
     const countResult = await pool.query(
       `SELECT COUNT(*) FROM sales 
