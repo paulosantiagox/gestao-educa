@@ -35,8 +35,6 @@ import { UserForm } from "@/components/forms/UserForm";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
-import { useAuth } from "@/contexts/AuthContext";
-
 export default function Users() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -45,7 +43,6 @@ export default function Users() {
   const [userToEdit, setUserToEdit] = useState<any>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { user: currentUser, refreshUser } = useAuth();
 
   const { data: usersData, isLoading } = useQuery({
     queryKey: ["users"],
@@ -79,16 +76,10 @@ export default function Users() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: { email: string; name: string; role?: string; avatar?: string } }) =>
       api.updateUser(id, data),
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       setEditDialogOpen(false);
       setUserToEdit(null);
-      
-      // Se o usuário editado for o usuário logado, atualiza o contexto
-      if (currentUser && currentUser.id.toString() === variables.id) {
-        refreshUser();
-      }
-      
       toast({
         title: "Usuário atualizado com sucesso!",
         description: "Os dados do usuário foram atualizados.",

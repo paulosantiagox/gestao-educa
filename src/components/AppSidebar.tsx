@@ -138,7 +138,7 @@ const AppSidebar = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="w-full justify-start gap-2 h-auto py-3">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.avatar} alt={user.name} />
+                  <AvatarImage src={user.avatar_url} alt={user.name} />
                   <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                     {getInitials(user.name)}
                   </AvatarFallback>
@@ -163,7 +163,7 @@ const AppSidebar = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="w-full h-12">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.avatar} alt={user.name} />
+                  <AvatarImage src={user.avatar_url} alt={user.name} />
                   <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                     {getInitials(user.name)}
                   </AvatarFallback>
