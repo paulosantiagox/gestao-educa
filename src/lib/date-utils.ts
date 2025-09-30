@@ -4,14 +4,14 @@ import { toZonedTime, fromZonedTime, formatInTimeZone } from "date-fns-tz";
 const SAO_PAULO_TZ = "America/Sao_Paulo";
 
 /**
- * Formata uma data para o timezone de São Paulo
+ * Formata uma data para o timezone de São Paulo com segundos
  */
 export const formatDateTimeSP = (date: string | Date | null | undefined): string => {
   if (!date) return "-";
   
   try {
     const dateObj = typeof date === "string" ? parseISO(date) : date;
-    return formatInTimeZone(dateObj, SAO_PAULO_TZ, "dd/MM/yyyy HH:mm");
+    return formatInTimeZone(dateObj, SAO_PAULO_TZ, "dd/MM/yyyy HH:mm:ss");
   } catch (error) {
     console.error("Erro ao formatar data:", error);
     return "-";
