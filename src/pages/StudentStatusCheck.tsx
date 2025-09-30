@@ -44,11 +44,11 @@ const maskData = (data: string, type: 'name' | 'cpf' | 'email' | 'phone' = 'name
 
   const TIMELINE_STEPS = [
     { status: "welcome", label: "🎉 Boas-vindas", field: "created_at" },
-    { status: "exam_in_progress", label: "📝 Prova Iniciada", field: "exam_started_at" },
+    { status: "exam_in_progress", label: "📝 Prova Concluída", field: "exam_started_at" },
     { status: "documents_requested", label: "📄 Documentos Solicitados", field: "documents_requested_at" },
     { status: "documents_under_review", label: "🔍 Documentos em Análise", field: "documents_under_review_at" },
     { status: "certification_started", label: "⚙️ Certificação Iniciada", field: "certification_started_at" },
-    { status: "digital_certificate_sent", label: "📧 Certificado Digital Enviado", field: "digital_certificate_sent_at" },
+    { status: "digital_certificate_sent", label: "📧 Certificado Digital", field: "digital_certificate_sent_at" },
     { status: "physical_certificate_sent", label: "📦 Certificado Físico Enviado", field: "physical_certificate_sent_at" },
     { status: "completed", label: "🎓 Concluído", field: "completed_at" },
   ];
