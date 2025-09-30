@@ -26,7 +26,7 @@ import { toast } from "sonner";
 const userSchema = z.object({
   name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres").max(100),
   email: z.string().email("Email inválido").max(255),
-  password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres").max(100),
+  password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres").max(100).optional(),
   role: z.enum(["admin", "user"]).default("user"),
   avatar: z.string().url("URL inválida").optional().or(z.literal("")),
 });
@@ -34,16 +34,18 @@ const userSchema = z.object({
 type UserFormValues = z.infer<typeof userSchema>;
 
 interface UserFormProps {
-  onSubmit: (data: { email: string; name: string; password: string; role: string; avatar?: string }) => void;
+  onSubmit: (data: { email: string; name: string; password?: string; role: string; avatar?: string }) => void;
   isLoading?: boolean;
+  initialData?: Partial<UserFormValues>;
+  isEditing?: boolean;
 }
 
-export function UserForm({ onSubmit, isLoading }: UserFormProps) {
+export function UserForm({ onSubmit, isLoading, initialData, isEditing }: UserFormProps) {
   const { settings } = useSettings();
   
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
-    defaultValues: {
+    defaultValues: initialData || {
       name: "",
       email: "",
       password: "",
@@ -62,7 +64,7 @@ export function UserForm({ onSubmit, isLoading }: UserFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit((data) => onSubmit(data as { email: string; name: string; password: string; role: string; avatar?: string }))} className="space-y-4">
+      <form onSubmit={form.handleSubmit((data) => onSubmit(data as { email: string; name: string; password?: string; role: string; avatar?: string }))} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
@@ -95,23 +97,25 @@ export function UserForm({ onSubmit, isLoading }: UserFormProps) {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Senha</FormLabel>
-              <FormControl>
-                <Input
-                  type="password"
-                  placeholder="Mínimo 6 caracteres"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {!isEditing && (
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Senha</FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    placeholder="Mínimo 6 caracteres"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         <FormField
           control={form.control}
@@ -154,7 +158,7 @@ export function UserForm({ onSubmit, isLoading }: UserFormProps) {
         />
 
         <div className="flex justify-end gap-2">
-          {settings.testMode && (
+          {settings.testMode && !isEditing && (
             <Button type="button" variant="outline" onClick={fillTestData}>
               <Beaker className="mr-2 h-4 w-4" />
               Preencher com Dados de Teste
@@ -162,7 +166,7 @@ export function UserForm({ onSubmit, isLoading }: UserFormProps) {
           )}
           <Button type="submit" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Criar Usuário
+            {isEditing ? "Atualizar Usuário" : "Criar Usuário"}
           </Button>
         </div>
       </form>

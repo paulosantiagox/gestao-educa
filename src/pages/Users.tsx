@@ -30,15 +30,17 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UserPlus, Shield, User as UserIcon, Trash2 } from "lucide-react";
+import { UserPlus, Shield, User as UserIcon, Trash2, Edit } from "lucide-react";
 import { UserForm } from "@/components/forms/UserForm";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
 export default function Users() {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<any>(null);
+  const [userToEdit, setUserToEdit] = useState<any>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -71,6 +73,27 @@ export default function Users() {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { email: string; name: string; role?: string; avatar?: string } }) =>
+      api.updateUser(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      setEditDialogOpen(false);
+      setUserToEdit(null);
+      toast({
+        title: "Usuário atualizado com sucesso!",
+        description: "Os dados do usuário foram atualizados.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao atualizar usuário",
+        description: error.message || "Ocorreu um erro ao atualizar o usuário.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.deleteUser(id),
     onSuccess: () => {
@@ -90,6 +113,11 @@ export default function Users() {
       });
     },
   });
+
+  const handleEditUser = (user: any) => {
+    setUserToEdit(user);
+    setEditDialogOpen(true);
+  };
 
   const handleDeleteUser = (user: any) => {
     setUserToDelete(user);
@@ -154,7 +182,11 @@ export default function Users() {
               </DialogDescription>
             </DialogHeader>
             <UserForm
-              onSubmit={(data) => createMutation.mutate(data)}
+              onSubmit={(data) => {
+                if (data.password) {
+                  createMutation.mutate({ ...data, password: data.password });
+                }
+              }}
               isLoading={createMutation.isPending}
             />
           </DialogContent>
@@ -203,14 +235,23 @@ export default function Users() {
                     {format(new Date(user.created_at), "dd/MM/yyyy")}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteUser(user)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditUser(user)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteUser(user)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -224,6 +265,33 @@ export default function Users() {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Usuário</DialogTitle>
+            <DialogDescription>
+              Atualize os dados do usuário
+            </DialogDescription>
+          </DialogHeader>
+          {userToEdit && (
+            <UserForm
+              onSubmit={(data) => {
+                const { password, ...userData } = data;
+                updateMutation.mutate({ id: userToEdit.id, data: userData });
+              }}
+              isLoading={updateMutation.isPending}
+              initialData={{
+                name: userToEdit.name,
+                email: userToEdit.email,
+                role: userToEdit.role,
+                avatar: userToEdit.avatar || "",
+              }}
+              isEditing={true}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>

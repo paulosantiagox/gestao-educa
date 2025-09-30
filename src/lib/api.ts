@@ -254,6 +254,13 @@ class ApiClient {
     });
   }
 
+  async updateUser(id: string, data: { email: string; name: string; role?: string; avatar?: string }): Promise<ApiResponse<{ user: User }>> {
+    return this.request(`/api/users/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
   async deleteUser(id: string): Promise<ApiResponse<any>> {
     return this.request(`/api/users/${id}`, {
       method: "DELETE",

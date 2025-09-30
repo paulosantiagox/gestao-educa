@@ -31,6 +31,35 @@ router.get("/", requireAuth, async (_req, res) => {
   res.json({ ok: true, users: rows });
 });
 
+// Atualizar usuário
+router.put("/:id", requireAuth, async (req, res) => {
+  const { id } = req.params;
+  const { name, email, role, avatar } = req.body || {};
+  
+  if (!name || !email) {
+    return res.status(400).json({ error: "missing_fields" });
+  }
+  
+  try {
+    const { rows } = await pool.query(
+      "UPDATE users SET name = $1, email = $2, role = $3, avatar = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $5 RETURNING id, email, name, role, avatar",
+      [name, email, role || "user", avatar || null, id]
+    );
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "user_not_found" });
+    }
+    
+    res.json({ ok: true, user: rows[0] });
+  } catch (e) {
+    if (e.code === "23505") {
+      return res.status(409).json({ error: "email_exists" });
+    }
+    console.error("Error updating user:", e);
+    res.status(500).json({ error: "server_error" });
+  }
+});
+
 // Deletar usuário
 router.delete("/:id", requireAuth, async (req, res) => {
   const { id } = req.params;
