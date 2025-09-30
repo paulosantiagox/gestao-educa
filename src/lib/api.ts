@@ -28,7 +28,11 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     try {
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      const url = `${this.baseUrl}${endpoint}`;
+      console.log('🌐 [Mobile Debug] Fazendo request para:', url);
+      console.log('🌐 [Mobile Debug] Credentials:', 'include');
+      
+      const response = await fetch(url, {
         ...options,
         headers: {
           'Content-Type': 'application/json',
@@ -37,22 +41,28 @@ class ApiClient {
         credentials: 'include', // Para enviar cookies (JWT)
       });
 
+      console.log('🌐 [Mobile Debug] Response status:', response.status);
+      console.log('🌐 [Mobile Debug] Response headers:', Object.fromEntries(response.headers.entries()));
+
       // Verificar se a resposta é JSON válida
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
-        console.error('API returned non-JSON response:', await response.text());
+        const text = await response.text();
+        console.error('❌ [Mobile Debug] API returned non-JSON response:', text);
         return { ok: false, error: 'Erro no servidor - resposta inválida' };
       }
 
       const data = await response.json();
+      console.log('🌐 [Mobile Debug] Response data:', data);
 
       if (!response.ok) {
+        console.error('❌ [Mobile Debug] Response not ok:', data.error);
         return { ok: false, error: data.error || 'Erro desconhecido' };
       }
 
       return { ok: true, data };
     } catch (error) {
-      console.error('API Error:', error);
+      console.error('❌ [Mobile Debug] API Error:', error);
       return { ok: false, error: 'Erro de conexão com o servidor' };
     }
   }
