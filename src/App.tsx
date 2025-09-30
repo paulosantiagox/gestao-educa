@@ -21,6 +21,7 @@ import Users from "./pages/Users";
 import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import StudentStatusCheck from "./pages/StudentStatusCheck";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,14 @@ const App = () => (
                 element={
                   <PublicRoute>
                     <Auth />
+                  </PublicRoute>
+                } 
+              />
+              <Route 
+                path="/consultar-aluno" 
+                element={
+                  <PublicRoute>
+                    <StudentStatusCheck />
                   </PublicRoute>
                 } 
               />

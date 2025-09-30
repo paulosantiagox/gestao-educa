@@ -34,6 +34,56 @@ function fixTimestampsSP(row) {
 
 const router = express.Router();
 
+// POST /api/certification/check-by-cpf - Busca processo por CPF (rota pública)
+router.post('/check-by-cpf', async (req, res) => {
+  try {
+    const { cpf } = req.body;
+    
+    if (!cpf) {
+      return res.status(400).json({ error: 'CPF é obrigatório' });
+    }
+
+    // Buscar aluno por CPF
+    const studentResult = await pool.query(
+      'SELECT * FROM students WHERE cpf = $1',
+      [cpf.replace(/\D/g, '')]
+    );
+
+    if (studentResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Aluno não encontrado' });
+    }
+
+    const student = studentResult.rows[0];
+
+    // Buscar processo de certificação
+    const certResult = await pool.query(
+      `SELECT cp.*, c.name as certifier_name
+       FROM certification_process cp
+       LEFT JOIN certifiers c ON cp.certifier_id = c.id
+       WHERE cp.student_id = $1`,
+      [student.id]
+    );
+
+    if (certResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Processo de certificação não encontrado' });
+    }
+
+    res.json({
+      student: {
+        id: student.id,
+        name: student.name,
+        email: student.email,
+        phone: student.phone,
+        cpf: student.cpf
+      },
+      certification: fixTimestampsSP(certResult.rows[0])
+    });
+  } catch (error) {
+    console.error('Error checking certification by CPF:', error);
+    res.status(500).json({ error: 'Erro ao buscar certificação' });
+  }
+});
+
 // GET /api/certification/student/:studentId - Busca processo de certificação
 router.get('/student/:studentId', requireAuth, async (req, res) => {
   try {
