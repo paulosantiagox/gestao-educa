@@ -133,11 +133,20 @@ router.put('/:studentId/status', requireAuth, async (req, res) => {
   }
 });
 
-// PUT /api/certification/:studentId - Atualizar dados do processo de certificação
-router.put('/:studentId', requireAuth, async (req, res) => {
+// PUT /api/certification/:studentId/update - Atualizar dados do processo de certificação
+router.put('/:studentId/update', requireAuth, async (req, res) => {
   try {
     const { studentId } = req.params;
     const { certifier_id, wants_physical } = req.body;
+
+    // Validação dos dados
+    if (!certifier_id || isNaN(parseInt(certifier_id))) {
+      return res.status(400).json({ error: 'ID da certificadora é obrigatório e deve ser um número válido' });
+    }
+
+    if (typeof wants_physical !== 'boolean') {
+      return res.status(400).json({ error: 'Campo wants_physical deve ser um boolean' });
+    }
 
     const result = await pool.query(
       `UPDATE certification_process 

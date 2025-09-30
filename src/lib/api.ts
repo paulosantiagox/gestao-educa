@@ -219,7 +219,7 @@ class ApiClient {
   }
 
   async updateCertificationProcess(studentId: number, data: any) {
-    return this.request(`/api/certification/${studentId}`, {
+    return this.request(`/api/certification/${studentId}/update`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
