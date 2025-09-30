@@ -167,7 +167,7 @@ export default function StudentStatusCheck() {
 
     timeline += "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
     timeline += "🔍 *Consulte seu status a qualquer momento:*\n";
-    timeline += "https://sistema-educa.lovable.app/consultar-aluno\n\n";
+    timeline += "https://ejaeducabrasil.com/consultar-aluno\n\n";
     timeline += "━━━━━━━━━━━━━━━━━━━━━━━━━\n";
     
     return timeline;
