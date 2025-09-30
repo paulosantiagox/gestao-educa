@@ -211,6 +211,13 @@ class ApiClient {
     });
   }
 
+  async updateCertificationProcess(studentId: number, data: any) {
+    return this.request(`/api/certification/${studentId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
   // CERTIFICATION SLA
   async getCertificationSLA() {
     return this.request<any[]>('/api/certification-sla');

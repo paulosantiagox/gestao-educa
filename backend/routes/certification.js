@@ -133,4 +133,29 @@ router.put('/:studentId/status', requireAuth, async (req, res) => {
   }
 });
 
+// PUT /api/certification/:studentId - Atualizar dados do processo de certificação
+router.put('/:studentId', requireAuth, async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const { certifier_id, wants_physical } = req.body;
+
+    const result = await pool.query(
+      `UPDATE certification_process 
+       SET certifier_id = $1, wants_physical = $2, updated_at = CURRENT_TIMESTAMP
+       WHERE student_id = $3
+       RETURNING *`,
+      [certifier_id, wants_physical, studentId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Processo de certificação não encontrado' });
+    }
+
+    res.json({ ok: true, data: result.rows[0] });
+  } catch (error) {
+    console.error('Error updating certification process:', error);
+    res.status(500).json({ error: 'Erro ao atualizar processo de certificação' });
+  }
+});
+
 export default router;

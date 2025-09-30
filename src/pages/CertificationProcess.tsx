@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Search, Eye, FileCheck, Settings } from "lucide-react";
+import { Plus, Search, Eye, FileCheck, Settings, Edit } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { CertificationForm } from "@/components/forms/CertificationForm";
 import { CertificationStatusUpdate } from "@/components/forms/CertificationStatusUpdate";
+import { CertificationEditForm } from "@/components/forms/CertificationEditForm";
 import { CertificationTimeline } from "@/components/CertificationTimeline";
 import { MiniTimeline } from "@/components/MiniTimeline";
 import { SLAConfigForm } from "@/components/forms/SLAConfigForm";
@@ -20,6 +21,7 @@ const CertificationProcess = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedProcess, setSelectedProcess] = useState<any>(null);
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSLADialogOpen, setIsSLADialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
@@ -72,6 +74,11 @@ const CertificationProcess = () => {
     setIsStatusDialogOpen(true);
   };
 
+  const handleEditProcess = (student: any) => {
+    setSelectedProcess(student);
+    setIsEditDialogOpen(true);
+  };
+
   const handleCloseCreateDialog = () => {
     setIsCreateDialogOpen(false);
     queryClient.invalidateQueries({ queryKey: ["students-with-certification"] });
@@ -79,6 +86,12 @@ const CertificationProcess = () => {
 
   const handleCloseStatusDialog = () => {
     setIsStatusDialogOpen(false);
+    setSelectedProcess(null);
+    queryClient.invalidateQueries({ queryKey: ["students-with-certification"] });
+  };
+
+  const handleCloseEditDialog = () => {
+    setIsEditDialogOpen(false);
     setSelectedProcess(null);
     queryClient.invalidateQueries({ queryKey: ["students-with-certification"] });
   };
@@ -226,13 +239,23 @@ const CertificationProcess = () => {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleViewDetails(student)}
+                              title="Ver detalhes"
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
+                              onClick={() => handleEditProcess(student)}
+                              title="Editar processo"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               onClick={() => handleUpdateStatus(student)}
+                              title="Atualizar status"
                             >
                               <FileCheck className="h-4 w-4" />
                             </Button>
@@ -260,7 +283,7 @@ const CertificationProcess = () => {
       </Card>
 
       {/* Dialog para visualizar detalhes */}
-      <Dialog open={!!selectedProcess && !isStatusDialogOpen} onOpenChange={() => setSelectedProcess(null)}>
+      <Dialog open={!!selectedProcess && !isStatusDialogOpen && !isEditDialogOpen} onOpenChange={() => setSelectedProcess(null)}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Processo de Certificação</DialogTitle>
@@ -325,6 +348,25 @@ const CertificationProcess = () => {
               studentId={selectedProcess.id}
               currentStatus={selectedProcess.certification?.status}
               onSuccess={handleCloseStatusDialog}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para editar processo */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Editar Processo de Certificação</DialogTitle>
+            <DialogDescription>
+              Altere as configurações do processo de certificação
+            </DialogDescription>
+          </DialogHeader>
+          {selectedProcess && (
+            <CertificationEditForm
+              studentId={selectedProcess.id}
+              certification={selectedProcess.certification}
+              onSuccess={handleCloseEditDialog}
             />
           )}
         </DialogContent>
