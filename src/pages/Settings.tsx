@@ -76,12 +76,12 @@ const Settings = () => {
             <input
               type="text"
               readOnly
-              value={`${window.location.origin}/consultar-aluno`}
+              value="https://ejaeducabrasil.com/consultar-aluno"
               className="flex-1 px-3 py-2 text-sm bg-muted rounded-md border border-input"
             />
             <button
               onClick={() => {
-                navigator.clipboard.writeText(`${window.location.origin}/consultar-aluno`);
+                navigator.clipboard.writeText('https://ejaeducabrasil.com/consultar-aluno');
                 toast.success('Link copiado para a área de transferência!');
               }}
               className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
