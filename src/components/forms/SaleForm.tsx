@@ -85,18 +85,19 @@ export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
     },
   });
 
-  // Pagamentos da venda atual (para calcular valor já pago)
-  const { data: paymentsData } = useQuery({
-    queryKey: ['payments-by-sale', saleId],
-    queryFn: async () => {
-      if (!saleId) return [] as any[];
-      const res = await api.getPaymentsBySale(saleId);
-      return res.ok ? ((res.data as any) || []) : [];
-    },
-    enabled: !!saleId,
-  });
+// Pagamentos da venda atual (para calcular valor já pago)
+const { data: paymentsData } = useQuery({
+  queryKey: ['payments-by-sale', saleId],
+  queryFn: async () => {
+    if (!saleId) return [] as any[];
+    const res = await api.getPaymentsBySale(saleId);
+    return res.ok ? ((res.data as any) || []) : [];
+  },
+  enabled: !!saleId,
+});
 
-  const currentPaid = (paymentsData as any[])?.reduce((sum, p: any) => sum + parseFloat(p.amount || 0), 0) || 0;
+const initialPaid = initialData?.paid_amount ? parseFloat(initialData.paid_amount as string) : 0;
+const currentPaid = (paymentsData as any[])?.reduce((sum, p: any) => sum + parseFloat(p.amount || 0), 0) ?? initialPaid;
 
   // Função para verificar se um aluno já está em uma venda paga
   const isStudentInPaidSale = async (studentId: number) => {
