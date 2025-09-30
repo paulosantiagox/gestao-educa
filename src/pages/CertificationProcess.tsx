@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Plus, Search, Eye, FileCheck, Settings, Edit, Trash2, X, Download } from "lucide-react";
+import { Plus, Search, Eye, FileCheck, Settings, Edit, Trash2, X, Download, FileSpreadsheet } from "lucide-react";
+import * as XLSX from 'xlsx';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -185,7 +186,6 @@ const CertificationProcess = () => {
       return;
     }
 
-    // Cabeçalhos do CSV
     const headers = [
       "Nome do Aluno",
       "Email",
@@ -202,7 +202,6 @@ const CertificationProcess = () => {
       "Concluído"
     ];
 
-    // Converter dados para CSV
     const csvRows = students.map((student: any) => {
       const cert = student.certification;
       const statusLabel = cert ? getStatusLabel(cert.status) : "Não Iniciado";
@@ -224,10 +223,7 @@ const CertificationProcess = () => {
       ].join(",");
     });
 
-    // Montar CSV completo
     const csvContent = [headers.join(","), ...csvRows].join("\n");
-
-    // Criar blob e fazer download
     const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
@@ -241,6 +237,59 @@ const CertificationProcess = () => {
     document.body.removeChild(link);
     
     toast.success("CSV exportado com sucesso!");
+  };
+
+  const exportToExcel = () => {
+    if (students.length === 0) {
+      toast.error("Não há dados para exportar");
+      return;
+    }
+
+    const data = students.map((student: any) => {
+      const cert = student.certification;
+      const statusLabel = cert ? getStatusLabel(cert.status) : "Não Iniciado";
+      
+      return {
+        "Nome do Aluno": student.name || '',
+        "Email": student.email || '',
+        "CPF": student.cpf || '',
+        "Certificadora": cert?.certifier_name || '-',
+        "Status": statusLabel,
+        "Certificado Físico": cert?.wants_physical ? "Sim" : cert ? "Não" : "-",
+        "Código de Rastreio": cert?.physical_tracking_code || '-',
+        "Data de Criação": cert?.created_at ? formatDate(cert.created_at) : "-",
+        "Documentos Enviados": cert?.documents_sent_at ? formatDate(cert.documents_sent_at) : "-",
+        "Em Análise": cert?.under_review_at ? formatDate(cert.under_review_at) : "-",
+        "Certificado Digital Emitido": cert?.digital_delivered_at ? formatDate(cert.digital_delivered_at) : "-",
+        "Certificado Físico Enviado": cert?.physical_shipping_at ? formatDate(cert.physical_shipping_at) : "-",
+        "Concluído": cert?.completed_at ? formatDate(cert.completed_at) : "-"
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Processos de Certificação");
+
+    // Ajustar largura das colunas
+    const maxWidth = 30;
+    worksheet['!cols'] = [
+      { wch: 25 }, // Nome
+      { wch: 30 }, // Email
+      { wch: 15 }, // CPF
+      { wch: 25 }, // Certificadora
+      { wch: 20 }, // Status
+      { wch: 18 }, // Certificado Físico
+      { wch: 20 }, // Código de Rastreio
+      { wch: 15 }, // Data de Criação
+      { wch: 18 }, // Documentos Enviados
+      { wch: 15 }, // Em Análise
+      { wch: 25 }, // Certificado Digital
+      { wch: 25 }, // Certificado Físico Enviado
+      { wch: 15 }, // Concluído
+    ];
+
+    XLSX.writeFile(workbook, `processos_certificacao_${new Date().toISOString().split('T')[0]}.xlsx`);
+    toast.success("Excel exportado com sucesso!");
   };
 
   const getStatusLabel = (status?: string) => {
@@ -316,15 +365,26 @@ const CertificationProcess = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle>Pesquisar e Filtrar</CardTitle>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={exportToCSV}
-            disabled={students.length === 0}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Exportar CSV
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={exportToExcel}
+              disabled={students.length === 0}
+            >
+              <FileSpreadsheet className="mr-2 h-4 w-4" />
+              Exportar Excel
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={exportToCSV}
+              disabled={students.length === 0}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Exportar CSV
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="relative">
