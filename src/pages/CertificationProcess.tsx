@@ -340,11 +340,11 @@ const CertificationProcess = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Select value={filterCertifier} onValueChange={setFilterCertifier}>
               <SelectTrigger>
-                <SelectValue placeholder="Certificadora" />
+                <SelectValue placeholder="Filtrar por certificadora" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todas certificadoras</SelectItem>
-                <SelectItem value="none">Sem certificadora</SelectItem>
+                <SelectItem value="all">Todas as certificadoras</SelectItem>
+                <SelectItem value="none">Sem certificadora atribuída</SelectItem>
                 {certifiers.map((certifier: any) => (
                   <SelectItem key={certifier.id} value={certifier.id.toString()}>
                     {certifier.name}
@@ -355,29 +355,29 @@ const CertificationProcess = () => {
 
             <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger>
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder="Filtrar por status do processo" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os status</SelectItem>
-                <SelectItem value="not_started">Não Iniciado</SelectItem>
-                <SelectItem value="pending">Pendente</SelectItem>
-                <SelectItem value="documents_sent">Documentos Enviados</SelectItem>
-                <SelectItem value="under_review">Em Análise</SelectItem>
-                <SelectItem value="approved">Aprovado</SelectItem>
-                <SelectItem value="certificate_issued">Certificado Emitido</SelectItem>
-                <SelectItem value="certificate_sent">Certificado Enviado</SelectItem>
-                <SelectItem value="completed">Concluído</SelectItem>
+                <SelectItem value="not_started">🔴 Não Iniciado</SelectItem>
+                <SelectItem value="pending">⏳ Pendente</SelectItem>
+                <SelectItem value="documents_sent">📄 Documentos Enviados</SelectItem>
+                <SelectItem value="under_review">🔍 Em Análise</SelectItem>
+                <SelectItem value="approved">✅ Aprovado</SelectItem>
+                <SelectItem value="certificate_issued">📜 Certificado Emitido</SelectItem>
+                <SelectItem value="certificate_sent">📮 Certificado Enviado</SelectItem>
+                <SelectItem value="completed">🎉 Concluído</SelectItem>
               </SelectContent>
             </Select>
 
             <Select value={filterPhysical} onValueChange={setFilterPhysical}>
               <SelectTrigger>
-                <SelectValue placeholder="Certificado Físico" />
+                <SelectValue placeholder="Deseja certificado físico?" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="yes">Sim</SelectItem>
-                <SelectItem value="no">Não</SelectItem>
+                <SelectItem value="all">Todos (físico e digital)</SelectItem>
+                <SelectItem value="yes">Somente com certificado físico</SelectItem>
+                <SelectItem value="no">Somente certificado digital</SelectItem>
               </SelectContent>
             </Select>
 
