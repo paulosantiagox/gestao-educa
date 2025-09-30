@@ -11,6 +11,21 @@ import { formatDateTimeSP } from '@/lib/date-utils';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sistema-educa.autoflixtreinamentos.com';
 
+// Função para mascarar dados sensíveis (segurança)
+const maskData = (data: string, type: 'name' | 'cpf' = 'name'): string => {
+  if (!data) return '';
+  
+  if (type === 'cpf') {
+    const cleaned = data.replace(/\D/g, '');
+    if (cleaned.length < 5) return data;
+    return `${cleaned.slice(0, 3)}***${cleaned.slice(-2)}`;
+  }
+  
+  // Para nome
+  if (data.length <= 6) return data;
+  return `${data.slice(0, 3)}***${data.slice(-3)}`;
+};
+
 const TIMELINE_STEPS = [
   { status: "welcome", label: "🎉 Boas-vindas", field: "created_at" },
   { status: "exam_in_progress", label: "📝 Prova Iniciada", field: "exam_started_at" },
@@ -269,9 +284,10 @@ export default function StudentStatusCheck() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>{student.name}</CardTitle>
-                  <CardDescription>
-                    Status Atual: <strong>{STATUS_LABELS[certification.status]}</strong>
+                  <CardTitle>{maskData(student.name, 'name')}</CardTitle>
+                  <CardDescription className="space-y-1">
+                    <div>CPF: <strong>{maskData(cpf, 'cpf')}</strong></div>
+                    <div>Status Atual: <strong>{STATUS_LABELS[certification.status]}</strong></div>
                   </CardDescription>
                 </div>
                 <Button
@@ -302,17 +318,17 @@ export default function StudentStatusCheck() {
                       <div key={step.status} className="relative pb-8">
                         {!isLast && (
                           <div
-                            className={`absolute left-4 top-8 h-full w-0.5 ${
-                              state === 'completed' ? 'bg-primary' : 'bg-muted'
+                            className={`absolute left-4 top-8 h-full w-0.5 transition-colors duration-300 ${
+                              state === 'completed' ? 'bg-green-500' : 'bg-muted'
                             }`}
                           />
                         )}
                         
                         <div className="relative flex items-start gap-4">
                           <div className={`
-                            flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2
+                            flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-300
                             ${state === 'completed' 
-                              ? 'border-primary bg-primary text-primary-foreground' 
+                              ? 'border-green-500 bg-green-500 text-white shadow-lg shadow-green-500/50 animate-pulse' 
                               : state === 'current'
                               ? 'border-primary bg-background text-primary'
                               : 'border-muted bg-background text-muted-foreground'
