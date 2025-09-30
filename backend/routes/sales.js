@@ -107,6 +107,31 @@ router.put('/:id', requireAuth, async (req, res) => {
       total_amount, paid_amount, payment_method_id, payment_status, sale_date
     } = req.body;
 
+    console.log('Updating sale with paid_amount:', paid_amount);
+    console.log('Full request body:', req.body);
+
+    // Garantir que paid_amount e total_amount sejam números válidos
+    const paidAmountValue = paid_amount !== undefined && paid_amount !== null && paid_amount !== '' 
+      ? parseFloat(paid_amount) 
+      : 0;
+    
+    const totalAmountValue = parseFloat(total_amount);
+
+    console.log('Processed paid_amount value:', paidAmountValue);
+    console.log('Total amount value:', totalAmountValue);
+
+    // Atualizar status automaticamente baseado no valor pago
+    let finalStatus = payment_status || 'pending';
+    if (paidAmountValue >= totalAmountValue && paidAmountValue > 0) {
+      finalStatus = 'paid';
+    } else if (paidAmountValue > 0 && paidAmountValue < totalAmountValue) {
+      finalStatus = 'partial';
+    } else if (paidAmountValue === 0) {
+      finalStatus = 'pending';
+    }
+
+    console.log('Final status:', finalStatus);
+
     const result = await pool.query(
       `UPDATE sales SET
         sale_code = $1, payer_name = $2, payer_email = $3, payer_phone = $4,
@@ -117,10 +142,13 @@ router.put('/:id', requireAuth, async (req, res) => {
       RETURNING *`,
       [
         sale_code, payer_name, payer_email, payer_phone, payer_cpf,
-        total_amount, paid_amount || 0, payment_method_id, payment_status || 'pending', sale_date,
+        totalAmountValue, paidAmountValue, payment_method_id, finalStatus, sale_date,
         id
       ]
     );
+
+    console.log('Update result paid_amount:', result.rows[0]?.paid_amount);
+    console.log('Update result payment_status:', result.rows[0]?.payment_status);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Venda não encontrada' });
