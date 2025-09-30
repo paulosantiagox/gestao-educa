@@ -66,6 +66,37 @@ const Settings = () => {
 
       <Card>
         <CardHeader>
+          <CardTitle>Consulta Pública de Status</CardTitle>
+          <CardDescription>
+            Link para os alunos consultarem o status de certificação
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              readOnly
+              value={`${window.location.origin}/consultar-aluno`}
+              className="flex-1 px-3 py-2 text-sm bg-muted rounded-md border border-input"
+            />
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/consultar-aluno`);
+                toast.success('Link copiado para a área de transferência!');
+              }}
+              className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+            >
+              Copiar Link
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Compartilhe este link com os alunos para que possam consultar o status de certificação usando o CPF
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Sobre</CardTitle>
         </CardHeader>
         <CardContent>

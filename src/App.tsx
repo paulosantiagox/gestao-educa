@@ -45,11 +45,7 @@ const App = () => (
               />
               <Route 
                 path="/consultar-aluno" 
-                element={
-                  <PublicRoute>
-                    <StudentStatusCheck />
-                  </PublicRoute>
-                } 
+                element={<StudentStatusCheck />} 
               />
               <Route
                 path="/*"
