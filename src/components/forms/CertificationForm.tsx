@@ -48,6 +48,8 @@ export function CertificationForm({ onSuccess, preSelectedStudentId }: Certifica
     },
   });
 
+  const studentsOptions = Array.isArray(students) ? students : (students as any)?.students ?? [];
+
   const onSubmit = async (data: CertificationFormData) => {
     try {
       const payload = {
@@ -86,7 +88,7 @@ export function CertificationForm({ onSuccess, preSelectedStudentId }: Certifica
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {students.map((student: any) => (
+                  {studentsOptions.map((student: any) => (
                     <SelectItem key={student.id} value={student.id.toString()}>
                       {student.name} - {student.email}
                     </SelectItem>
