@@ -88,32 +88,57 @@ const CertificationProcess = () => {
     },
   });
 
-  // Aplicar filtros aos alunos
-  const filteredStudents = allStudents.filter((student: any) => {
-    // Filtro por certificadora
-    if (filterCertifier !== "all") {
-      if (!student.certification) return filterCertifier === "none";
-      if (filterCertifier === "none") return false;
-      if (student.certification.certifier_id?.toString() !== filterCertifier) return false;
-    }
+  // Ordem de prioridade dos status (do menos completo ao mais completo)
+  const statusOrder = [
+    "welcome",
+    "exam_in_progress", 
+    "documents_requested",
+    "documents_under_review",
+    "certification_started",
+    "digital_certificate_sent",
+    "physical_certificate_sent",
+    "completed"
+  ];
 
-    // Filtro por status
-    if (filterStatus !== "all") {
-      if (!student.certification) return filterStatus === "not_started";
-      if (filterStatus === "not_started") return false;
-      if (student.certification.status !== filterStatus) return false;
-    }
+  // Aplicar filtros e ordenação aos alunos
+  const filteredStudents = allStudents
+    .filter((student: any) => {
+      // Filtro por certificadora
+      if (filterCertifier !== "all") {
+        if (!student.certification) return filterCertifier === "none";
+        if (filterCertifier === "none") return false;
+        if (student.certification.certifier_id?.toString() !== filterCertifier) return false;
+      }
 
-    // Filtro por certificado físico
-    if (filterPhysical !== "all") {
-      if (!student.certification) return false;
-      const wantsPhysical = student.certification.wants_physical;
-      if (filterPhysical === "yes" && !wantsPhysical) return false;
-      if (filterPhysical === "no" && wantsPhysical) return false;
-    }
+      // Filtro por status
+      if (filterStatus !== "all") {
+        if (!student.certification) return filterStatus === "not_started";
+        if (filterStatus === "not_started") return false;
+        if (student.certification.status !== filterStatus) return false;
+      }
 
-    return true;
-  });
+      // Filtro por certificado físico
+      if (filterPhysical !== "all") {
+        if (!student.certification) return false;
+        const wantsPhysical = student.certification.wants_physical;
+        if (filterPhysical === "yes" && !wantsPhysical) return false;
+        if (filterPhysical === "no" && wantsPhysical) return false;
+      }
+
+      return true;
+    })
+    .sort((a: any, b: any) => {
+      // Alunos sem certificação vêm primeiro
+      if (!a.certification && b.certification) return -1;
+      if (a.certification && !b.certification) return 1;
+      if (!a.certification && !b.certification) return 0;
+
+      // Ordenar por status (menos completo primeiro)
+      const aIndex = statusOrder.indexOf(a.certification.status);
+      const bIndex = statusOrder.indexOf(b.certification.status);
+      
+      return aIndex - bIndex;
+    });
 
   // Calcular paginação
   const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
@@ -695,7 +720,7 @@ const CertificationProcess = () => {
 
       {/* Dialog para visualizar detalhes */}
       <Dialog open={!!selectedProcess && !isStatusDialogOpen && !isEditDialogOpen} onOpenChange={() => setSelectedProcess(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Processo de Certificação</DialogTitle>
             <DialogDescription>
@@ -704,13 +729,53 @@ const CertificationProcess = () => {
           </DialogHeader>
           {selectedProcess?.certification && (
             <div className="space-y-6">
-              {/* Informações gerais */}
-              <div className="grid grid-cols-2 gap-4 p-4 rounded-lg border bg-muted/50">
-                <div>
-                  <p className="text-sm text-muted-foreground">Aluno</p>
-                  <p className="font-medium">{selectedProcess.name}</p>
-                  <p className="text-sm text-muted-foreground">{selectedProcess.email}</p>
+              {/* Dados do Aluno - Card expandido */}
+              <div className="space-y-4 p-4 rounded-lg border bg-card">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-lg">Dados do Aluno</h3>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      // Abrir dialog de edição de aluno
+                      window.location.href = `/students?edit=${selectedProcess.id}`;
+                    }}
+                  >
+                    <Edit className="mr-2 h-4 w-4" />
+                    Editar Aluno
+                  </Button>
                 </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Nome Completo</p>
+                    <p className="font-medium">{selectedProcess.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Email</p>
+                    <p className="font-medium text-sm">{selectedProcess.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Telefone</p>
+                    <p className="font-medium">{selectedProcess.phone || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">CPF</p>
+                    <p className="font-medium">{selectedProcess.cpf || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Data de Nascimento</p>
+                    <p className="font-medium">{selectedProcess.birth_date ? formatDateSP(selectedProcess.birth_date) : "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Cidade/Estado</p>
+                    <p className="font-medium">{selectedProcess.city && selectedProcess.state ? `${selectedProcess.city}/${selectedProcess.state}` : "-"}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Informações do Processo */}
+              <div className="grid grid-cols-2 gap-4 p-4 rounded-lg border bg-muted/50">
                 <div>
                   <p className="text-sm text-muted-foreground">Certificadora</p>
                   <p className="font-medium">{selectedProcess.certification.certifier_name}</p>
@@ -724,6 +789,10 @@ const CertificationProcess = () => {
                   <p className="font-medium">
                     {selectedProcess.certification.wants_physical ? "Sim" : "Não"}
                   </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Criado em</p>
+                  <p className="font-medium">{formatDateTimeSP(selectedProcess.certification.created_at)}</p>
                 </div>
               </div>
 

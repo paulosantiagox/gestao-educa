@@ -61,13 +61,15 @@ const checkSLA = (certification: any, currentStatus: string, slaConfig?: any[]) 
 };
 
 export function MiniTimeline({ currentStatus, certification, slaConfig }: MiniTimelineProps) {
-  const slaStatus = checkSLA(certification, currentStatus, slaConfig);
+  // Se o processo está completo, não mostrar warnings de SLA
+  const slaStatus = currentStatus === "completed" ? null : checkSLA(certification, currentStatus, slaConfig);
   
   return (
     <div className="flex items-center gap-1">
       {MINI_STEPS.map((step, index) => {
         const state = getStepState(step.status, currentStatus);
         const isLast = index === MINI_STEPS.length - 1;
+        const isCompleted = currentStatus === "completed";
         
         return (
           <div key={step.status} className="flex items-center">
@@ -76,16 +78,18 @@ export function MiniTimeline({ currentStatus, certification, slaConfig }: MiniTi
                 "relative flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium transition-all",
                 state === "completed" && "bg-primary text-primary-foreground",
                 state === "current" && [
-                  "bg-primary text-primary-foreground ring-2",
-                  slaStatus === "overdue" && "ring-destructive",
-                  slaStatus === "warning" && "ring-yellow-500",
-                  slaStatus === "ok" && "ring-primary/30"
+                  isCompleted 
+                    ? "bg-green-600 text-white ring-2 ring-green-600/30"
+                    : "bg-primary text-primary-foreground ring-2",
+                  !isCompleted && slaStatus === "overdue" && "ring-destructive",
+                  !isCompleted && slaStatus === "warning" && "ring-yellow-500",
+                  !isCompleted && slaStatus === "ok" && "ring-primary/30"
                 ],
                 state === "upcoming" && "bg-muted text-muted-foreground"
               )}
               title={step.status}
             >
-              {state === "completed" ? (
+              {state === "completed" || (state === "current" && isCompleted) ? (
                 <CheckCircle2 className="h-3 w-3" />
               ) : state === "current" ? (
                 slaStatus === "overdue" ? (
@@ -110,14 +114,21 @@ export function MiniTimeline({ currentStatus, certification, slaConfig }: MiniTi
         );
       })}
       
-      {slaStatus === "overdue" && (
+      {currentStatus === "completed" && (
+        <div className="ml-2 flex items-center gap-1 text-xs text-green-600 font-medium">
+          <CheckCircle2 className="h-3 w-3" />
+          Concluído
+        </div>
+      )}
+      
+      {currentStatus !== "completed" && slaStatus === "overdue" && (
         <div className="ml-2 flex items-center gap-1 text-xs text-destructive">
           <AlertTriangle className="h-3 w-3" />
           Atrasado
         </div>
       )}
       
-      {slaStatus === "warning" && (
+      {currentStatus !== "completed" && slaStatus === "warning" && (
         <div className="ml-2 flex items-center gap-1 text-xs text-yellow-600">
           <Clock className="h-3 w-3" />
           Urgente

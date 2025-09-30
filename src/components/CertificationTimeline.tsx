@@ -81,7 +81,8 @@ const getStepDate = (step: TimelineStep, certification: any) => {
 export function CertificationTimeline({ currentStatus, certification, studentName, studentPhone }: CertificationTimelineProps) {
   const currentIndex = TIMELINE_STEPS.findIndex((s) => s.status === currentStatus);
   const { getTemplate } = useWhatsAppTemplates();
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
+  const [messageToSend, setMessageToSend] = useState("");
   const [selectedStep, setSelectedStep] = useState<TimelineStep | null>(null);
 
   const getStepState = (index: number) => {
@@ -91,8 +92,10 @@ export function CertificationTimeline({ currentStatus, certification, studentNam
   };
 
   const handleSendMessage = (step: TimelineStep) => {
+    const template = getTemplate(step.status);
+    setMessageToSend(formatMessage(template));
     setSelectedStep(step);
-    setDialogOpen(true);
+    setWhatsappDialogOpen(true);
   };
 
   const formatMessage = (template: string) => {
@@ -164,7 +167,7 @@ export function CertificationTimeline({ currentStatus, certification, studentNam
                     <Button
                       variant="outline"
                       size="sm"
-                      className="ml-auto"
+                      className="ml-auto whitespace-nowrap"
                       onClick={() => handleSendMessage(step)}
                     >
                       <MessageSquare className="h-4 w-4 mr-1" />
@@ -196,12 +199,13 @@ export function CertificationTimeline({ currentStatus, certification, studentNam
       
       {selectedStep && (
         <WhatsAppMessageDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
+          open={whatsappDialogOpen}
+          onOpenChange={setWhatsappDialogOpen}
           studentName={studentName}
           studentPhone={studentPhone}
-          initialMessage={formatMessage(getTemplate(selectedStep.status))}
+          initialMessage={messageToSend}
           statusLabel={selectedStep.label}
+          certification={certification}
         />
       )}
     </div>

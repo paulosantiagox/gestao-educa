@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { MessageSquare, Send, Loader2 } from 'lucide-react';
+import { MessageSquare, Send, Loader2, CheckCircle2, Circle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatDateTimeSP } from '@/lib/date-utils';
 
 interface WhatsAppMessageDialogProps {
   open: boolean;
@@ -12,7 +13,19 @@ interface WhatsAppMessageDialogProps {
   studentPhone: string;
   initialMessage: string;
   statusLabel: string;
+  certification?: any;
 }
+
+const TIMELINE_STEPS = [
+  { status: "welcome", label: "🎉 Boas-vindas", field: "created_at" },
+  { status: "exam_in_progress", label: "📝 Prova Iniciada", field: "exam_started_at" },
+  { status: "documents_requested", label: "📄 Documentos Solicitados", field: "documents_requested_at" },
+  { status: "documents_under_review", label: "🔍 Documentos em Análise", field: "documents_under_review_at" },
+  { status: "certification_started", label: "⚙️ Certificação Iniciada", field: "certification_started_at" },
+  { status: "digital_certificate_sent", label: "📧 Certificado Digital Enviado", field: "digital_certificate_sent_at" },
+  { status: "physical_certificate_sent", label: "📦 Certificado Físico Enviado", field: "physical_certificate_sent_at" },
+  { status: "completed", label: "✅ Concluído", field: "completed_at" },
+];
 
 export function WhatsAppMessageDialog({
   open,
@@ -20,10 +33,53 @@ export function WhatsAppMessageDialog({
   studentName,
   studentPhone,
   initialMessage,
-  statusLabel
+  statusLabel,
+  certification
 }: WhatsAppMessageDialogProps) {
   const [message, setMessage] = useState(initialMessage);
   const [sending, setSending] = useState(false);
+
+  // Atualizar mensagem quando o dialog abrir ou initialMessage mudar
+  useEffect(() => {
+    if (open && certification) {
+      const timeline = generateTimeline(certification);
+      setMessage(`${initialMessage}\n\n${timeline}`);
+    }
+  }, [open, initialMessage, certification]);
+
+  const generateTimeline = (cert: any) => {
+    let timeline = "━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+    timeline += "📊 *RESUMO DO PROCESSO*\n";
+    timeline += "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
+
+    const currentIndex = TIMELINE_STEPS.findIndex(s => s.status === cert.status);
+
+    TIMELINE_STEPS.forEach((step, index) => {
+      const dateValue = cert[step.field];
+      const isCompleted = index < currentIndex || (index === currentIndex && dateValue);
+      const isCurrent = index === currentIndex;
+      
+      if (isCompleted) {
+        timeline += `${step.label}\n`;
+        timeline += `✓ ${formatDateTimeSP(dateValue)}\n\n`;
+      } else if (isCurrent) {
+        timeline += `${step.label}\n`;
+        timeline += dateValue ? `✓ ${formatDateTimeSP(dateValue)}\n\n` : `⏳ Em andamento...\n\n`;
+      } else {
+        timeline += `${step.label}\n`;
+        timeline += `○ Aguardando...\n\n`;
+      }
+    });
+
+    if (cert.wants_physical && cert.physical_tracking_code) {
+      timeline += "━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+      timeline += `📦 *Código de Rastreio:*\n${cert.physical_tracking_code}\n`;
+    }
+
+    timeline += "━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+    
+    return timeline;
+  };
 
   const handleSend = async () => {
     if (!message.trim()) {
