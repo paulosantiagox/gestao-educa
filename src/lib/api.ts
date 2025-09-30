@@ -225,6 +225,12 @@ class ApiClient {
     });
   }
 
+  async deleteCertificationProcess(studentId: number) {
+    return this.request(`/api/certification/${studentId}`, {
+      method: 'DELETE',
+    });
+  }
+
   // CERTIFICATION SLA
   async getCertificationSLA() {
     return this.request<any[]>('/api/certification-sla');

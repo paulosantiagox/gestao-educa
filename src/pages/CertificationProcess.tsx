@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Search, Eye, FileCheck, Settings, Edit } from "lucide-react";
+import { Plus, Search, Eye, FileCheck, Settings, Edit, Trash2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { CertificationForm } from "@/components/forms/CertificationForm";
 import { CertificationStatusUpdate } from "@/components/forms/CertificationStatusUpdate";
 import { CertificationEditForm } from "@/components/forms/CertificationEditForm";
@@ -67,6 +68,17 @@ const CertificationProcess = () => {
 
   // Filtrar apenas alunos com processo iniciado para a tabela
   const students = allStudents.filter((student: any) => student.certification !== null);
+
+  const deleteMutation = useMutation({
+    mutationFn: (studentId: number) => api.deleteCertificationProcess(studentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students-with-certification"] });
+      toast.success("Processo de certificação excluído com sucesso!");
+    },
+    onError: () => {
+      toast.error("Erro ao excluir processo de certificação");
+    },
+  });
 
   const handleViewDetails = (student: any) => {
     setSelectedProcess(student);
@@ -270,6 +282,29 @@ const CertificationProcess = () => {
                             >
                               <FileCheck className="h-4 w-4" />
                             </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" title="Deletar processo">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Tem certeza que deseja excluir o processo de certificação de <strong>{student.name}</strong>? Esta ação não pode ser desfeita e todas as informações do processo serão perdidas.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => deleteMutation.mutate(student.id)}
+                                  >
+                                    Excluir
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </>
                         ) : (
                           <Button

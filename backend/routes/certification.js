@@ -167,4 +167,26 @@ router.put('/:studentId/update', requireAuth, async (req, res) => {
   }
 });
 
+// DELETE /api/certification/:studentId - Deletar processo de certificação
+router.delete('/:studentId', requireAuth, async (req, res) => {
+  try {
+    const { studentId } = req.params;
+
+    const result = await pool.query(
+      'DELETE FROM certification_process WHERE student_id = $1 RETURNING *',
+      [studentId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Processo de certificação não encontrado' });
+    }
+
+    console.log('🗑️ Processo de certificação deletado:', { studentId, processId: result.rows[0].id });
+    res.json({ ok: true, message: 'Processo de certificação deletado com sucesso' });
+  } catch (error) {
+    console.error('Error deleting certification process:', error);
+    res.status(500).json({ error: 'Erro ao deletar processo de certificação' });
+  }
+});
+
 export default router;
