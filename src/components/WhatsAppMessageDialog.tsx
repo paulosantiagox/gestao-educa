@@ -18,7 +18,7 @@ interface WhatsAppMessageDialogProps {
 
 const TIMELINE_STEPS = [
   { status: "welcome", label: "🎉 Boas-vindas", field: "created_at" },
-  { status: "exam_in_progress", label: "📝 Prova Concluída", field: "exam_started_at" },
+  { status: "exam_in_progress", label: "📝 Prova", field: "exam_started_at" },
   { status: "documents_requested", label: "📄 Documentos Solicitados", field: "documents_requested_at" },
   { status: "documents_under_review", label: "🔍 Documentos em Análise", field: "documents_under_review_at" },
   { status: "certification_started", label: "⚙️ Certificação Iniciada", field: "certification_started_at" },
