@@ -13,17 +13,17 @@ import { Beaker } from "lucide-react";
 const studentSchema = z.object({
   name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
   email: z.string().email("Email inválido"),
-  phone: z.string().optional().or(z.literal("")),
-  cpf: z.string().optional().or(z.literal("")),
-  birth_date: z.string().optional().or(z.literal("")),
-  zip_code: z.string().optional().or(z.literal("")),
-  street: z.string().optional().or(z.literal("")),
-  number: z.string().optional().or(z.literal("")),
-  complement: z.string().optional().or(z.literal("")),
-  neighborhood: z.string().optional().or(z.literal("")),
-  city: z.string().optional().or(z.literal("")),
-  state: z.string().optional().or(z.literal("")),
-  documents_link: z.string().url("Link inválido").optional().or(z.literal("")),
+  phone: z.string().nullable().optional().transform(val => val || ""),
+  cpf: z.string().nullable().optional().transform(val => val || ""),
+  birth_date: z.string().nullable().optional().transform(val => val || ""),
+  zip_code: z.string().nullable().optional().transform(val => val || ""),
+  street: z.string().nullable().optional().transform(val => val || ""),
+  number: z.string().nullable().optional().transform(val => val || ""),
+  complement: z.string().nullable().optional().transform(val => val || ""),
+  neighborhood: z.string().nullable().optional().transform(val => val || ""),
+  city: z.string().nullable().optional().transform(val => val || ""),
+  state: z.string().nullable().optional().transform(val => val || ""),
+  documents_link: z.string().url("Link inválido").nullable().optional().or(z.literal("")).transform(val => val || ""),
 });
 
 type StudentFormData = z.infer<typeof studentSchema>;
