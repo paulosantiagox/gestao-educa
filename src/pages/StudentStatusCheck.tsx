@@ -221,12 +221,20 @@ export default function StudentStatusCheck() {
 
     const currentIndex = filteredSteps.findIndex(s => s.status === certification.status);
     
+    console.log('DEBUG - Certification status:', certification.status);
+    console.log('DEBUG - Current index:', currentIndex);
+    console.log('DEBUG - Step index:', index);
+    console.log('DEBUG - Filtered steps:', filteredSteps.map(s => s.status));
+    
     // Todas as etapas anteriores ao status atual são marcadas como concluídas
     if (index < currentIndex) {
+      console.log(`DEBUG - Step ${index} is COMPLETED (before current)`);
       return 'completed';
     } else if (index === currentIndex) {
+      console.log(`DEBUG - Step ${index} is CURRENT`);
       return 'current';
     }
+    console.log(`DEBUG - Step ${index} is PENDING`);
     return 'pending';
   };
 
