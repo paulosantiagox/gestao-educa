@@ -355,14 +355,16 @@ export default function StudentStatusCheck() {
 
                           <div className="flex-1 pt-0.5">
                             <p className={`font-medium ${
-                              state === 'completed' ? 'text-foreground' :
+                              state === 'completed' ? 'text-green-600 dark:text-green-400' :
                               state === 'current' ? 'text-primary' :
                               'text-muted-foreground'
                             }`}>
                               {step.label}
                             </p>
                             {stepDate && (
-                              <p className="text-sm text-muted-foreground mt-1">
+                              <p className={`text-sm mt-1 ${
+                                state === 'completed' ? 'text-green-600/80 dark:text-green-400/80' : 'text-muted-foreground'
+                              }`}>
                                 {formatDateTimeSP(stepDate)}
                               </p>
                             )}
@@ -397,6 +399,10 @@ export default function StudentStatusCheck() {
             <p className="text-xs text-muted-foreground">
               CNPJ: 59.905.568/0001-02
             </p>
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs text-muted-foreground mt-2">
+              <p>📧 contato@ejaeducabrasil.com</p>
+              <p>📞 (11) 4200-2991</p>
+            </div>
           </div>
         </div>
       </footer>
