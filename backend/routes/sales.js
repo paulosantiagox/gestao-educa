@@ -54,6 +54,8 @@ router.get('/', requireAuth, async (req, res) => {
 router.get('/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Buscar venda
     const result = await pool.query(
       `SELECT s.*, pm.name as payment_method_name 
        FROM sales s
@@ -66,7 +68,21 @@ router.get('/:id', requireAuth, async (req, res) => {
       return res.status(404).json({ error: 'Venda não encontrada' });
     }
     
-    res.json(result.rows[0]);
+    const sale = result.rows[0];
+    
+    // Buscar alunos associados à venda
+    const studentsResult = await pool.query(
+      `SELECT st.id, st.name, st.email, st.phone, st.cpf
+       FROM student_sales ss
+       INNER JOIN students st ON ss.student_id = st.id
+       WHERE ss.sale_id = $1`,
+      [id]
+    );
+    
+    // Adicionar alunos à venda
+    sale.students = studentsResult.rows;
+    
+    res.json(sale);
   } catch (error) {
     console.error('Error fetching sale:', error);
     res.status(500).json({ error: 'Erro ao buscar venda' });
@@ -102,7 +118,7 @@ router.post('/', requireAuth, async (req, res) => {
 
       if (existingStudent.rows.length > 0) {
         studentId = existingStudent.rows[0].id;
-        console.log('✅ Aluno existente encontrado:', studentId);
+        console.log('✅ Aluno existente encontrado (CPF):', studentId);
       } else {
         // Criar novo aluno
         const newStudent = await client.query(
@@ -112,18 +128,39 @@ router.post('/', requireAuth, async (req, res) => {
           [payer_name, payer_email || null, payer_phone || null, cpfClean]
         );
         studentId = newStudent.rows[0].id;
-        console.log('✅ Novo aluno criado:', studentId);
+        console.log('✅ Novo aluno criado com CPF:', studentId);
+      }
+    } else if (payer_email) {
+      // Se não tem CPF mas tem email, verificar por email
+      const existingStudent = await client.query(
+        'SELECT id FROM students WHERE email = $1',
+        [payer_email]
+      );
+      
+      if (existingStudent.rows.length > 0) {
+        studentId = existingStudent.rows[0].id;
+        console.log('✅ Aluno existente encontrado (email):', studentId);
+      } else {
+        // Criar aluno com email mas sem CPF
+        const newStudent = await client.query(
+          `INSERT INTO students (name, email, phone, active)
+           VALUES ($1, $2, $3, true)
+           RETURNING id`,
+          [payer_name, payer_email, payer_phone || null]
+        );
+        studentId = newStudent.rows[0].id;
+        console.log('✅ Novo aluno criado (sem CPF):', studentId);
       }
     } else {
-      // Criar aluno sem CPF (temporário)
+      // Criar aluno sem CPF e sem email (apenas nome e telefone)
       const newStudent = await client.query(
-        `INSERT INTO students (name, email, phone, active)
-         VALUES ($1, $2, $3, true)
+        `INSERT INTO students (name, phone, active)
+         VALUES ($1, $2, true)
          RETURNING id`,
-        [payer_name, payer_email || null, payer_phone || null]
+        [payer_name, payer_phone || null]
       );
       studentId = newStudent.rows[0].id;
-      console.log('✅ Novo aluno criado (sem CPF):', studentId);
+      console.log('✅ Novo aluno criado (sem CPF e sem email):', studentId);
     }
 
     // 2. Criar a venda
