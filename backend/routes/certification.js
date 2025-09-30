@@ -90,7 +90,7 @@ router.put('/:studentId/status', requireAuth, async (req, res) => {
     const current = currentResult.rows[0];
 
     // Monta a query de atualização - SEMPRE atualiza a data do status atual
-    let updateQuery = "UPDATE certification_process SET status = $1, updated_at = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')";
+    let updateQuery = 'UPDATE certification_process SET status = $1, updated_at = CURRENT_TIMESTAMP';
     const params = [status];
     let paramIndex = 2;
 
@@ -99,25 +99,25 @@ router.put('/:studentId/status', requireAuth, async (req, res) => {
       // welcome usa created_at como data de referência (não atualiza created_at)
     }
     if (status === 'exam_in_progress') {
-      updateQuery += ", exam_started_at = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')";
+      updateQuery += `, exam_started_at = CURRENT_TIMESTAMP`;
     }
     if (status === 'documents_requested') {
-      updateQuery += ", documents_requested_at = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')";
+      updateQuery += `, documents_requested_at = CURRENT_TIMESTAMP`;
     }
     if (status === 'documents_under_review') {
-      updateQuery += ", documents_under_review_at = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')";
+      updateQuery += `, documents_under_review_at = CURRENT_TIMESTAMP`;
     }
     if (status === 'certification_started') {
-      updateQuery += ", certification_started_at = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')";
+      updateQuery += `, certification_started_at = CURRENT_TIMESTAMP`;
     }
     if (status === 'digital_certificate_sent') {
-      updateQuery += ", digital_certificate_sent_at = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')";
+      updateQuery += `, digital_certificate_sent_at = CURRENT_TIMESTAMP`;
     }
     if (status === 'physical_certificate_sent') {
-      updateQuery += ", physical_certificate_sent_at = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')";
+      updateQuery += `, physical_certificate_sent_at = CURRENT_TIMESTAMP`;
     }
     if (status === 'completed') {
-      updateQuery += ", completed_at = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')";
+      updateQuery += `, completed_at = CURRENT_TIMESTAMP`;
     }
 
     // Adiciona código de rastreio se fornecido
@@ -156,7 +156,7 @@ router.put('/:studentId/update', requireAuth, async (req, res) => {
 
     const result = await pool.query(
       `UPDATE certification_process 
-       SET certifier_id = $1, wants_physical = $2, updated_at = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')
+       SET certifier_id = $1, wants_physical = $2, updated_at = CURRENT_TIMESTAMP
        WHERE student_id = $3
        RETURNING *`,
       [certifier_id, wants_physical, studentId]
