@@ -2,9 +2,16 @@ import express from 'express';
 import { pool } from '../db.js';
 import { requireAuth } from '../requireAuth.js';
 
-import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
+const SAO_PAULO_TZ_OFFSET = -3; // UTC-3
 
-const SAO_PAULO_TZ = 'America/Sao_Paulo';
+function toSaoPauloTime(dateString) {
+  if (!dateString) return null;
+  const date = new Date(dateString);
+  // Converte para horário de São Paulo (UTC-3)
+  const saoPauloTime = new Date(date.getTime() + (SAO_PAULO_TZ_OFFSET * 60 * 60 * 1000));
+  return saoPauloTime.toISOString();
+}
+
 const DATE_FIELDS = [
   'created_at','updated_at',
   'enrolled_at','welcomed_at','exam_taken_at','exam_result_at','documents_sent_at',
@@ -18,15 +25,8 @@ function fixTimestampsSP(row) {
   if (!row) return row;
   const out = { ...row };
   for (const key of DATE_FIELDS) {
-    const val = out[key];
-    if (!val) continue;
-    try {
-      // Reinterpreta o valor "Z" como horário local de SP e converte para UTC correto
-      const naive = formatInTimeZone(new Date(val), 'UTC', "yyyy-MM-dd HH:mm:ss.SSS");
-      const correctedUTC = fromZonedTime(naive, SAO_PAULO_TZ);
-      out[key] = formatInTimeZone(correctedUTC, SAO_PAULO_TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
-    } catch (e) {
-      // Mantém original em caso de erro
+    if (out[key]) {
+      out[key] = toSaoPauloTime(out[key]);
     }
   }
   return out;
