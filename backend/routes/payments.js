@@ -32,9 +32,15 @@ router.post('/', requireAuth, async (req, res) => {
   try {
     await client.query('BEGIN');
 
+    console.log('\n=== BACKEND: CREATE PAYMENT ===');
+    console.log('1. Request body:', JSON.stringify(req.body, null, 2));
+
     const { sale_id, amount, payment_date, payment_method_id, notes } = req.body;
 
+    console.log('2. sale_id:', sale_id, 'amount:', amount);
+
     if (!sale_id || !amount) {
+      console.error('3. ERRO: Campos obrigatórios faltando');
       return res.status(400).json({ error: 'ID da venda e valor são obrigatórios' });
     }
 
@@ -44,20 +50,30 @@ router.post('/', requireAuth, async (req, res) => {
       [sale_id]
     );
 
+    console.log('3. Venda encontrada:', saleResult.rows[0]);
+
     if (saleResult.rows.length === 0) {
       await client.query('ROLLBACK');
+      console.error('4. ERRO: Venda não encontrada');
       return res.status(404).json({ error: 'Venda não encontrada' });
     }
 
     const sale = saleResult.rows[0];
     const newPaidAmount = parseFloat(sale.paid_amount) + parseFloat(amount);
 
+    console.log('4. paid_amount atual:', sale.paid_amount);
+    console.log('5. amount do pagamento:', amount);
+    console.log('6. newPaidAmount calculado:', newPaidAmount);
+    console.log('7. total_amount da venda:', sale.total_amount);
+
     if (newPaidAmount > parseFloat(sale.total_amount)) {
       await client.query('ROLLBACK');
+      console.error('8. ERRO: Valor excede o total');
       return res.status(400).json({ error: 'Valor pago excede o valor total da venda' });
     }
 
     // Insere o pagamento
+    console.log('8. Inserindo pagamento...');
     const paymentResult = await client.query(
       `INSERT INTO payments (sale_id, amount, payment_date, payment_method_id, notes)
        VALUES ($1, $2, $3, $4, $5)
@@ -65,8 +81,13 @@ router.post('/', requireAuth, async (req, res) => {
       [sale_id, amount, payment_date || new Date(), payment_method_id, notes]
     );
 
+    console.log('9. Pagamento inserido:', paymentResult.rows[0]);
+
     // Atualiza a venda
     const newStatus = newPaidAmount >= parseFloat(sale.total_amount) ? 'paid' : 'partial';
+    console.log('10. newStatus calculado:', newStatus);
+    console.log('11. Atualizando venda com paid_amount:', newPaidAmount, 'status:', newStatus);
+    
     await client.query(
       `UPDATE sales SET
         paid_amount = $1,
@@ -76,11 +97,18 @@ router.post('/', requireAuth, async (req, res) => {
       [newPaidAmount, newStatus, sale_id]
     );
 
+    console.log('12. Venda atualizada com sucesso!');
+
     await client.query('COMMIT');
+    console.log('13. Transaction committed!');
+    console.log('=== FIM CREATE PAYMENT ===\n');
+    
     res.status(201).json(paymentResult.rows[0]);
   } catch (error) {
     await client.query('ROLLBACK');
+    console.error('=== ERRO NO CREATE PAYMENT ===');
     console.error('Error creating payment:', error);
+    console.error('Stack:', error.stack);
     res.status(500).json({ error: 'Erro ao criar pagamento' });
   } finally {
     client.release();

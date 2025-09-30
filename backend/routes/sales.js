@@ -102,13 +102,17 @@ router.post('/', requireAuth, async (req, res) => {
 router.put('/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
+    console.log('\n=== BACKEND: UPDATE SALE ===');
+    console.log('1. Sale ID:', id);
+    console.log('2. Request body:', JSON.stringify(req.body, null, 2));
+    
     const {
       sale_code, payer_name, payer_email, payer_phone, payer_cpf,
       total_amount, paid_amount, payment_method_id, payment_status, sale_date
     } = req.body;
 
-    console.log('Updating sale with paid_amount:', paid_amount);
-    console.log('Full request body:', req.body);
+    console.log('3. paid_amount recebido:', paid_amount, 'tipo:', typeof paid_amount);
+    console.log('4. payment_status recebido:', payment_status);
 
     // Garantir que paid_amount e total_amount sejam números válidos
     const paidAmountValue = paid_amount !== undefined && paid_amount !== null && paid_amount !== '' 
@@ -117,8 +121,8 @@ router.put('/:id', requireAuth, async (req, res) => {
     
     const totalAmountValue = parseFloat(total_amount);
 
-    console.log('Processed paid_amount value:', paidAmountValue);
-    console.log('Total amount value:', totalAmountValue);
+    console.log('5. paidAmountValue processado:', paidAmountValue);
+    console.log('6. totalAmountValue:', totalAmountValue);
 
     // Atualizar status automaticamente baseado no valor pago
     let finalStatus = payment_status || 'pending';
@@ -130,7 +134,8 @@ router.put('/:id', requireAuth, async (req, res) => {
       finalStatus = 'pending';
     }
 
-    console.log('Final status:', finalStatus);
+    console.log('7. finalStatus calculado:', finalStatus);
+    console.log('8. Executando UPDATE no banco...');
 
     const result = await pool.query(
       `UPDATE sales SET
@@ -147,16 +152,23 @@ router.put('/:id', requireAuth, async (req, res) => {
       ]
     );
 
-    console.log('Update result paid_amount:', result.rows[0]?.paid_amount);
-    console.log('Update result payment_status:', result.rows[0]?.payment_status);
+    console.log('9. Resultado do UPDATE:');
+    console.log('   - paid_amount no banco:', result.rows[0]?.paid_amount);
+    console.log('   - payment_status no banco:', result.rows[0]?.payment_status);
+    console.log('   - total_amount no banco:', result.rows[0]?.total_amount);
 
     if (result.rows.length === 0) {
+      console.error('10. ERRO: Venda não encontrada');
       return res.status(404).json({ error: 'Venda não encontrada' });
     }
 
+    console.log('11. UPDATE concluído com sucesso!');
+    console.log('=== FIM UPDATE SALE ===\n');
     res.json(result.rows[0]);
   } catch (error) {
+    console.error('=== ERRO NO UPDATE SALE ===');
     console.error('Error updating sale:', error);
+    console.error('Stack:', error.stack);
     res.status(500).json({ error: 'Erro ao atualizar venda' });
   }
 });

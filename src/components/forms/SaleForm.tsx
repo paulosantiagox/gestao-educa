@@ -160,56 +160,89 @@ const currentPaid = (paymentsData as any[])?.reduce((sum, p: any) => sum + parse
 
   const onSubmit = async (data: SaleFormData) => {
     try {
+      console.log('=== INICIO DO SUBMIT ===');
+      console.log('1. Data recebida do form:', data);
+      console.log('2. saleId:', saleId);
+      console.log('3. initialData:', initialData);
+      console.log('4. currentPaid (calculado):', currentPaid);
+      
       const totalAmountNumber = parseFloat(data.total_amount);
       const targetPaid = data.paid_amount ? parseFloat(data.paid_amount) : 0;
-      const delta = saleId ? targetPaid - currentPaid : targetPaid; // na criação, insere tudo como pagamento
+      const delta = saleId ? targetPaid - currentPaid : targetPaid;
+      
+      console.log('5. totalAmountNumber:', totalAmountNumber);
+      console.log('6. targetPaid:', targetPaid);
+      console.log('7. delta (diferença):', delta);
 
       // Definir status baseado no valor pago desejado
       let finalStatus: string = 'pending';
       if (targetPaid >= totalAmountNumber && targetPaid > 0) finalStatus = 'paid';
       else if (targetPaid > 0 && targetPaid < totalAmountNumber) finalStatus = 'partial';
 
-      // Atualizar venda (sem depender do backend para calcular status)
+      console.log('8. finalStatus calculado:', finalStatus);
+
+      // Atualizar venda
       const payload = {
         ...data,
         total_amount: totalAmountNumber,
-        paid_amount: targetPaid, // backend pode ignorar; mantemos para compatibilidade
+        paid_amount: targetPaid,
         payment_status: finalStatus,
         payment_method_id: parseInt(data.payment_method_id),
         student_ids: selectedStudents.map(s => s.id),
       } as any;
 
+      console.log('9. Payload para API:', payload);
+
       const result = saleId
         ? await api.updateSale(saleId, payload)
         : await api.createSale(payload);
 
+      console.log('10. Resultado da API:', result);
+
       if (!result.ok) {
+        console.error('11. ERRO na API:', result.error);
         toast.error(result.error || "Erro ao salvar venda");
         return;
       }
 
-      // Criar pagamento automático quando necessário (workaround para backends que calculam paid_amount via /payments)
+      console.log('12. Venda salva com sucesso. Verificando se precisa criar pagamento...');
+      console.log('13. delta > 0?', delta > 0);
+
+      // Criar pagamento automático quando necessário
       if (delta > 0) {
-        const paymentRes = await api.createPayment({
+        console.log('14. Criando pagamento de:', delta);
+        const paymentPayload = {
           sale_id: saleId || (result.data as any)?.id,
           amount: delta,
           payment_date: data.sale_date || new Date().toISOString().split('T')[0],
           payment_method_id: parseInt(data.payment_method_id),
           notes: 'Ajuste automático via formulário de venda',
-        });
+        };
+        console.log('15. Payload do pagamento:', paymentPayload);
+        
+        const paymentRes = await api.createPayment(paymentPayload);
+        console.log('16. Resultado do pagamento:', paymentRes);
+        
         if (!paymentRes.ok) {
-          toast.error('Venda salva, mas falhou ao registrar o pagamento.');
+          console.error('17. ERRO ao criar pagamento:', paymentRes.error);
+          toast.error('Venda salva, mas falhou ao registrar o pagamento: ' + paymentRes.error);
+        } else {
+          console.log('18. Pagamento criado com sucesso!');
         }
       } else if (delta < 0) {
-        // Não vamos remover pagamentos automaticamente para evitar inconsistências
+        console.log('14. Delta negativo - não vamos remover pagamentos automaticamente');
         toast.message('Para reduzir o valor pago, ajuste os pagamentos na seção de pagamentos.');
+      } else {
+        console.log('14. Delta é zero - nenhum pagamento a criar');
       }
 
+      console.log('=== FIM DO SUBMIT - SUCESSO ===');
       toast.success(saleId ? "Venda atualizada com sucesso!" : "Venda cadastrada com sucesso!");
       form.reset();
       setSelectedStudents([]);
       onSuccess?.();
     } catch (error) {
+      console.error('=== ERRO NO SUBMIT ===', error);
       toast.error("Erro ao processar requisição");
     }
   };
