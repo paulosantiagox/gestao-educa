@@ -121,14 +121,14 @@ router.post('/', requireAuth, async (req, res) => {
         name, email, phone, cpf, birth_date,
         zip_code, street, number, complement,
         neighborhood, city, state,
-        documents_link
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        documents_link, notes
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
       RETURNING *`,
       [
         name, email, phone, cpf, birth_date,
         zip_code, street, number, complement,
         neighborhood, city, state,
-        documents_link
+        documents_link, req.body.notes
       ]
     );
 
@@ -169,15 +169,15 @@ router.put('/:id', requireAuth, async (req, res) => {
         name = $1, email = $2, phone = $3, cpf = $4, birth_date = $5,
         zip_code = $6, street = $7, number = $8,
         complement = $9, neighborhood = $10, city = $11, state = $12,
-        documents_link = $13, active = $14,
+        documents_link = $13, active = $14, notes = $15,
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $15
+      WHERE id = $16
       RETURNING *`,
       [
         name, email, phone, cpf, birth_date,
         zip_code, street, number,
         complement, neighborhood, city, state,
-        documents_link, active,
+        documents_link, active, req.body.notes,
         id
       ]
     );

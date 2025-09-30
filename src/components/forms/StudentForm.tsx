@@ -24,6 +24,7 @@ const studentSchema = z.object({
   city: z.string().nullable().optional().transform(val => val || ""),
   state: z.string().nullable().optional().transform(val => val || ""),
   documents_link: z.string().url("Link inválido").nullable().optional().or(z.literal("")).transform(val => val || ""),
+  notes: z.string().nullable().optional().transform(val => val || ""),
 });
 
 type StudentFormData = z.infer<typeof studentSchema>;
@@ -53,6 +54,7 @@ export function StudentForm({ onSuccess, initialData, studentId }: StudentFormPr
       city: "",
       state: "",
       documents_link: "",
+      notes: "",
     },
   });
 
@@ -273,6 +275,26 @@ export function StudentForm({ onSuccess, initialData, studentId }: StudentFormPr
               )}
             />
           </div>
+        </div>
+
+        <div className="space-y-4">
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Observações</FormLabel>
+                <FormControl>
+                  <textarea
+                    placeholder="Informações adicionais sobre o aluno..."
+                    className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <div className="flex justify-end gap-4">

@@ -167,12 +167,12 @@ router.post('/', requireAuth, async (req, res) => {
     const result = await client.query(
       `INSERT INTO sales (
         sale_code, payer_name, payer_email, payer_phone, payer_cpf,
-        total_amount, paid_amount, payment_method_id, payment_status, sale_date
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        total_amount, paid_amount, payment_method_id, payment_status, sale_date, notes
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *`,
       [
         sale_code, payer_name, payer_email, payer_phone, payer_cpf,
-        total_amount, 0, payment_method_id, 'pending', sale_date || new Date()
+        total_amount, 0, payment_method_id, 'pending', sale_date || new Date(), req.body.notes
       ]
     );
 
@@ -245,13 +245,13 @@ router.put('/:id', requireAuth, async (req, res) => {
       `UPDATE sales SET
         sale_code = $1, payer_name = $2, payer_email = $3, payer_phone = $4,
         payer_cpf = $5, total_amount = $6, paid_amount = $7, payment_method_id = $8, 
-        payment_status = $9, sale_date = $10,
+        payment_status = $9, sale_date = $10, notes = $11,
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $11
+      WHERE id = $12
       RETURNING *`,
       [
         sale_code, payer_name, payer_email, payer_phone, payer_cpf,
-        totalAmountValue, paidAmountValue, payment_method_id, finalStatus, sale_date,
+        totalAmountValue, paidAmountValue, payment_method_id, finalStatus, sale_date, req.body.notes,
         id
       ]
     );

@@ -28,6 +28,7 @@ const saleSchema = z.object({
   payment_method_id: z.string().min(1, "Método de pagamento é obrigatório"),
   payment_status: z.string().optional(),
   sale_date: z.string().optional(),
+  notes: z.string().optional(),
 });
 
 type SaleFormData = z.infer<typeof saleSchema>;
@@ -57,6 +58,7 @@ export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
       payment_method_id: "",
       payment_status: "pending",
       sale_date: new Date().toISOString().split('T')[0],
+      notes: "",
     },
   });
 
@@ -499,6 +501,26 @@ const currentPaid = (paymentsData as any[])?.reduce((sum, p: any) => sum + parse
               ))}
             </div>
           )}
+        </div>
+
+        <div className="space-y-4">
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Observações da Venda</FormLabel>
+                <FormControl>
+                  <textarea
+                    placeholder="Informações adicionais sobre esta venda..."
+                    className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <div className="flex justify-end gap-4">
