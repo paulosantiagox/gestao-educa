@@ -32,6 +32,10 @@ const CertificationProcess = () => {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterPhysical, setFilterPhysical] = useState<string>("all");
   
+  // Paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(30);
+  
   const queryClient = useQueryClient();
 
   // Buscar configurações de SLA
@@ -84,7 +88,7 @@ const CertificationProcess = () => {
   });
 
   // Aplicar filtros aos alunos
-  const students = allStudents.filter((student: any) => {
+  const filteredStudents = allStudents.filter((student: any) => {
     // Filtro por certificadora
     if (filterCertifier !== "all") {
       if (!student.certification) return filterCertifier === "none";
@@ -110,10 +114,23 @@ const CertificationProcess = () => {
     return true;
   });
 
+  // Calcular paginação
+  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const students = filteredStudents.slice(startIndex, endIndex);
+
+  // Reset página quando filtros mudam
+  const handleFilterChange = (filterFn: () => void) => {
+    filterFn();
+    setCurrentPage(1);
+  };
+
   const clearFilters = () => {
     setFilterCertifier("all");
     setFilterStatus("all");
     setFilterPhysical("all");
+    setCurrentPage(1);
   };
 
   const deleteMutation = useMutation({
@@ -181,7 +198,7 @@ const CertificationProcess = () => {
   };
 
   const exportToCSV = () => {
-    if (students.length === 0) {
+    if (filteredStudents.length === 0) {
       toast.error("Não há dados para exportar");
       return;
     }
@@ -202,7 +219,7 @@ const CertificationProcess = () => {
       "Concluído"
     ];
 
-    const csvRows = students.map((student: any) => {
+    const csvRows = filteredStudents.map((student: any) => {
       const cert = student.certification;
       const statusLabel = cert ? getStatusLabel(cert.status) : "Não Iniciado";
       
@@ -240,12 +257,12 @@ const CertificationProcess = () => {
   };
 
   const exportToExcel = () => {
-    if (students.length === 0) {
+    if (filteredStudents.length === 0) {
       toast.error("Não há dados para exportar");
       return;
     }
 
-    const data = students.map((student: any) => {
+    const data = filteredStudents.map((student: any) => {
       const cert = student.certification;
       const statusLabel = cert ? getStatusLabel(cert.status) : "Não Iniciado";
       
@@ -370,7 +387,7 @@ const CertificationProcess = () => {
               variant="outline" 
               size="sm"
               onClick={exportToExcel}
-              disabled={students.length === 0}
+              disabled={filteredStudents.length === 0}
             >
               <FileSpreadsheet className="mr-2 h-4 w-4" />
               Exportar Excel
@@ -379,7 +396,7 @@ const CertificationProcess = () => {
               variant="outline" 
               size="sm"
               onClick={exportToCSV}
-              disabled={students.length === 0}
+              disabled={filteredStudents.length === 0}
             >
               <Download className="mr-2 h-4 w-4" />
               Exportar CSV
@@ -398,7 +415,7 @@ const CertificationProcess = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Select value={filterCertifier} onValueChange={setFilterCertifier}>
+            <Select value={filterCertifier} onValueChange={(value) => handleFilterChange(() => setFilterCertifier(value))}>
               <SelectTrigger>
                 <SelectValue placeholder="Filtrar por certificadora" />
               </SelectTrigger>
@@ -413,7 +430,7 @@ const CertificationProcess = () => {
               </SelectContent>
             </Select>
 
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <Select value={filterStatus} onValueChange={(value) => handleFilterChange(() => setFilterStatus(value))}>
               <SelectTrigger>
                 <SelectValue placeholder="Filtrar por status do processo" />
               </SelectTrigger>
@@ -430,7 +447,7 @@ const CertificationProcess = () => {
               </SelectContent>
             </Select>
 
-            <Select value={filterPhysical} onValueChange={setFilterPhysical}>
+            <Select value={filterPhysical} onValueChange={(value) => handleFilterChange(() => setFilterPhysical(value))}>
               <SelectTrigger>
                 <SelectValue placeholder="Deseja certificado físico?" />
               </SelectTrigger>
@@ -455,13 +472,37 @@ const CertificationProcess = () => {
 
       <Card>
         <CardContent className="pt-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Mostrando {students.length === 0 ? 0 : startIndex + 1} a {Math.min(endIndex, filteredStudents.length)} de {filteredStudents.length} registros</span>
+            </div>
+            <Select 
+              value={itemsPerPage.toString()} 
+              onValueChange={(value) => {
+                setItemsPerPage(Number(value));
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10 por página</SelectItem>
+                <SelectItem value="30">30 por página</SelectItem>
+                <SelectItem value="50">50 por página</SelectItem>
+                <SelectItem value="100">100 por página</SelectItem>
+                <SelectItem value="500">500 por página</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {isLoading ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">Carregando...</p>
             </div>
-          ) : students.length === 0 ? (
+          ) : filteredStudents.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">Nenhum aluno encontrado</p>
+              <p className="text-muted-foreground">Nenhum aluno encontrado com os filtros aplicados</p>
             </div>
           ) : (
             <Table>
@@ -573,6 +614,71 @@ const CertificationProcess = () => {
                 ))}
               </TableBody>
             </Table>
+          )}
+
+          {/* Paginação */}
+          {filteredStudents.length > 0 && totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+              >
+                Primeira
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                Anterior
+              </Button>
+              
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Próxima
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+              >
+                Última
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>
