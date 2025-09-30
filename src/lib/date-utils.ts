@@ -1,7 +1,18 @@
-import { format, parseISO } from "date-fns";
+import { parseISO } from "date-fns";
 import { toZonedTime, fromZonedTime, formatInTimeZone } from "date-fns-tz";
 
 const SAO_PAULO_TZ = "America/Sao_Paulo";
+
+// Detecta se a string possui informação explícita de timezone
+const hasTZ = (s: string) => /Z$|[+-]\d{2}:\d{2}$/.test(s);
+
+// Converte qualquer entrada para um Date em UTC, tratando strings SEM timezone como horário de São Paulo
+const parseToUTC = (date: string | Date): Date => {
+  if (typeof date === "string") {
+    return hasTZ(date) ? parseISO(date) : fromZonedTime(date, SAO_PAULO_TZ);
+  }
+  return date;
+};
 
 /**
  * Formata uma data para o timezone de São Paulo com segundos
@@ -10,8 +21,8 @@ export const formatDateTimeSP = (date: string | Date | null | undefined): string
   if (!date) return "-";
   
   try {
-    const dateObj = typeof date === "string" ? parseISO(date) : date;
-    return formatInTimeZone(dateObj, SAO_PAULO_TZ, "dd/MM/yyyy HH:mm:ss");
+    const dateUtc = parseToUTC(date as any);
+    return formatInTimeZone(dateUtc, SAO_PAULO_TZ, "dd/MM/yyyy HH:mm:ss");
   } catch (error) {
     console.error("Erro ao formatar data:", error);
     return "-";
@@ -25,8 +36,8 @@ export const formatDateSP = (date: string | Date | null | undefined): string => 
   if (!date) return "-";
   
   try {
-    const dateObj = typeof date === "string" ? parseISO(date) : date;
-    return formatInTimeZone(dateObj, SAO_PAULO_TZ, "dd/MM/yyyy");
+    const dateUtc = parseToUTC(date as any);
+    return formatInTimeZone(dateUtc, SAO_PAULO_TZ, "dd/MM/yyyy");
   } catch (error) {
     console.error("Erro ao formatar data:", error);
     return "-";
@@ -44,6 +55,6 @@ export const toUTC = (date: Date): Date => {
  * Converte uma data UTC para o timezone de São Paulo (para exibir no frontend)
  */
 export const toSaoPaulo = (date: string | Date): Date => {
-  const dateObj = typeof date === "string" ? parseISO(date) : date;
-  return toZonedTime(dateObj, SAO_PAULO_TZ);
+  const d = parseToUTC(date as any);
+  return toZonedTime(d, SAO_PAULO_TZ);
 };
