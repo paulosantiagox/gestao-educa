@@ -23,7 +23,8 @@ const Sales = () => {
     queryKey: ["sales", searchTerm],
     queryFn: async () => {
       const result = await api.getSales({ search: searchTerm });
-      return result.ok ? ((result.data as any)?.sales || []) : [];
+      const list = result.ok ? (((result.data as any)?.sales) || []) : [];
+      return [...list].sort((a: any, b: any) => new Date(b.created_at || b.sale_date).getTime() - new Date(a.created_at || a.sale_date).getTime());
     },
   });
 
