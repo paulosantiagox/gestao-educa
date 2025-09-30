@@ -13,13 +13,26 @@ import ejaLogo from '@/assets/eja-logo.png';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sistema-educa.autoflixtreinamentos.com';
 
 // Função para mascarar dados sensíveis (segurança)
-const maskData = (data: string, type: 'name' | 'cpf' = 'name'): string => {
+const maskData = (data: string, type: 'name' | 'cpf' | 'email' | 'phone' = 'name'): string => {
   if (!data) return '';
   
   if (type === 'cpf') {
     const cleaned = data.replace(/\D/g, '');
     if (cleaned.length < 5) return data;
     return `${cleaned.slice(0, 3)}***${cleaned.slice(-2)}`;
+  }
+
+  if (type === 'email') {
+    const [user, domain] = data.split('@');
+    if (!domain) return data;
+    const visible = user.slice(0, 2);
+    return `${visible}***@${domain}`;
+  }
+
+  if (type === 'phone') {
+    const cleaned = data.replace(/\D/g, '');
+    if (cleaned.length <= 4) return data;
+    return `${cleaned.slice(0, 2)}***${cleaned.slice(-2)}`;
   }
   
   // Para nome
@@ -211,30 +224,34 @@ export default function StudentStatusCheck() {
 
   const getStepState = (index: number): 'completed' | 'current' | 'pending' => {
     if (!certification) return 'pending';
-    
+
     const filteredSteps = TIMELINE_STEPS.filter(step => {
-      if (step.status === "physical_certificate_sent" && !certification.wants_physical) {
+      if (step.status === 'physical_certificate_sent' && !certification.wants_physical) {
         return false;
       }
       return true;
     });
 
-    const currentIndex = filteredSteps.findIndex(s => s.status === certification.status);
-    
-    console.log('DEBUG - Certification status:', certification.status);
-    console.log('DEBUG - Current index:', currentIndex);
-    console.log('DEBUG - Step index:', index);
-    console.log('DEBUG - Filtered steps:', filteredSteps.map(s => s.status));
-    
-    // Todas as etapas anteriores ao status atual são marcadas como concluídas
-    if (index < currentIndex) {
-      console.log(`DEBUG - Step ${index} is COMPLETED (before current)`);
-      return 'completed';
-    } else if (index === currentIndex) {
-      console.log(`DEBUG - Step ${index} is CURRENT`);
-      return 'current';
+    // Índice do status atual na lista completa e na lista filtrada
+    const fullIndex = TIMELINE_STEPS.findIndex(s => s.status === certification.status);
+    let currentIndex = filteredSteps.findIndex(s => s.status === certification.status);
+
+    // Se não encontrar (ex.: status removido por filtro), usa o último passo da lista filtrada
+    // cujo índice na lista completa seja menor ou igual ao índice real
+    if (currentIndex === -1) {
+      for (let i = filteredSteps.length - 1; i >= 0; i--) {
+        const stepStatus = filteredSteps[i].status;
+        const idxInFull = TIMELINE_STEPS.findIndex(s => s.status === stepStatus);
+        if (idxInFull !== -1 && (fullIndex === -1 || idxInFull <= fullIndex)) {
+          currentIndex = i;
+          break;
+        }
+      }
+      if (currentIndex === -1) currentIndex = 0;
     }
-    console.log(`DEBUG - Step ${index} is PENDING`);
+
+    if (index < currentIndex) return 'completed';
+    if (index === currentIndex) return 'current';
     return 'pending';
   };
 
@@ -302,7 +319,13 @@ export default function StudentStatusCheck() {
                 <div>
                   <CardTitle>{maskData(student.name, 'name')}</CardTitle>
                   <CardDescription className="space-y-1">
-                    <div>CPF: <strong>{maskData(cpf, 'cpf')}</strong></div>
+                    <div>CPF: <strong>{maskData(student.cpf ?? cpf, 'cpf')}</strong></div>
+                    {student.email && (
+                      <div>E-mail: <strong>{maskData(student.email, 'email')}</strong></div>
+                    )}
+                    {student.phone && (
+                      <div>WhatsApp: <strong>{maskData(student.phone, 'phone')}</strong></div>
+                    )}
                     <div>Status Atual: <strong>{STATUS_LABELS[certification.status]}</strong></div>
                   </CardDescription>
                 </div>
