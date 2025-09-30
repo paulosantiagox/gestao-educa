@@ -169,15 +169,15 @@ router.put('/:id', requireAuth, async (req, res) => {
         name = $1, email = $2, phone = $3, cpf = $4, birth_date = $5,
         zip_code = $6, street = $7, number = $8,
         complement = $9, neighborhood = $10, city = $11, state = $12,
-        documents_link = $13, active = $14, notes = $15,
+        documents_link = $13, notes = $14,
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $16
+      WHERE id = $15
       RETURNING *`,
       [
         name, email, phone, cpf, birth_date,
         zip_code, street, number,
         complement, neighborhood, city, state,
-        documents_link, active, req.body.notes,
+        documents_link, req.body.notes,
         id
       ]
     );
