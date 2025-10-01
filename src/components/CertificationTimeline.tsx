@@ -1,10 +1,15 @@
 import { useState } from "react";
-import { CheckCircle2, Circle, Clock, MessageSquare } from "lucide-react";
+import { CheckCircle2, Circle, Clock, MessageSquare, Pencil, Check, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDateTimeSP } from "@/lib/date-utils";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useWhatsAppTemplates } from "@/contexts/WhatsAppTemplatesContext";
 import { WhatsAppMessageDialog } from "@/components/WhatsAppMessageDialog";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
+import { format } from "date-fns";
 
 interface TimelineStep {
   status: string;
@@ -84,6 +89,37 @@ export function CertificationTimeline({ currentStatus, certification, studentNam
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [messageToSend, setMessageToSend] = useState("");
   const [selectedStep, setSelectedStep] = useState<TimelineStep | null>(null);
+  const [editingDate, setEditingDate] = useState<string | null>(null);
+  const [tempDate, setTempDate] = useState("");
+  const queryClient = useQueryClient();
+
+  const updateDateMutation = useMutation({
+    mutationFn: async ({ status, date }: { status: string; date: string }) => {
+      return await api.updateCertificationDates(certification.student_id, { [getDateFieldName(status)]: date });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students-with-certification"] });
+      toast.success("Data atualizada com sucesso!");
+      setEditingDate(null);
+    },
+    onError: () => {
+      toast.error("Erro ao atualizar data");
+    },
+  });
+
+  const getDateFieldName = (status: string): string => {
+    const fieldMap: Record<string, string> = {
+      welcome: "created_at",
+      exam_in_progress: "exam_started_at",
+      documents_requested: "documents_requested_at",
+      documents_under_review: "documents_under_review_at",
+      certification_started: "certification_started_at",
+      digital_certificate_sent: "digital_certificate_sent_at",
+      physical_certificate_sent: "physical_certificate_sent_at",
+      completed: "completed_at",
+    };
+    return fieldMap[status];
+  };
 
   const getStepState = (index: number) => {
     if (index < currentIndex) return "completed";
@@ -102,6 +138,30 @@ export function CertificationTimeline({ currentStatus, certification, studentNam
     return template
       .replace(/\{\{nome\}\}/g, studentName)
       .replace(/\{\{codigo_rastreio\}\}/g, certification.physical_tracking_code || 'Não disponível');
+  };
+
+  const handleEditDate = (step: TimelineStep) => {
+    const currentDate = getStepDate(step, certification);
+    if (currentDate) {
+      const formattedDate = format(new Date(currentDate), "yyyy-MM-dd'T'HH:mm");
+      setTempDate(formattedDate);
+    } else {
+      setTempDate(format(new Date(), "yyyy-MM-dd'T'HH:mm"));
+    }
+    setEditingDate(step.status);
+  };
+
+  const handleSaveDate = (step: TimelineStep) => {
+    if (!tempDate) {
+      toast.error("Por favor, selecione uma data");
+      return;
+    }
+    updateDateMutation.mutate({ status: step.status, date: new Date(tempDate).toISOString() });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingDate(null);
+    setTempDate("");
   };
 
   return (
@@ -164,12 +224,64 @@ export function CertificationTimeline({ currentStatus, certification, studentNam
                   >
                     {step.label}
                   </h4>
-                  {stepDate && (
-                    <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-                      {formatDateTimeSP(stepDate)}
-                    </span>
-                  )}
-                  {(state === "completed" || state === "current") && (
+                  
+                  {/* Data - modo edição ou visualização */}
+                  <div className="flex items-center gap-2">
+                    {editingDate === step.status ? (
+                      <>
+                        <Input
+                          type="datetime-local"
+                          value={tempDate}
+                          onChange={(e) => setTempDate(e.target.value)}
+                          className="h-8 text-xs w-auto"
+                          disabled={updateDateMutation.isPending}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleSaveDate(step)}
+                          disabled={updateDateMutation.isPending}
+                        >
+                          {updateDateMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Check className="h-4 w-4 text-green-600" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={handleCancelEdit}
+                          disabled={updateDateMutation.isPending}
+                        >
+                          <X className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        {stepDate && (
+                          <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                            {formatDateTimeSP(stepDate)}
+                          </span>
+                        )}
+                        {(state === "completed" || state === "current") && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleEditDate(step)}
+                            title="Editar data"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                  
+                  {(state === "completed" || state === "current") && editingDate !== step.status && (
                     <Button
                       variant="outline"
                       size="sm"

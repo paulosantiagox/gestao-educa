@@ -853,39 +853,41 @@ const CertificationProcess = () => {
                   </div>
                 </div>
 
-                {/* Outros */}
-                {(selectedProcess.documents_link || selectedProcess.notes) && (
-                  <div className="space-y-3 pt-3 border-t">
-                    <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-1">
-                      <FileText className="h-4 w-4" />
-                      Informações Adicionais
-                    </h4>
-                    <div className="space-y-3">
-                      {selectedProcess.documents_link && (
-                        <div>
-                          <p className="text-sm text-muted-foreground flex items-center gap-1">
-                            <ExternalLink className="h-3 w-3" />
-                            Link dos Documentos
-                          </p>
-                          <a 
-                            href={selectedProcess.documents_link} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="font-medium text-primary hover:underline text-sm break-all"
-                          >
-                            {selectedProcess.documents_link}
-                          </a>
-                        </div>
+                {/* Informações Adicionais */}
+                <div className="space-y-3 pt-3 border-t">
+                  <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-1">
+                    <FileText className="h-4 w-4" />
+                    Informações Adicionais
+                  </h4>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-muted-foreground flex items-center gap-1">
+                        <ExternalLink className="h-3 w-3" />
+                        Link dos Documentos
+                      </p>
+                      {selectedProcess.documents_link ? (
+                        <a 
+                          href={selectedProcess.documents_link} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="font-medium text-primary hover:underline text-sm break-all"
+                        >
+                          {selectedProcess.documents_link}
+                        </a>
+                      ) : (
+                        <p className="font-medium text-muted-foreground">-</p>
                       )}
-                      {selectedProcess.notes && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Observações</p>
-                          <p className="font-medium text-sm whitespace-pre-wrap">{selectedProcess.notes}</p>
-                        </div>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Observações</p>
+                      {selectedProcess.notes ? (
+                        <p className="font-medium text-sm whitespace-pre-wrap">{selectedProcess.notes}</p>
+                      ) : (
+                        <p className="font-medium text-muted-foreground">-</p>
                       )}
                     </div>
                   </div>
-                )}
+                </div>
               </div>
 
               {/* Informações do Processo */}
