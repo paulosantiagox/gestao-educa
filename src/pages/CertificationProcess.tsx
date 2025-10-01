@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Search, Eye, FileCheck, Settings, Edit, Trash2, X, Download, FileSpreadsheet, CalendarClock, Phone, Mail, MapPin, FileText, ExternalLink } from "lucide-react";
+import { Plus, Search, Eye, FileCheck, Settings, Edit, Trash2, X, Download, FileSpreadsheet, CalendarClock, Phone, Mail, MapPin, FileText, ExternalLink, RefreshCw } from "lucide-react";
 import * as XLSX from 'xlsx';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -237,6 +237,19 @@ const CertificationProcess = () => {
         }
       }
     });
+  };
+
+  const handleRefreshData = () => {
+    queryClient.invalidateQueries({ queryKey: ["students-with-certification"] }).then(() => {
+      if (selectedProcess) {
+        const updatedStudent = queryClient.getQueryData<any[]>(["students-with-certification"])
+          ?.find((s: any) => s.id === selectedProcess.id);
+        if (updatedStudent) {
+          setSelectedProcess(updatedStudent);
+        }
+      }
+    });
+    toast.success("Dados atualizados com sucesso!");
   };
 
   const getStatusBadge = (status?: string) => {
@@ -773,14 +786,24 @@ const CertificationProcess = () => {
               <div className="space-y-4 p-4 rounded-lg border bg-card">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-lg">Dados do Aluno</h3>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleEditStudent(selectedProcess)}
-                  >
-                    <Edit className="mr-2 h-4 w-4" />
-                    Editar Aluno
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleRefreshData}
+                    >
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Atualizar
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleEditStudent(selectedProcess)}
+                    >
+                      <Edit className="mr-2 h-4 w-4" />
+                      Editar Aluno
+                    </Button>
+                  </div>
                 </div>
                 
                 {/* Dados Pessoais */}
