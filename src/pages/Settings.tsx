@@ -75,6 +75,22 @@ const Settings = () => {
               onCheckedChange={(checked) => handleToggle('allowDeletions', checked)}
             />
           </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="sort-by-status" className="text-base">
+                Ordenar por Status
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Ordena processos de certificação por status (mais completos por último)
+              </p>
+            </div>
+            <Switch
+              id="sort-by-status"
+              checked={settings.sortByStatus}
+              onCheckedChange={(checked) => handleToggle('sortByStatus', checked)}
+            />
+          </div>
         </CardContent>
       </Card>
 

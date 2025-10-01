@@ -141,11 +141,19 @@ const CertificationProcess = () => {
       if (a.certification && !b.certification) return 1;
       if (!a.certification && !b.certification) return 0;
 
-      // Ordenar por status (menos completo primeiro)
-      const aIndex = statusOrder.indexOf(a.certification.status);
-      const bIndex = statusOrder.indexOf(b.certification.status);
-      
-      return aIndex - bIndex;
+      if (settings.sortByStatus) {
+        // Ordenar por status (menos completo primeiro)
+        const aIndex = statusOrder.indexOf(a.certification.status);
+        const bIndex = statusOrder.indexOf(b.certification.status);
+        
+        return aIndex - bIndex;
+      } else {
+        // Ordenar por data de criação (padrão - mais recente primeiro)
+        const aDate = new Date(a.certification.created_at || 0);
+        const bDate = new Date(b.certification.created_at || 0);
+        
+        return bDate.getTime() - aDate.getTime();
+      }
     });
 
   // Calcular paginação

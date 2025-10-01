@@ -4,6 +4,7 @@ interface GlobalSettings {
   testMode: boolean;
   debugMode: boolean;
   allowDeletions: boolean;
+  sortByStatus: boolean;
 }
 
 interface SettingsContextType {
@@ -15,6 +16,7 @@ const defaultSettings: GlobalSettings = {
   testMode: false,
   debugMode: false,
   allowDeletions: false,
+  sortByStatus: false,
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
