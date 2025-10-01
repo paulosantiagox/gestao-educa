@@ -20,6 +20,7 @@ import { CertificationTimeline } from "@/components/CertificationTimeline";
 import { MiniTimeline } from "@/components/MiniTimeline";
 import { SLAConfigForm } from "@/components/forms/SLAConfigForm";
 import { formatDateSP, formatDateTimeSP } from "@/lib/date-utils";
+import { useSettings } from "@/contexts/SettingsContext";
 
 const CertificationProcess = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,6 +41,7 @@ const CertificationProcess = () => {
   const [itemsPerPage, setItemsPerPage] = useState(30);
   
   const queryClient = useQueryClient();
+  const { settings } = useSettings();
 
   // Buscar configurações de SLA
   const { data: slaConfig = [] } = useQuery({
@@ -620,29 +622,31 @@ const CertificationProcess = () => {
                             >
                               <FileCheck className="h-4 w-4" />
                             </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" title="Deletar processo">
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Tem certeza que deseja excluir o processo de certificação de <strong>{student.name}</strong>? Esta ação não pode ser desfeita e todas as informações do processo serão perdidas.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => deleteMutation.mutate(student.id)}
-                                  >
-                                    Excluir
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                            {settings.allowDeletions && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" title="Deletar processo">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Tem certeza que deseja excluir o processo de certificação de <strong>{student.name}</strong>? Esta ação não pode ser desfeita e todas as informações do processo serão perdidas.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => deleteMutation.mutate(student.id)}
+                                    >
+                                      Excluir
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
                           </>
                         ) : (
                           <Button
