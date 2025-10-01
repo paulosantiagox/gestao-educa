@@ -4,26 +4,7 @@ import requireAuth from "../requireAuth.js";
 
 const router = express.Router();
 
-// Validação de CPF
-function isValidCPF(cpf) {
-  if (!cpf) return false;
-  cpf = cpf.replace(/[^\d]/g, "");
-  if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
-  
-  let sum = 0;
-  for (let i = 0; i < 9; i++) sum += parseInt(cpf.charAt(i)) * (10 - i);
-  let digit = 11 - (sum % 11);
-  if (digit >= 10) digit = 0;
-  if (digit !== parseInt(cpf.charAt(9))) return false;
-  
-  sum = 0;
-  for (let i = 0; i < 10; i++) sum += parseInt(cpf.charAt(i)) * (11 - i);
-  digit = 11 - (sum % 11);
-  if (digit >= 10) digit = 0;
-  if (digit !== parseInt(cpf.charAt(10))) return false;
-  
-  return true;
-}
+// Função de validação de CPF removida - permitindo CPFs duplicados
 
 // Validação de email
 function isValidEmail(email) {
@@ -74,34 +55,21 @@ router.post("/sale", async (req, res) => {
       throw new Error("Email do pagador inválido");
     }
 
-    if (payer.cpf && !isValidCPF(payer.cpf)) {
-      throw new Error("CPF do pagador inválido");
-    }
-
     await client.query("BEGIN");
 
     // 1. Criar/buscar aluno com dados do pagador
     let studentId;
     const cpfClean = payer.cpf ? payer.cpf.replace(/[^\d]/g, "") : null;
 
-    // Verificar se aluno já existe
-    let existingStudent;
-    if (cpfClean) {
-      existingStudent = await client.query(
-        "SELECT id FROM students WHERE cpf = $1 LIMIT 1",
-        [cpfClean]
-      );
-    }
-    
-    if (!existingStudent?.rows.length && payer.email) {
-      existingStudent = await client.query(
-        "SELECT id FROM students WHERE email = $1 LIMIT 1",
-        [payer.email]
-      );
-    }
+    // Verificar se aluno já existe (apenas por email)
+    const existingStudent = await client.query(
+      "SELECT id FROM students WHERE email = $1 LIMIT 1",
+      [payer.email]
+    );
 
-    if (existingStudent?.rows.length) {
+    if (existingStudent.rows.length) {
       studentId = existingStudent.rows[0].id;
+      console.log(`✅ Aluno existente encontrado: ${studentId}`);
     } else {
       // Criar novo aluno
       const studentResult = await client.query(
@@ -125,6 +93,7 @@ router.post("/sale", async (req, res) => {
         ]
       );
       studentId = studentResult.rows[0].id;
+      console.log(`✅ Novo aluno criado: ${studentId}`);
     }
 
     // 2. Buscar payment_method_id
@@ -172,37 +141,28 @@ router.post("/sale", async (req, res) => {
     for (const student of additionalStudents) {
       if (!student.name || !student.email) continue;
       if (!isValidEmail(student.email)) continue;
-      if (student.cpf && !isValidCPF(student.cpf)) continue;
 
       const studentCpfClean = student.cpf ? student.cpf.replace(/[^\d]/g, "") : null;
 
-      // Verificar se já existe
-      let existingAdditional;
-      if (studentCpfClean) {
-        existingAdditional = await client.query(
-          "SELECT id FROM students WHERE cpf = $1 LIMIT 1",
-          [studentCpfClean]
-        );
-      }
-
-      if (!existingAdditional?.rows.length) {
-        existingAdditional = await client.query(
-          "SELECT id FROM students WHERE email = $1 LIMIT 1",
-          [student.email]
-        );
-      }
+      // Verificar se aluno já existe (apenas por email)
+      const existingAdditional = await client.query(
+        "SELECT id FROM students WHERE email = $1 LIMIT 1",
+        [student.email]
+      );
 
       let additionalStudentId;
-      if (existingAdditional?.rows.length) {
+      if (existingAdditional.rows.length) {
         additionalStudentId = existingAdditional.rows[0].id;
+        console.log(`✅ Aluno adicional existente encontrado: ${additionalStudentId}`);
       } else {
         const additionalResult = await client.query(
           `INSERT INTO students (name, email, phone, cpf)
            VALUES ($1, $2, $3, $4)
            RETURNING id`,
-          [student.name, student.email, student.phone || null, studentCpfClean]
+           [student.name, student.email, student.phone || null, studentCpfClean]
         );
         additionalStudentId = additionalResult.rows[0].id;
+        console.log(`✅ Novo aluno adicional criado: ${additionalStudentId}`);
       }
 
       createdStudentIds.push(additionalStudentId);
@@ -241,7 +201,8 @@ router.post("/sale", async (req, res) => {
 
   } catch (error) {
     await client.query("ROLLBACK");
-    console.error("Erro no webhook:", error);
+    console.error("❌ Erro no webhook:", error.message);
+    console.error("Stack:", error.stack);
 
     if (logId) {
       await client.query(
