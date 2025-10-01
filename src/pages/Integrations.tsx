@@ -100,7 +100,7 @@ export default function Integrations() {
     try {
       const response = await api.get("/api/webhook/settings");
       if (response.ok) {
-        setSettings(response.data);
+        setSettings(response.data.data);
       }
     } catch (error) {
       console.error("Erro ao carregar configurações:", error);
@@ -117,8 +117,8 @@ export default function Integrations() {
       params.append("limit", itemsPerPage.toString());
 
       const response = await api.get(`/api/webhook/logs?${params.toString()}`);
-      if (response.ok && Array.isArray(response.data)) {
-        setLogs(response.data);
+      if (response.ok && Array.isArray(response.data.data)) {
+        setLogs(response.data.data);
       } else {
         setLogs([]);
       }
@@ -143,7 +143,7 @@ export default function Integrations() {
         auto_cleanup_enabled: settings.auto_cleanup_enabled
       });
       if (response.ok) {
-        setSettings(response.data);
+        setSettings(response.data.data);
         toast({ title: "Configurações salvas com sucesso" });
       }
     } catch (error) {

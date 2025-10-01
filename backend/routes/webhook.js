@@ -242,8 +242,8 @@ router.post("/sale", async (req, res) => {
   }
 });
 
-// GET /api/webhook/logs - Listar logs (autenticado)
-router.get("/logs", requireAuth, async (req, res) => {
+// GET /api/webhook/logs - Listar logs (público)
+router.get("/logs", async (req, res) => {
   try {
     const { 
       start_date, 
@@ -350,8 +350,8 @@ router.post("/logs/cleanup", requireAuth, async (req, res) => {
   }
 });
 
-// GET /api/webhook/settings - Buscar configurações (autenticado)
-router.get("/settings", requireAuth, async (req, res) => {
+// GET /api/webhook/settings - Buscar configurações (público)
+router.get("/settings", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM webhook_settings LIMIT 1");
     
