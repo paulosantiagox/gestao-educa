@@ -33,6 +33,7 @@ const CertificationProcess = () => {
   const [isSLADialogOpen, setIsSLADialogOpen] = useState(false);
   const [isStudentEditDialogOpen, setIsStudentEditDialogOpen] = useState(false);
   const [selectedStudentForEdit, setSelectedStudentForEdit] = useState<any>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Filtros
   const [filterCertifier, setFilterCertifier] = useState<string>("all");
@@ -224,32 +225,73 @@ const CertificationProcess = () => {
     setIsStudentEditDialogOpen(true);
   };
 
-  const handleCloseStudentEditDialog = () => {
+  const handleCloseStudentEditDialog = async () => {
     setIsStudentEditDialogOpen(false);
     setSelectedStudentForEdit(null);
-    queryClient.invalidateQueries({ queryKey: ["students-with-certification"] }).then(() => {
-      // Atualizar o selectedProcess com os dados mais recentes
-      if (selectedProcess) {
-        const updatedStudent = queryClient.getQueryData<any[]>(["students-with-certification"])
-          ?.find((s: any) => s.id === selectedProcess.id);
-        if (updatedStudent) {
-          setSelectedProcess(updatedStudent);
+    
+    // Atualizar o selectedProcess com os dados mais recentes
+    if (selectedProcess) {
+      try {
+        const [studentRes, certRes] = await Promise.all([
+          api.getStudent(selectedProcess.id),
+          api.getCertificationProcess(selectedProcess.id)
+        ]);
+        
+        if (studentRes.ok && studentRes.data) {
+          const updated = {
+            ...(studentRes.data as any),
+            certification: certRes.ok ? certRes.data : null
+          };
+          setSelectedProcess(updated);
+          
+          // Atualizar o cache da lista
+          queryClient.setQueryData(
+            ["students-with-certification", searchTerm],
+            (prev: any[] = []) => prev.map(s => s.id === updated.id ? updated : s)
+          );
         }
+      } catch (error) {
+        console.error("Erro ao atualizar dados do aluno:", error);
       }
-    });
+    }
+    
+    // Invalidar queries para refazer a listagem no fundo
+    queryClient.invalidateQueries({ queryKey: ["students-with-certification"] });
   };
 
-  const handleRefreshData = () => {
-    queryClient.invalidateQueries({ queryKey: ["students-with-certification"] }).then(() => {
-      if (selectedProcess) {
-        const updatedStudent = queryClient.getQueryData<any[]>(["students-with-certification"])
-          ?.find((s: any) => s.id === selectedProcess.id);
-        if (updatedStudent) {
-          setSelectedProcess(updatedStudent);
-        }
+  const handleRefreshData = async () => {
+    if (!selectedProcess) return;
+    
+    setIsRefreshing(true);
+    try {
+      const [studentRes, certRes] = await Promise.all([
+        api.getStudent(selectedProcess.id),
+        api.getCertificationProcess(selectedProcess.id)
+      ]);
+      
+      if (studentRes.ok && studentRes.data) {
+        const updated = {
+          ...(studentRes.data as any),
+          certification: certRes.ok ? certRes.data : null
+        };
+        setSelectedProcess(updated);
+        
+        // Atualizar o cache da lista
+        queryClient.setQueryData(
+          ["students-with-certification", searchTerm],
+          (prev: any[] = []) => prev.map(s => s.id === updated.id ? updated : s)
+        );
+        
+        toast.success("Dados atualizados com sucesso!");
+      } else {
+        toast.error("Erro ao atualizar dados");
       }
-    });
-    toast.success("Dados atualizados com sucesso!");
+    } catch (error) {
+      console.error("Erro ao atualizar dados:", error);
+      toast.error("Erro ao atualizar dados");
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const getStatusBadge = (status?: string) => {
@@ -791,9 +833,10 @@ const CertificationProcess = () => {
                       variant="outline" 
                       size="sm"
                       onClick={handleRefreshData}
+                      disabled={isRefreshing}
                     >
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      Atualizar
+                      <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                      {isRefreshing ? "Atualizando..." : "Atualizar"}
                     </Button>
                     <Button 
                       variant="outline" 
