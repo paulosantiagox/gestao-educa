@@ -67,7 +67,6 @@ interface WebhookSettings {
   id: number;
   log_retention_days: number;
   auto_cleanup_enabled: boolean;
-  webhook_token: string;
   created_at: string;
   updated_at: string;
 }
@@ -126,36 +125,9 @@ export default function Integrations() {
     }
   };
 
-  const handleCopyToken = () => {
-    if (settings?.webhook_token) {
-      navigator.clipboard.writeText(settings.webhook_token);
-      toast({ title: "Token copiado para a área de transferência" });
-    }
-  };
-
   const handleCopyUrl = () => {
     navigator.clipboard.writeText(webhookUrl);
     toast({ title: "URL copiada para a área de transferência" });
-  };
-
-  const handleRegenerateToken = async () => {
-    if (!confirm("Tem certeza? O token atual será invalidado.")) return;
-    
-    setLoading(true);
-    try {
-      const response = await api.post("/webhook/settings/regenerate-token", {});
-      if (response.ok) {
-        setSettings(response.data);
-        toast({ title: "Token regenerado com sucesso" });
-      }
-    } catch (error) {
-      toast({ 
-        title: "Erro ao regenerar token", 
-        variant: "destructive" 
-      });
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleUpdateSettings = async () => {
@@ -281,7 +253,6 @@ export default function Integrations() {
   };
 
   const exampleJson = {
-    token: settings?.webhook_token || "SEU_TOKEN_AQUI",
     sale: {
       sale_code: "VENDA-2024-001",
       total_amount: 297.00,
@@ -330,7 +301,7 @@ export default function Integrations() {
         <CardHeader>
           <CardTitle>Documentação da API</CardTitle>
           <CardDescription>
-            Endpoint para receber vendas automaticamente
+            Endpoint público para receber vendas automaticamente (sem autenticação)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -350,32 +321,6 @@ export default function Integrations() {
           </div>
 
           <div>
-            <Label>Token de Autenticação</Label>
-            <div className="flex gap-2 mt-2">
-              <Input 
-                value={settings?.webhook_token || "..."} 
-                readOnly 
-                type="password"
-                className="font-mono text-sm" 
-              />
-              <Button variant="outline" size="icon" onClick={handleCopyToken}>
-                <Copy className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={handleRegenerateToken}
-                disabled={loading}
-              >
-                <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Envie o token no corpo da requisição (campo "token") ou no header "x-webhook-token"
-            </p>
-          </div>
-
-          <div>
             <Label>Exemplo de Requisição</Label>
             <pre className="bg-muted p-4 rounded-lg mt-2 text-xs overflow-x-auto">
               {JSON.stringify(exampleJson, null, 2)}
@@ -390,12 +335,8 @@ export default function Integrations() {
                 <span>Venda criada com sucesso</span>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="destructive">401</Badge>
-                <span>Token inválido</span>
-              </div>
-              <div className="flex items-center gap-2">
                 <Badge variant="destructive">500</Badge>
-                <span>Erro no processamento</span>
+                <span>Erro no processamento (dados inválidos ou erro interno)</span>
               </div>
             </div>
           </div>

@@ -54,27 +54,6 @@ router.post("/sale", async (req, res) => {
     );
     logId = logResult.rows[0].id;
 
-    // Validar token
-    const settingsRes = await client.query("SELECT webhook_token FROM webhook_settings LIMIT 1");
-    if (!settingsRes.rows.length) {
-      throw new Error("Webhook não configurado");
-    }
-
-    const validToken = settingsRes.rows[0].webhook_token;
-    const receivedToken = req.body.token || req.headers["x-webhook-token"];
-
-    if (receivedToken !== validToken) {
-      await client.query(
-        `UPDATE webhook_logs SET processing_status = $1, error_message = $2, response_status = $3 
-         WHERE id = $4`,
-        ["error", "Token inválido", 401, logId]
-      );
-      return res.status(401).json({ 
-        ok: false, 
-        error: "Token inválido" 
-      });
-    }
-
     // Validar dados obrigatórios
     const { sale } = req.body;
     if (!sale) {
@@ -432,27 +411,6 @@ router.put("/settings", requireAuth, async (req, res) => {
     res.json({ ok: true, data: result.rows[0] });
   } catch (error) {
     console.error("Erro ao atualizar configurações:", error);
-    res.status(500).json({ ok: false, error: error.message });
-  }
-});
-
-// POST /api/webhook/settings/regenerate-token - Regenerar token (autenticado)
-router.post("/settings/regenerate-token", requireAuth, async (req, res) => {
-  try {
-    const crypto = await import("crypto");
-    const newToken = crypto.randomBytes(32).toString("hex");
-
-    const result = await pool.query(
-      `UPDATE webhook_settings 
-       SET webhook_token = $1, updated_at = CURRENT_TIMESTAMP
-       WHERE id = (SELECT id FROM webhook_settings LIMIT 1)
-       RETURNING *`,
-      [newToken]
-    );
-
-    res.json({ ok: true, data: result.rows[0] });
-  } catch (error) {
-    console.error("Erro ao regenerar token:", error);
     res.status(500).json({ ok: false, error: error.message });
   }
 });
