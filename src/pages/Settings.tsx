@@ -59,6 +59,22 @@ const Settings = () => {
               onCheckedChange={(checked) => handleToggle('debugMode', checked)}
             />
           </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="allow-deletions" className="text-base">
+                Permitir Exclusões
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Habilita os botões de exclusão de alunos e vendas
+              </p>
+            </div>
+            <Switch
+              id="allow-deletions"
+              checked={settings.allowDeletions}
+              onCheckedChange={(checked) => handleToggle('allowDeletions', checked)}
+            />
+          </div>
         </CardContent>
       </Card>
 

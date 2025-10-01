@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 interface GlobalSettings {
   testMode: boolean;
   debugMode: boolean;
+  allowDeletions: boolean;
 }
 
 interface SettingsContextType {
@@ -13,6 +14,7 @@ interface SettingsContextType {
 const defaultSettings: GlobalSettings = {
   testMode: false,
   debugMode: false,
+  allowDeletions: false,
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);

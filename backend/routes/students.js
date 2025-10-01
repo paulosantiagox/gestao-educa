@@ -213,6 +213,19 @@ router.put('/:id', requireAuth, async (req, res) => {
 router.delete('/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Verificar se o aluno está associado a alguma venda
+    const salesCheck = await pool.query(
+      'SELECT COUNT(*) as count FROM student_sales WHERE student_id = $1',
+      [id]
+    );
+    
+    if (parseInt(salesCheck.rows[0].count) > 0) {
+      return res.status(400).json({ 
+        error: 'Não é possível excluir este aluno pois ele está associado a uma ou mais vendas' 
+      });
+    }
+    
     const result = await pool.query('DELETE FROM students WHERE id = $1 RETURNING *', [id]);
     
     if (result.rows.length === 0) {
