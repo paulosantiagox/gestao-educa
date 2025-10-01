@@ -7,7 +7,7 @@ interface VersionDisplayProps {
 export function VersionDisplay({ className = "" }: VersionDisplayProps) {
   return (
     <div className={`text-sm text-muted-foreground ${className}`}>
-      Sistema de Gestão {packageJson.version}
+      {packageJson.version}
     </div>
   );
 }

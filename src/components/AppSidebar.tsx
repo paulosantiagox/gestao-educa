@@ -35,6 +35,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
+import { VersionDisplay } from "@/components/VersionDisplay";
 
 const menuItems = [
   {
@@ -100,9 +101,11 @@ const AppSidebar = () => {
           {!isCollapsed && (
             <div className="flex items-center gap-2">
               <GraduationCap className="h-6 w-6 text-primary" />
-              <div>
+              <div className="flex-1">
                 <h2 className="font-bold text-lg">Educa Brasil</h2>
-                <p className="text-xs text-muted-foreground">Sistema de Gestão</p>
+                <p className="text-xs text-muted-foreground">
+                  Sistema de Gestão <VersionDisplay className="inline" />
+                </p>
               </div>
             </div>
           )}

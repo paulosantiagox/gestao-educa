@@ -3,7 +3,7 @@ import { Calendar as CalendarIcon, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { VersionDisplay } from "@/components/VersionDisplay";
+
 import { cn } from "@/lib/utils";
 
 export function Header() {
@@ -39,7 +39,6 @@ export function Header() {
       <div className="container flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-3">
           <h1 className="text-lg font-semibold">Sistema de Gestão Educacional</h1>
-          <VersionDisplay className="hidden sm:block" />
         </div>
         
         <div className="flex items-center gap-3">
