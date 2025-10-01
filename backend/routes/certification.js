@@ -253,6 +253,96 @@ router.put('/:studentId/update', requireAuth, async (req, res) => {
   }
 });
 
+// PUT /api/certification/:studentId/dates - Atualizar datas específicas do processo
+router.put('/:studentId/dates', requireAuth, async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const {
+      exam_started_at,
+      documents_requested_at,
+      documents_under_review_at,
+      certification_started_at,
+      digital_certificate_sent_at,
+      physical_certificate_sent_at,
+      completed_at
+    } = req.body;
+
+    // Verifica se o processo existe
+    const checkResult = await pool.query(
+      'SELECT id FROM certification_process WHERE student_id = $1',
+      [studentId]
+    );
+
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Processo de certificação não encontrado' });
+    }
+
+    // Monta a query dinamicamente baseado nos campos fornecidos
+    const updates = [];
+    const params = [];
+    let paramIndex = 1;
+
+    if (exam_started_at) {
+      updates.push(`exam_started_at = $${paramIndex}`);
+      params.push(exam_started_at);
+      paramIndex++;
+    }
+    if (documents_requested_at) {
+      updates.push(`documents_requested_at = $${paramIndex}`);
+      params.push(documents_requested_at);
+      paramIndex++;
+    }
+    if (documents_under_review_at) {
+      updates.push(`documents_under_review_at = $${paramIndex}`);
+      params.push(documents_under_review_at);
+      paramIndex++;
+    }
+    if (certification_started_at) {
+      updates.push(`certification_started_at = $${paramIndex}`);
+      params.push(certification_started_at);
+      paramIndex++;
+    }
+    if (digital_certificate_sent_at) {
+      updates.push(`digital_certificate_sent_at = $${paramIndex}`);
+      params.push(digital_certificate_sent_at);
+      paramIndex++;
+    }
+    if (physical_certificate_sent_at) {
+      updates.push(`physical_certificate_sent_at = $${paramIndex}`);
+      params.push(physical_certificate_sent_at);
+      paramIndex++;
+    }
+    if (completed_at) {
+      updates.push(`completed_at = $${paramIndex}`);
+      params.push(completed_at);
+      paramIndex++;
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'Nenhuma data fornecida para atualização' });
+    }
+
+    // Sempre atualiza o updated_at
+    updates.push(`updated_at = CURRENT_TIMESTAMP`);
+
+    const updateQuery = `
+      UPDATE certification_process 
+      SET ${updates.join(', ')}
+      WHERE student_id = $${paramIndex}
+      RETURNING *
+    `;
+    params.push(studentId);
+
+    const result = await pool.query(updateQuery, params);
+
+    console.log('📅 Datas do processo de certificação atualizadas:', { studentId, updates: Object.keys(req.body) });
+    res.json({ ok: true, data: fixTimestampsSP(result.rows[0]) });
+  } catch (error) {
+    console.error('Error updating certification dates:', error);
+    res.status(500).json({ error: 'Erro ao atualizar datas de certificação' });
+  }
+});
+
 // DELETE /api/certification/:studentId - Deletar processo de certificação
 router.delete('/:studentId', requireAuth, async (req, res) => {
   try {

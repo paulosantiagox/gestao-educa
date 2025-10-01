@@ -97,7 +97,7 @@ router.post('/', requireAuth, async (req, res) => {
 
     const {
       sale_code, payer_name, payer_email, payer_phone, payer_cpf,
-      total_amount, payment_method_id, sale_date
+      total_amount, payment_method_id, sale_date, student_ids = []
     } = req.body;
 
     // Validação básica
@@ -178,7 +178,7 @@ router.post('/', requireAuth, async (req, res) => {
 
     const saleId = result.rows[0].id;
 
-    // 3. Associar aluno à venda
+    // 3. Associar aluno pagador à venda
     await client.query(
       `INSERT INTO student_sales (student_id, sale_id)
        VALUES ($1, $2)
@@ -186,8 +186,23 @@ router.post('/', requireAuth, async (req, res) => {
       [studentId, saleId]
     );
 
+    // 4. Associar alunos adicionais (student_ids)
+    if (student_ids && student_ids.length > 0) {
+      for (const sid of student_ids) {
+        if (sid !== studentId) { // Evitar duplicação com o pagador
+          await client.query(
+            `INSERT INTO student_sales (student_id, sale_id)
+             VALUES ($1, $2)
+             ON CONFLICT (student_id, sale_id) DO NOTHING`,
+            [sid, saleId]
+          );
+        }
+      }
+      console.log('✅ Alunos adicionais associados:', student_ids);
+    }
+
     await client.query('COMMIT');
-    console.log('✅ Venda criada e aluno associado:', { saleId, studentId });
+    console.log('✅ Venda criada e alunos associados:', { saleId, studentId, additionalStudents: student_ids });
 
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -204,7 +219,10 @@ router.post('/', requireAuth, async (req, res) => {
 
 // PUT /api/sales/:id - Atualizar venda
 router.put('/:id', requireAuth, async (req, res) => {
+  const client = await pool.connect();
   try {
+    await client.query('BEGIN');
+    
     const { id } = req.params;
     console.log('\n=== BACKEND: UPDATE SALE ===');
     console.log('1. Sale ID:', id);
@@ -212,11 +230,12 @@ router.put('/:id', requireAuth, async (req, res) => {
     
     const {
       sale_code, payer_name, payer_email, payer_phone, payer_cpf,
-      total_amount, paid_amount, payment_method_id, payment_status, sale_date
+      total_amount, paid_amount, payment_method_id, payment_status, sale_date, student_ids = []
     } = req.body;
 
     console.log('3. paid_amount recebido:', paid_amount, 'tipo:', typeof paid_amount);
     console.log('4. payment_status recebido:', payment_status);
+    console.log('5. student_ids recebido:', student_ids);
 
     // Garantir que paid_amount e total_amount sejam números válidos
     const paidAmountValue = paid_amount !== undefined && paid_amount !== null && paid_amount !== '' 
@@ -225,8 +244,8 @@ router.put('/:id', requireAuth, async (req, res) => {
     
     const totalAmountValue = parseFloat(total_amount);
 
-    console.log('5. paidAmountValue processado:', paidAmountValue);
-    console.log('6. totalAmountValue:', totalAmountValue);
+    console.log('6. paidAmountValue processado:', paidAmountValue);
+    console.log('7. totalAmountValue:', totalAmountValue);
 
     // Atualizar status automaticamente baseado no valor pago
     let finalStatus = payment_status || 'pending';
@@ -238,10 +257,10 @@ router.put('/:id', requireAuth, async (req, res) => {
       finalStatus = 'pending';
     }
 
-    console.log('7. finalStatus calculado:', finalStatus);
-    console.log('8. Executando UPDATE no banco...');
+    console.log('8. finalStatus calculado:', finalStatus);
+    console.log('9. Executando UPDATE no banco...');
 
-    const result = await pool.query(
+    const result = await client.query(
       `UPDATE sales SET
         sale_code = $1, payer_name = $2, payer_email = $3, payer_phone = $4,
         payer_cpf = $5, total_amount = $6, paid_amount = $7, payment_method_id = $8, 
@@ -256,24 +275,49 @@ router.put('/:id', requireAuth, async (req, res) => {
       ]
     );
 
-    console.log('9. Resultado do UPDATE:');
+    console.log('10. Resultado do UPDATE:');
     console.log('   - paid_amount no banco:', result.rows[0]?.paid_amount);
     console.log('   - payment_status no banco:', result.rows[0]?.payment_status);
     console.log('   - total_amount no banco:', result.rows[0]?.total_amount);
 
     if (result.rows.length === 0) {
-      console.error('10. ERRO: Venda não encontrada');
+      console.error('11. ERRO: Venda não encontrada');
+      await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Venda não encontrada' });
     }
 
-    console.log('11. UPDATE concluído com sucesso!');
+    // Atualizar associações de alunos
+    if (student_ids && Array.isArray(student_ids)) {
+      console.log('12. Atualizando associações de alunos...');
+      
+      // Remover todas as associações antigas
+      await client.query('DELETE FROM student_sales WHERE sale_id = $1', [id]);
+      console.log('   - Associações antigas removidas');
+      
+      // Adicionar novas associações
+      for (const studentId of student_ids) {
+        await client.query(
+          `INSERT INTO student_sales (student_id, sale_id)
+           VALUES ($1, $2)
+           ON CONFLICT (student_id, sale_id) DO NOTHING`,
+          [studentId, id]
+        );
+      }
+      console.log('   - Novas associações criadas:', student_ids);
+    }
+
+    await client.query('COMMIT');
+    console.log('13. UPDATE concluído com sucesso!');
     console.log('=== FIM UPDATE SALE ===\n');
     res.json(result.rows[0]);
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('=== ERRO NO UPDATE SALE ===');
     console.error('Error updating sale:', error);
     console.error('Stack:', error.stack);
     res.status(500).json({ error: 'Erro ao atualizar venda' });
+  } finally {
+    client.release();
   }
 });
 

@@ -264,6 +264,13 @@ class ApiClient {
     });
   }
 
+  async updateCertificationDates(studentId: number, data: any) {
+    return this.request(`/api/certification/${studentId}/dates`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
   async deleteCertificationProcess(studentId: number) {
     return this.request(`/api/certification/${studentId}`, {
       method: 'DELETE',

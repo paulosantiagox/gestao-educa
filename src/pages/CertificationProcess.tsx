@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Search, Eye, FileCheck, Settings, Edit, Trash2, X, Download, FileSpreadsheet } from "lucide-react";
+import { Plus, Search, Eye, FileCheck, Settings, Edit, Trash2, X, Download, FileSpreadsheet, CalendarClock } from "lucide-react";
 import * as XLSX from 'xlsx';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { CertificationForm } from "@/components/forms/CertificationForm";
 import { CertificationStatusUpdate } from "@/components/forms/CertificationStatusUpdate";
 import { CertificationEditForm } from "@/components/forms/CertificationEditForm";
+import { CertificationDateEditor } from "@/components/forms/CertificationDateEditor";
 import { CertificationTimeline } from "@/components/CertificationTimeline";
 import { MiniTimeline } from "@/components/MiniTimeline";
 import { SLAConfigForm } from "@/components/forms/SLAConfigForm";
@@ -26,6 +27,7 @@ const CertificationProcess = () => {
   const [selectedProcess, setSelectedProcess] = useState<any>(null);
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDateEditorDialogOpen, setIsDateEditorDialogOpen] = useState(false);
   const [isSLADialogOpen, setIsSLADialogOpen] = useState(false);
   
   // Filtros
@@ -184,6 +186,11 @@ const CertificationProcess = () => {
     setIsEditDialogOpen(true);
   };
 
+  const handleEditDates = (student: any) => {
+    setSelectedProcess(student);
+    setIsDateEditorDialogOpen(true);
+  };
+
   const handleCloseCreateDialog = () => {
     setIsCreateDialogOpen(false);
     queryClient.invalidateQueries({ queryKey: ["students-with-certification"] });
@@ -197,6 +204,12 @@ const CertificationProcess = () => {
 
   const handleCloseEditDialog = () => {
     setIsEditDialogOpen(false);
+    setSelectedProcess(null);
+    queryClient.invalidateQueries({ queryKey: ["students-with-certification"] });
+  };
+
+  const handleCloseDateEditorDialog = () => {
+    setIsDateEditorDialogOpen(false);
     setSelectedProcess(null);
     queryClient.invalidateQueries({ queryKey: ["students-with-certification"] });
   };
@@ -719,7 +732,7 @@ const CertificationProcess = () => {
       </Card>
 
       {/* Dialog para visualizar detalhes */}
-      <Dialog open={!!selectedProcess && !isStatusDialogOpen && !isEditDialogOpen} onOpenChange={() => setSelectedProcess(null)}>
+      <Dialog open={!!selectedProcess && !isStatusDialogOpen && !isEditDialogOpen && !isDateEditorDialogOpen} onOpenChange={() => setSelectedProcess(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Processo de Certificação</DialogTitle>
@@ -808,7 +821,11 @@ const CertificationProcess = () => {
               </div>
 
               {/* Botão para atualizar status */}
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => handleEditDates(selectedProcess)}>
+                  <CalendarClock className="mr-2 h-4 w-4" />
+                  Editar Datas
+                </Button>
                 <Button onClick={() => handleUpdateStatus(selectedProcess)}>
                   <FileCheck className="mr-2 h-4 w-4" />
                   Atualizar Status
@@ -849,6 +866,25 @@ const CertificationProcess = () => {
               studentId={selectedProcess.id}
               certification={selectedProcess.certification}
               onSuccess={handleCloseEditDialog}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para editar datas */}
+      <Dialog open={isDateEditorDialogOpen} onOpenChange={setIsDateEditorDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Datas do Processo</DialogTitle>
+            <DialogDescription>
+              Ajuste as datas históricas do processo de certificação. Use para corrigir datas de alunos antigos.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedProcess && (
+            <CertificationDateEditor
+              studentId={selectedProcess.id}
+              currentDates={selectedProcess.certification}
+              onSuccess={handleCloseDateEditorDialog}
             />
           )}
         </DialogContent>
