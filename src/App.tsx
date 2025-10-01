@@ -22,7 +22,6 @@ import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import StudentStatusCheck from "./pages/StudentStatusCheck";
-import Integrations from "./pages/Integrations";
 
 const queryClient = new QueryClient();
 
@@ -71,7 +70,6 @@ const App = () => (
                                 <Route path="/payment-methods" element={<PaymentMethods />} />
                                 <Route path="/users" element={<Users />} />
                                 <Route path="/settings" element={<Settings />} />
-                                <Route path="/integrations" element={<Integrations />} />
                                 <Route path="*" element={<NotFound />} />
                               </Routes>
                             </div>

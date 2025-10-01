@@ -16,7 +16,6 @@ import payments from "./routes/payments.js";
 import certification from "./routes/certification.js";
 import dashboard from "./routes/dashboard.js";
 import certificationSLA from "./routes/certification-sla.js";
-import webhook from "./routes/webhook.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -52,7 +51,6 @@ app.use("/api/payments", payments);
 app.use("/api/certification", certification);
 app.use("/api/dashboard", dashboard);
 app.use("/api/certification-sla", certificationSLA);
-app.use("/api/webhook", webhook);
 
 // healthcheck
 app.get("/api/ping", (_req, res) => res.json({ ok: true }));
