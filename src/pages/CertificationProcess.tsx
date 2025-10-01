@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Search, Eye, FileCheck, Settings, Edit, Trash2, X, Download, FileSpreadsheet, CalendarClock } from "lucide-react";
+import { Plus, Search, Eye, FileCheck, Settings, Edit, Trash2, X, Download, FileSpreadsheet, CalendarClock, Phone, Mail, MapPin, FileText, ExternalLink } from "lucide-react";
 import * as XLSX from 'xlsx';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import { CertificationDateEditor } from "@/components/forms/CertificationDateEdi
 import { CertificationTimeline } from "@/components/CertificationTimeline";
 import { MiniTimeline } from "@/components/MiniTimeline";
 import { SLAConfigForm } from "@/components/forms/SLAConfigForm";
+import { StudentForm } from "@/components/forms/StudentForm";
 import { formatDateSP, formatDateTimeSP } from "@/lib/date-utils";
 import { useSettings } from "@/contexts/SettingsContext";
 
@@ -30,6 +31,8 @@ const CertificationProcess = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDateEditorDialogOpen, setIsDateEditorDialogOpen] = useState(false);
   const [isSLADialogOpen, setIsSLADialogOpen] = useState(false);
+  const [isStudentEditDialogOpen, setIsStudentEditDialogOpen] = useState(false);
+  const [selectedStudentForEdit, setSelectedStudentForEdit] = useState<any>(null);
   
   // Filtros
   const [filterCertifier, setFilterCertifier] = useState<string>("all");
@@ -213,6 +216,17 @@ const CertificationProcess = () => {
   const handleCloseDateEditorDialog = () => {
     setIsDateEditorDialogOpen(false);
     setSelectedProcess(null);
+    queryClient.invalidateQueries({ queryKey: ["students-with-certification"] });
+  };
+
+  const handleEditStudent = (student: any) => {
+    setSelectedStudentForEdit(student);
+    setIsStudentEditDialogOpen(true);
+  };
+
+  const handleCloseStudentEditDialog = () => {
+    setIsStudentEditDialogOpen(false);
+    setSelectedStudentForEdit(null);
     queryClient.invalidateQueries({ queryKey: ["students-with-certification"] });
   };
 
@@ -736,7 +750,7 @@ const CertificationProcess = () => {
       </Card>
 
       {/* Dialog para visualizar detalhes */}
-      <Dialog open={!!selectedProcess && !isStatusDialogOpen && !isEditDialogOpen && !isDateEditorDialogOpen} onOpenChange={() => setSelectedProcess(null)}>
+      <Dialog open={!!selectedProcess && !isStatusDialogOpen && !isEditDialogOpen && !isDateEditorDialogOpen && !isStudentEditDialogOpen} onOpenChange={() => setSelectedProcess(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Processo de Certificação</DialogTitle>
@@ -753,42 +767,125 @@ const CertificationProcess = () => {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => {
-                      // Abrir dialog de edição de aluno
-                      window.location.href = `/students?edit=${selectedProcess.id}`;
-                    }}
+                    onClick={() => handleEditStudent(selectedProcess)}
                   >
                     <Edit className="mr-2 h-4 w-4" />
                     Editar Aluno
                   </Button>
                 </div>
                 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Nome Completo</p>
-                    <p className="font-medium">{selectedProcess.name}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Email</p>
-                    <p className="font-medium text-sm">{selectedProcess.email}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Telefone</p>
-                    <p className="font-medium">{selectedProcess.phone || "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">CPF</p>
-                    <p className="font-medium">{selectedProcess.cpf || "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Data de Nascimento</p>
-                    <p className="font-medium">{selectedProcess.birth_date ? formatDateSP(selectedProcess.birth_date) : "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Cidade/Estado</p>
-                    <p className="font-medium">{selectedProcess.city && selectedProcess.state ? `${selectedProcess.city}/${selectedProcess.state}` : "-"}</p>
+                {/* Dados Pessoais */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-muted-foreground">Dados Pessoais</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Nome Completo</p>
+                      <p className="font-medium">{selectedProcess.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground flex items-center gap-1">
+                        <Mail className="h-3 w-3" />
+                        Email
+                      </p>
+                      <a href={`mailto:${selectedProcess.email}`} className="font-medium text-sm text-primary hover:underline">
+                        {selectedProcess.email}
+                      </a>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground flex items-center gap-1">
+                        <Phone className="h-3 w-3" />
+                        Telefone
+                      </p>
+                      {selectedProcess.phone ? (
+                        <a href={`tel:${selectedProcess.phone}`} className="font-medium text-primary hover:underline">
+                          {selectedProcess.phone}
+                        </a>
+                      ) : (
+                        <p className="font-medium text-muted-foreground">-</p>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">CPF</p>
+                      <p className="font-medium">{selectedProcess.cpf || "-"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Data de Nascimento</p>
+                      <p className="font-medium">{selectedProcess.birth_date ? formatDateSP(selectedProcess.birth_date) : "-"}</p>
+                    </div>
                   </div>
                 </div>
+
+                {/* Endereço */}
+                <div className="space-y-3 pt-3 border-t">
+                  <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-1">
+                    <MapPin className="h-4 w-4" />
+                    Endereço
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">CEP</p>
+                      <p className="font-medium">{selectedProcess.zip_code || "-"}</p>
+                    </div>
+                    <div className="md:col-span-2">
+                      <p className="text-sm text-muted-foreground">Rua</p>
+                      <p className="font-medium">{selectedProcess.street || "-"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Número</p>
+                      <p className="font-medium">{selectedProcess.number || "-"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Complemento</p>
+                      <p className="font-medium">{selectedProcess.complement || "-"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Bairro</p>
+                      <p className="font-medium">{selectedProcess.neighborhood || "-"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Cidade</p>
+                      <p className="font-medium">{selectedProcess.city || "-"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Estado</p>
+                      <p className="font-medium">{selectedProcess.state || "-"}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Outros */}
+                {(selectedProcess.documents_link || selectedProcess.notes) && (
+                  <div className="space-y-3 pt-3 border-t">
+                    <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-1">
+                      <FileText className="h-4 w-4" />
+                      Informações Adicionais
+                    </h4>
+                    <div className="space-y-3">
+                      {selectedProcess.documents_link && (
+                        <div>
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <ExternalLink className="h-3 w-3" />
+                            Link dos Documentos
+                          </p>
+                          <a 
+                            href={selectedProcess.documents_link} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="font-medium text-primary hover:underline text-sm break-all"
+                          >
+                            {selectedProcess.documents_link}
+                          </a>
+                        </div>
+                      )}
+                      {selectedProcess.notes && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Observações</p>
+                          <p className="font-medium text-sm whitespace-pre-wrap">{selectedProcess.notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Informações do Processo */}
@@ -881,14 +978,56 @@ const CertificationProcess = () => {
           <DialogHeader>
             <DialogTitle>Editar Datas do Processo</DialogTitle>
             <DialogDescription>
-              Ajuste as datas históricas do processo de certificação. Use para corrigir datas de alunos antigos.
+              Ajuste as datas de cada etapa do processo de certificação
             </DialogDescription>
           </DialogHeader>
-          {selectedProcess && (
+          {selectedProcess?.certification && (
             <CertificationDateEditor
               studentId={selectedProcess.id}
-              currentDates={selectedProcess.certification}
+              currentDates={{
+                exam_started_at: selectedProcess.certification.exam_started_at,
+                documents_requested_at: selectedProcess.certification.documents_requested_at,
+                documents_under_review_at: selectedProcess.certification.documents_under_review_at,
+                certification_started_at: selectedProcess.certification.certification_started_at,
+                digital_certificate_sent_at: selectedProcess.certification.digital_certificate_sent_at,
+                physical_certificate_sent_at: selectedProcess.certification.physical_certificate_sent_at,
+                completed_at: selectedProcess.certification.completed_at,
+              }}
               onSuccess={handleCloseDateEditorDialog}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para editar aluno */}
+      <Dialog open={isStudentEditDialogOpen} onOpenChange={setIsStudentEditDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Dados do Aluno</DialogTitle>
+            <DialogDescription>
+              Atualize as informações cadastrais do aluno
+            </DialogDescription>
+          </DialogHeader>
+          {selectedStudentForEdit && (
+            <StudentForm
+              studentId={selectedStudentForEdit.id}
+              initialData={{
+                name: selectedStudentForEdit.name || "",
+                email: selectedStudentForEdit.email || "",
+                phone: selectedStudentForEdit.phone || "",
+                cpf: selectedStudentForEdit.cpf || "",
+                birth_date: selectedStudentForEdit.birth_date || "",
+                zip_code: selectedStudentForEdit.zip_code || "",
+                street: selectedStudentForEdit.street || "",
+                number: selectedStudentForEdit.number || "",
+                complement: selectedStudentForEdit.complement || "",
+                neighborhood: selectedStudentForEdit.neighborhood || "",
+                city: selectedStudentForEdit.city || "",
+                state: selectedStudentForEdit.state || "",
+                documents_link: selectedStudentForEdit.documents_link || "",
+                notes: selectedStudentForEdit.notes || "",
+              }}
+              onSuccess={handleCloseStudentEditDialog}
             />
           )}
         </DialogContent>
