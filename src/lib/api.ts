@@ -25,46 +25,66 @@ class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    retries = 2
   ): Promise<ApiResponse<T>> {
-    try {
-      const url = `${this.baseUrl}${endpoint}`;
-      console.log('🌐 [Mobile Debug] Fazendo request para:', url);
-      console.log('🌐 [Mobile Debug] Credentials:', 'include');
-      
-      const response = await fetch(url, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-        credentials: 'include', // Para enviar cookies (JWT)
-      });
+    let lastError: any;
+    
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const url = `${this.baseUrl}${endpoint}`;
+        console.log(`🌐 [API] Request (tentativa ${attempt + 1}/${retries + 1}):`, url);
+        
+        const response = await fetch(url, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            ...options.headers,
+          },
+          credentials: 'include',
+          mode: 'cors',
+        });
 
-      console.log('🌐 [Mobile Debug] Response status:', response.status);
-      console.log('🌐 [Mobile Debug] Response headers:', Object.fromEntries(response.headers.entries()));
+        console.log('🌐 [API] Response status:', response.status);
 
-      // Verificar se a resposta é JSON válida
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        const text = await response.text();
-        console.error('❌ [Mobile Debug] API returned non-JSON response:', text);
-        return { ok: false, error: 'Erro no servidor - resposta inválida' };
+        // Verificar se a resposta é JSON válida
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await response.text();
+          console.error('❌ [API] Non-JSON response:', text);
+          
+          if (attempt < retries) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+            continue;
+          }
+          return { ok: false, error: 'Erro no servidor - resposta inválida' };
+        }
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error('❌ [API] Response not ok:', data.error);
+          return { ok: false, error: data.error || 'Erro desconhecido' };
+        }
+
+        return { ok: true, data };
+      } catch (error: any) {
+        console.error(`❌ [API] Error (tentativa ${attempt + 1}):`, error);
+        lastError = error;
+        
+        // Retry apenas em erros de rede/timeout
+        if (attempt < retries && (error.name === 'TypeError' || error.message.includes('fetch'))) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+          continue;
+        }
+        break;
       }
-
-      const data = await response.json();
-      console.log('🌐 [Mobile Debug] Response data:', data);
-
-      if (!response.ok) {
-        console.error('❌ [Mobile Debug] Response not ok:', data.error);
-        return { ok: false, error: data.error || 'Erro desconhecido' };
-      }
-
-      return { ok: true, data };
-    } catch (error) {
-      console.error('❌ [Mobile Debug] API Error:', error);
-      return { ok: false, error: 'Erro de conexão com o servidor' };
     }
+    
+    return { 
+      ok: false, 
+      error: lastError?.message || 'Erro de conexão com o servidor. Verifique sua internet.' 
+    };
   }
 
   // AUTH

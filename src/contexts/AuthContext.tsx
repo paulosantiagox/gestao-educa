@@ -70,16 +70,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      console.log('🔐 [Auth] Tentando login...');
       const response = await api.login(email, password);
+      console.log('🔐 [Auth] Resposta do login:', response);
       
       if (response.ok && response.data) {
         const data = response.data as any;
         if (data.user) {
-          // Armazena o usuário que vem completo do login
           setUser(data.user as User);
-          
-          // Salva no localStorage para persistir mesmo quando /me não retorna todos os dados
           localStorage.setItem('user', JSON.stringify(data.user));
+          console.log('✅ [Auth] Login bem-sucedido');
         }
         
         toast({
@@ -88,17 +88,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         return true;
       } else {
+        console.error('❌ [Auth] Login falhou:', response.error);
         toast({
           title: "Erro ao fazer login",
-          description: response.error || "Verifique suas credenciais.",
+          description: response.error || "Verifique suas credenciais e conexão.",
           variant: "destructive",
         });
         return false;
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('❌ [Auth] Exceção no login:', error);
       toast({
         title: "Erro ao fazer login",
-        description: "Não foi possível conectar ao servidor.",
+        description: error?.message || "Não foi possível conectar ao servidor. Verifique sua conexão.",
         variant: "destructive",
       });
       return false;

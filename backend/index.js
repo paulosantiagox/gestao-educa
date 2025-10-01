@@ -29,8 +29,12 @@ app.use(cors({
     "https://sistema-educa.autoflixtreinamentos.com",
     "https://42a90389-1914-4013-8ede-b39eed274805.lovableproject.com",
     "https://connect-my-rest.lovable.app",
+    /\.lovableproject\.com$/,
+    /\.lovable\.app$/,
   ],
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
 }));
 app.use(express.json());
 app.use(cookieParser());
