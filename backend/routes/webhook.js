@@ -41,7 +41,7 @@ router.post("/sale", async (req, res) => {
       throw new Error("Campo 'sale' é obrigatório");
     }
 
-    const { sale_code, total_amount, payment_method, payer } = sale;
+    const { sale_code, total_amount, paid_amount = 0, payment_method, payment_status, notes, payer } = sale;
     
     if (!sale_code || !total_amount || !payer) {
       throw new Error("Campos obrigatórios: sale_code, total_amount, payer");
@@ -108,11 +108,23 @@ router.post("/sale", async (req, res) => {
       }
     }
 
-    // 3. Criar venda
+    // 3. Calcular payment_status se não fornecido
+    let finalPaymentStatus = payment_status;
+    if (!finalPaymentStatus) {
+      if (paid_amount <= 0) {
+        finalPaymentStatus = "pending";
+      } else if (paid_amount >= total_amount) {
+        finalPaymentStatus = "paid";
+      } else {
+        finalPaymentStatus = "partial";
+      }
+    }
+
+    // 4. Criar venda
     const saleResult = await client.query(
       `INSERT INTO sales 
-       (sale_code, payer_name, payer_email, payer_phone, payer_cpf, total_amount, payment_method_id, payment_status, sale_date)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       (sale_code, payer_name, payer_email, payer_phone, payer_cpf, total_amount, paid_amount, payment_method_id, payment_status, sale_date, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING id`,
       [
         sale_code,
@@ -121,20 +133,22 @@ router.post("/sale", async (req, res) => {
         payer.phone || null,
         cpfClean,
         total_amount,
+        paid_amount,
         paymentMethodId,
-        "pending",
-        sale.sale_date || new Date()
+        finalPaymentStatus,
+        sale.sale_date || new Date(),
+        notes || null
       ]
     );
     const saleId = saleResult.rows[0].id;
 
-    // 4. Associar aluno principal à venda
+    // 5. Associar aluno principal à venda
     await client.query(
       "INSERT INTO student_sales (student_id, sale_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
       [studentId, saleId]
     );
 
-    // 5. Processar alunos adicionais (se houver)
+    // 6. Processar alunos adicionais (se houver)
     const additionalStudents = sale.students || [];
     const createdStudentIds = [studentId];
 

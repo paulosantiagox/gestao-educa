@@ -98,7 +98,7 @@ export default function Integrations() {
 
   const loadSettings = async () => {
     try {
-      const response = await api.get("/webhook/settings");
+      const response = await api.get("/api/webhook/settings");
       if (response.ok) {
         setSettings(response.data);
       }
@@ -116,12 +116,15 @@ export default function Integrations() {
       params.append("page", currentPage.toString());
       params.append("limit", itemsPerPage.toString());
 
-      const response = await api.get(`/webhook/logs?${params.toString()}`);
-      if (response.ok) {
+      const response = await api.get(`/api/webhook/logs?${params.toString()}`);
+      if (response.ok && Array.isArray(response.data)) {
         setLogs(response.data);
+      } else {
+        setLogs([]);
       }
     } catch (error) {
       console.error("Erro ao carregar logs:", error);
+      setLogs([]);
     }
   };
 
@@ -135,7 +138,7 @@ export default function Integrations() {
     
     setLoading(true);
     try {
-      const response = await api.put("/webhook/settings", {
+      const response = await api.put("/api/webhook/settings", {
         log_retention_days: settings.log_retention_days,
         auto_cleanup_enabled: settings.auto_cleanup_enabled
       });
@@ -158,7 +161,7 @@ export default function Integrations() {
     
     setLoading(true);
     try {
-      const response = await api.post("/webhook/logs/cleanup", {});
+      const response = await api.post("/api/webhook/logs/cleanup", {});
       if (response.ok) {
         toast({ title: response.data.message || "Logs limpos com sucesso" });
         loadLogs();
@@ -178,7 +181,7 @@ export default function Integrations() {
     
     setLoading(true);
     try {
-      const response = await api.delete(`/webhook/logs/${logToDelete}`);
+      const response = await api.delete(`/api/webhook/logs/${logToDelete}`);
       if (response.ok) {
         toast({ title: "Log deletado com sucesso" });
         loadLogs();
@@ -256,8 +259,11 @@ export default function Integrations() {
     sale: {
       sale_code: "VENDA-2024-001",
       total_amount: 297.00,
+      paid_amount: 100.00,
+      payment_status: "partial",
       payment_method: "pix",
       sale_date: "2024-01-15T10:30:00Z",
+      notes: "Cliente solicitou parcelamento",
       payer: {
         name: "Maria Silva",
         email: "maria@email.com",
