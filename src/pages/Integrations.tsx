@@ -83,7 +83,7 @@ export default function Integrations() {
   const [loading, setLoading] = useState(false);
   
   // Filters
-  const [filterStatus, setFilterStatus] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -111,7 +111,7 @@ export default function Integrations() {
   const loadLogs = async () => {
     try {
       const params = new URLSearchParams();
-      if (filterStatus) params.append("status", filterStatus);
+      if (filterStatus && filterStatus !== "all") params.append("status", filterStatus);
       if (filterStartDate) params.append("start_date", filterStartDate);
       if (filterEndDate) params.append("end_date", filterEndDate);
       params.append("page", currentPage.toString());
@@ -224,7 +224,7 @@ export default function Integrations() {
   };
 
   const clearFilters = () => {
-    setFilterStatus("");
+    setFilterStatus("all");
     setFilterStartDate("");
     setFilterEndDate("");
     setCurrentPage(1);
@@ -314,7 +314,7 @@ export default function Integrations() {
     }
   };
 
-  const hasActiveFilters = filterStatus || filterStartDate || filterEndDate;
+  const hasActiveFilters = (filterStatus && filterStatus !== "all") || filterStartDate || filterEndDate;
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -473,7 +473,7 @@ export default function Integrations() {
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="success">Sucesso</SelectItem>
                   <SelectItem value="error">Erro</SelectItem>
                   <SelectItem value="pending">Pendente</SelectItem>
