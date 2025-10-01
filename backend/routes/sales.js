@@ -14,7 +14,7 @@ router.get('/', requireAuth, async (req, res) => {
     
     const result = await pool.query(
       `SELECT s.*, pm.name as payment_method_name,
-              COUNT(DISTINCT ss.student_id) as students_count,
+              COUNT(DISTINCT ss.student_id)::int as students_count,
               (SELECT st.name FROM students st 
                INNER JOIN student_sales ss2 ON st.id = ss2.student_id 
                WHERE ss2.sale_id = s.id 
@@ -33,11 +33,13 @@ router.get('/', requireAuth, async (req, res) => {
       [searchQuery, limit, offset]
     );
     
-    console.log('📋 Sales query result (primeiras 3):', result.rows.slice(0, 3).map(s => ({ 
+    console.log('📋 Sales query result (primeira venda completa):', result.rows[0]);
+    console.log('📋 Campos importantes:', result.rows.slice(0, 2).map(s => ({ 
       id: s.id, 
-      code: s.sale_code, 
-      created_at: s.created_at,
-      students_count: s.students_count
+      code: s.sale_code,
+      students_count: s.students_count,
+      first_student_name: s.first_student_name,
+      student_names: s.student_names
     })));
 
     const countResult = await pool.query(
