@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { formatDateTimeSP } from '@/lib/date-utils';
 import ejaLogo from '@/assets/eja-logo.png';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sistema-educa.autoflixtreinamentos.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://gestao-educa.autoflixtreinamentos.com';
 
 // Função para mascarar dados sensíveis (segurança)
 const maskData = (data: string, type: 'name' | 'cpf' | 'email' | 'phone' = 'name'): string => {

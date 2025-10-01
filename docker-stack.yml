@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  gestao-educa-backend:
+    image: node:20
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    command: ["sh","-c","npm install --omit=dev && node index.js"]
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgres://sistema_educa:paulo123456@postgres_postgres:5432/sistema_educa
+      JWT_SECRET: paulo123456
+      PGSSLMODE: disable
+    networks: [OrionNet]
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=OrionNet
+        - traefik.http.routers.gestao-educa-backend.rule=Host(`gestao-educa.autoflixtreinamentos.com`) && PathPrefix(`/api`)
+        - traefik.http.routers.gestao-educa-backend.entrypoints=websecure
+        - traefik.http.routers.gestao-educa-backend.tls.certresolver=letsencrypt
+        - traefik.http.services.gestao-educa-backend.loadbalancer.server.port=3000
+
+  gestao-educa-frontend:
+    image: nginx:alpine
+    volumes:
+      - ./dist:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks: [OrionNet]
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=OrionNet
+        - traefik.http.routers.gestao-educa-frontend.rule=Host(`gestao-educa.autoflixtreinamentos.com`)
+        - traefik.http.routers.gestao-educa-frontend.entrypoints=websecure
+        - traefik.http.routers.gestao-educa-frontend.tls.certresolver=letsencrypt
+        - traefik.http.services.gestao-educa-frontend.loadbalancer.server.port=80
+
+networks:
+  OrionNet:
+    external: true

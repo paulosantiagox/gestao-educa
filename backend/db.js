@@ -2,9 +2,13 @@ import pg from 'pg';
 
 const { Pool } = pg;
 
-export const pool = new Pool({
+const cfg = {
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+  ssl: false, // forçado
+};
 
+console.log('[DB DEBUG] DATABASE_URL =', process.env.DATABASE_URL);
+console.log('[DB DEBUG] ssl =', cfg.ssl);
+
+export const pool = new Pool(cfg);
 export default pool;

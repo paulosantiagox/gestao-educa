@@ -54,7 +54,7 @@ export default function Auth() {
 
     setIsLoading(true);
 
-    const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://sistema-educa.autoflixtreinamentos.com'}/api/auth/signup`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://gestao-educa.autoflixtreinamentos.com'}/api/auth/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

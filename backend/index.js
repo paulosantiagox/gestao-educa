@@ -30,6 +30,7 @@ app.use(cors({
     "https://sistema-educa.autoflixtreinamentos.com",
     "https://42a90389-1914-4013-8ede-b39eed274805.lovableproject.com",
     "https://connect-my-rest.lovable.app",
+    "https://sistema-educa.lovable.app",
     /\.lovableproject\.com$/,
     /\.lovable\.app$/,
   ],
