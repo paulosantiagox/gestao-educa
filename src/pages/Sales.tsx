@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { Plus, Search, Pencil, Trash2, Eye, Users } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Eye, Users, Download, FileSpreadsheet, Filter, X } from "lucide-react";
+import * as XLSX from 'xlsx';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SaleForm } from "@/components/forms/SaleForm";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
@@ -19,9 +21,18 @@ const Sales = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSale, setEditingSale] = useState<any>(null);
   const [viewingSale, setViewingSale] = useState<any>(null);
+  
+  // Filtros
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>("all");
+  
+  // Paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(30);
+  
   const queryClient = useQueryClient();
 
-  const { data: sales = [], isLoading } = useQuery({
+  const { data: allSales = [], isLoading } = useQuery({
     queryKey: ["sales", searchTerm],
     queryFn: async () => {
       const result = await api.getSales({ search: searchTerm });
@@ -29,6 +40,43 @@ const Sales = () => {
       return [...list].sort((a: any, b: any) => new Date(b.created_at || b.sale_date).getTime() - new Date(a.created_at || a.sale_date).getTime());
     },
   });
+
+  const { data: paymentMethods = [] } = useQuery({
+    queryKey: ['payment-methods'],
+    queryFn: async () => {
+      const result = await api.getPaymentMethods();
+      return result.ok ? (result.data || []) : [];
+    },
+  });
+
+  // Aplicar filtros
+  const filteredSales = allSales.filter((sale: any) => {
+    // Filtro por status de pagamento
+    if (filterStatus !== "all" && sale.payment_status !== filterStatus) return false;
+
+    // Filtro por método de pagamento
+    if (filterPaymentMethod !== "all" && sale.payment_method_id?.toString() !== filterPaymentMethod) return false;
+
+    return true;
+  });
+
+  // Calcular paginação
+  const totalPages = Math.ceil(filteredSales.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const sales = filteredSales.slice(startIndex, endIndex);
+
+  // Reset página quando filtros mudam
+  const handleFilterChange = (filterFn: () => void) => {
+    filterFn();
+    setCurrentPage(1);
+  };
+
+  const clearFilters = () => {
+    setFilterStatus("all");
+    setFilterPaymentMethod("all");
+    setCurrentPage(1);
+  };
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => api.deleteSale(id),
@@ -92,6 +140,106 @@ const Sales = () => {
     return formatDateTimeSP(date);
   };
 
+  const exportToCSV = () => {
+    if (filteredSales.length === 0) {
+      toast.error("Não há dados para exportar");
+      return;
+    }
+
+    const headers = [
+      "Código",
+      "Pagador",
+      "Email",
+      "Telefone",
+      "CPF",
+      "Alunos",
+      "Valor Total",
+      "Valor Pago",
+      "Status",
+      "Método de Pagamento",
+      "Data da Venda",
+      "Data de Cadastro",
+      "Observações"
+    ];
+
+    const csvRows = filteredSales.map((sale: any) => [
+      `"${sale.sale_code || ''}"`,
+      `"${sale.payer_name || ''}"`,
+      `"${sale.payer_email || ''}"`,
+      `"${sale.payer_phone || ''}"`,
+      `"${sale.payer_cpf || ''}"`,
+      `"${sale.student_names || '-'}"`,
+      sale.total_amount || 0,
+      sale.paid_amount || 0,
+      `"${getStatusLabel(sale.payment_status)}"`,
+      `"${sale.payment_method_name || '-'}"`,
+      `"${formatDate(sale.sale_date || sale.created_at)}"`,
+      `"${formatDate(sale.created_at)}"`,
+      `"${(sale.notes || '').replace(/"/g, '""')}"` // Escape aspas
+    ].join(","));
+
+    const csvContent = [headers.join(","), ...csvRows].join("\n");
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", `vendas_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = "hidden";
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success("CSV exportado com sucesso!");
+  };
+
+  const exportToExcel = () => {
+    if (filteredSales.length === 0) {
+      toast.error("Não há dados para exportar");
+      return;
+    }
+
+    const data = filteredSales.map((sale: any) => ({
+      "Código": sale.sale_code || '',
+      "Pagador": sale.payer_name || '',
+      "Email": sale.payer_email || '',
+      "Telefone": sale.payer_phone || '',
+      "CPF": sale.payer_cpf || '',
+      "Alunos": sale.student_names || '-',
+      "Valor Total": sale.total_amount || 0,
+      "Valor Pago": sale.paid_amount || 0,
+      "Status": getStatusLabel(sale.payment_status),
+      "Método de Pagamento": sale.payment_method_name || '-',
+      "Data da Venda": formatDate(sale.sale_date || sale.created_at),
+      "Data de Cadastro": formatDate(sale.created_at),
+      "Observações": sale.notes || ''
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Vendas");
+
+    worksheet['!cols'] = [
+      { wch: 15 }, { wch: 25 }, { wch: 30 }, { wch: 15 },
+      { wch: 15 }, { wch: 30 }, { wch: 12 }, { wch: 12 },
+      { wch: 12 }, { wch: 20 }, { wch: 18 }, { wch: 18 }, { wch: 40 }
+    ];
+
+    XLSX.writeFile(workbook, `vendas_${new Date().toISOString().split('T')[0]}.xlsx`);
+    toast.success("Excel exportado com sucesso!");
+  };
+
+  const getStatusLabel = (status: string) => {
+    const statusLabels: Record<string, string> = {
+      pending: "Pendente",
+      partial: "Parcial",
+      paid: "Pago",
+      cancelled: "Cancelado"
+    };
+    return statusLabels[status] || status;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -121,9 +269,21 @@ const Sales = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Pesquisar Vendas</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Filtros e Busca</CardTitle>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={exportToCSV}>
+                <Download className="mr-2 h-4 w-4" />
+                CSV
+              </Button>
+              <Button variant="outline" size="sm" onClick={exportToExcel}>
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                Excel
+              </Button>
+            </div>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
@@ -132,6 +292,74 @@ const Sales = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Status de Pagamento</label>
+              <Select value={filterStatus} onValueChange={(value) => handleFilterChange(() => setFilterStatus(value))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos os status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="pending">Pendente</SelectItem>
+                  <SelectItem value="partial">Parcial</SelectItem>
+                  <SelectItem value="paid">Pago</SelectItem>
+                  <SelectItem value="cancelled">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Método de Pagamento</label>
+              <Select value={filterPaymentMethod} onValueChange={(value) => handleFilterChange(() => setFilterPaymentMethod(value))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos os métodos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {paymentMethods.map((method: any) => (
+                    <SelectItem key={method.id} value={method.id.toString()}>
+                      {method.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Itens por página</label>
+              <Select value={itemsPerPage.toString()} onValueChange={(value) => {
+                setItemsPerPage(parseInt(value));
+                setCurrentPage(1);
+              }}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="30">30</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {(filterStatus !== "all" || filterPaymentMethod !== "all") && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Filtros ativos</span>
+              <Button variant="ghost" size="sm" onClick={clearFilters}>
+                <X className="mr-2 h-4 w-4" />
+                Limpar filtros
+              </Button>
+            </div>
+          )}
+
+          <div className="text-sm text-muted-foreground">
+            Mostrando {sales.length} de {filteredSales.length} vendas
+            {searchTerm && ` (filtradas de ${allSales.length} total)`}
           </div>
         </CardContent>
       </Card>
@@ -244,6 +472,32 @@ const Sales = () => {
                 ))}
               </TableBody>
             </Table>
+          )}
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                Página {currentPage} de {totalPages}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Próxima
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
