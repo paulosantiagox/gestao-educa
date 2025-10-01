@@ -60,6 +60,40 @@ router.get('/', requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/sales/next-code - Busca próximo código de venda disponível
+router.get('/next-code', requireAuth, async (req, res) => {
+  try {
+    const currentYear = new Date().getFullYear();
+    const prefix = `VND-${currentYear}-`;
+    
+    // Buscar o maior número de ordem do ano atual
+    const result = await pool.query(
+      `SELECT sale_code FROM sales 
+       WHERE sale_code LIKE $1 
+       ORDER BY sale_code DESC 
+       LIMIT 1`,
+      [`${prefix}%`]
+    );
+    
+    let nextNumber = 1;
+    
+    if (result.rows.length > 0) {
+      const lastCode = result.rows[0].sale_code;
+      const lastNumberMatch = lastCode.match(/VND-\d{4}-(\d+)/);
+      
+      if (lastNumberMatch) {
+        nextNumber = parseInt(lastNumberMatch[1]) + 1;
+      }
+    }
+    
+    const nextCode = `${prefix}${nextNumber.toString().padStart(3, '0')}`;
+    res.json({ nextCode });
+  } catch (error) {
+    console.error('Error generating next sale code:', error);
+    res.status(500).json({ error: 'Erro ao gerar próximo código de venda' });
+  }
+});
+
 // GET /api/sales/:id - Busca venda por ID
 router.get('/:id', requireAuth, async (req, res) => {
   try {

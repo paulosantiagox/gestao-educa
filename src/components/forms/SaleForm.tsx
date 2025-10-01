@@ -63,6 +63,23 @@ export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
     },
   });
 
+  // Buscar próximo código de venda automaticamente (apenas para novas vendas)
+  const { data: nextCodeData } = useQuery({
+    queryKey: ['next-sale-code'],
+    queryFn: async () => {
+      const result = await api.getNextSaleCode();
+      return result.ok ? result.data : null;
+    },
+    enabled: !saleId && !initialData?.sale_code, // Só busca se for nova venda
+  });
+
+  // Preencher automaticamente o código quando disponível
+  React.useEffect(() => {
+    if (nextCodeData?.nextCode && !form.getValues('sale_code') && !saleId) {
+      form.setValue('sale_code', nextCodeData.nextCode);
+    }
+  }, [nextCodeData, saleId]);
+
   const { data: paymentMethods = [] } = useQuery({
     queryKey: ['payment-methods'],
     queryFn: async () => {

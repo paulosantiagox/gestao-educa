@@ -177,6 +177,10 @@ class ApiClient {
     return this.request<any[]>(`/api/sales?${query.toString()}`);
   }
 
+  async getNextSaleCode() {
+    return this.request<{ nextCode: string }>('/api/sales/next-code');
+  }
+
   async getSale(id: number) {
     return this.request(`/api/sales/${id}`);
   }
