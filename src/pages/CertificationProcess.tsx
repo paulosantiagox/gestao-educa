@@ -227,7 +227,16 @@ const CertificationProcess = () => {
   const handleCloseStudentEditDialog = () => {
     setIsStudentEditDialogOpen(false);
     setSelectedStudentForEdit(null);
-    queryClient.invalidateQueries({ queryKey: ["students-with-certification"] });
+    queryClient.invalidateQueries({ queryKey: ["students-with-certification"] }).then(() => {
+      // Atualizar o selectedProcess com os dados mais recentes
+      if (selectedProcess) {
+        const updatedStudent = queryClient.getQueryData<any[]>(["students-with-certification"])
+          ?.find((s: any) => s.id === selectedProcess.id);
+        if (updatedStudent) {
+          setSelectedProcess(updatedStudent);
+        }
+      }
+    });
   };
 
   const getStatusBadge = (status?: string) => {

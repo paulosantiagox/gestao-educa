@@ -122,6 +122,18 @@ export function CertificationTimeline({ currentStatus, certification, studentNam
   };
 
   const getStepState = (index: number) => {
+    const step = TIMELINE_STEPS.filter(s => {
+      if (s.status === "physical_certificate_sent" && !certification.wants_physical) {
+        return false;
+      }
+      return true;
+    })[index];
+    
+    // Se é o primeiro step (welcome) e existe uma data, sempre considerar como editável
+    if (step?.status === "welcome" && getStepDate(step, certification)) {
+      return index === currentIndex ? "current" : "completed";
+    }
+    
     if (index < currentIndex) return "completed";
     if (index === currentIndex) return "current";
     return "upcoming";
