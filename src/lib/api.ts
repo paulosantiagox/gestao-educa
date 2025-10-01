@@ -103,6 +103,29 @@ class ApiClient {
     return this.request('/api/auth/me');
   }
 
+  // Generic HTTP methods
+  async get<T = any>(endpoint: string): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, { method: "GET" });
+  }
+
+  async post<T = any>(endpoint: string, body: any): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      method: "POST",
+      body: JSON.stringify(body)
+    });
+  }
+
+  async put<T = any>(endpoint: string, body: any): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      method: "PUT",
+      body: JSON.stringify(body)
+    });
+  }
+
+  async delete<T = any>(endpoint: string): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, { method: "DELETE" });
+  }
+
   // STUDENTS (retorna array direto)
   async getStudents(params?: { page?: number; limit?: number; search?: string }) {
     const query = new URLSearchParams();
