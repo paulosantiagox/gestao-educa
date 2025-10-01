@@ -146,18 +146,33 @@ router.post('/', requireAuth, async (req, res) => {
 router.put('/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const {
+    let {
       name, email, phone, cpf, birth_date,
       zip_code, street, number, complement,
       neighborhood, city, state,
       documents_link, active
     } = req.body;
 
+    // Normalizar campos vazios para null
+    birth_date = birth_date === "" ? null : birth_date;
+    zip_code = zip_code === "" ? null : zip_code;
+    street = street === "" ? null : street;
+    number = number === "" ? null : number;
+    complement = complement === "" ? null : complement;
+    neighborhood = neighborhood === "" ? null : neighborhood;
+    city = city === "" ? null : city;
+    state = state === "" ? null : state;
+    documents_link = documents_link === "" ? null : documents_link;
+    const notes = req.body.notes === "" ? null : req.body.notes;
+
+    // Limpar CPF (apenas dígitos)
+    const cleanCpf = cpf ? cpf.replace(/\D/g, '') : null;
+
     // Verificar se já existe outro aluno com este CPF
-    if (cpf) {
+    if (cleanCpf) {
       const cpfCheck = await pool.query(
         'SELECT id FROM students WHERE cpf = $1 AND id != $2',
-        [cpf.replace(/\D/g, ''), id]
+        [cleanCpf, id]
       );
       if (cpfCheck.rows.length > 0) {
         return res.status(400).json({ error: 'Já existe outro aluno cadastrado com este CPF' });
@@ -174,10 +189,10 @@ router.put('/:id', requireAuth, async (req, res) => {
       WHERE id = $15
       RETURNING *`,
       [
-        name, email, phone, cpf, birth_date,
+        name, email, phone, cleanCpf, birth_date,
         zip_code, street, number,
         complement, neighborhood, city, state,
-        documents_link, req.body.notes,
+        documents_link, notes,
         id
       ]
     );
@@ -189,7 +204,8 @@ router.put('/:id', requireAuth, async (req, res) => {
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error updating student:', error);
-    res.status(500).json({ error: 'Erro ao atualizar aluno' });
+    console.error('Error details:', error.message);
+    res.status(500).json({ error: 'Erro ao atualizar aluno: ' + error.message });
   }
 });
 

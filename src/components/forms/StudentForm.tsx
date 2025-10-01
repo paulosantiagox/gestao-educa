@@ -69,9 +69,25 @@ export function StudentForm({ onSuccess, initialData, studentId }: StudentFormPr
 
   const onSubmit = async (data: StudentFormData) => {
     try {
+      // Sanitizar payload: converter "" para null e remover máscaras
+      const payload = {
+        ...data,
+        cpf: data.cpf?.replace(/\D/g, '') || null,
+        birth_date: data.birth_date || null,
+        zip_code: data.zip_code || null,
+        street: data.street || null,
+        number: data.number || null,
+        complement: data.complement || null,
+        neighborhood: data.neighborhood || null,
+        city: data.city || null,
+        state: data.state || null,
+        documents_link: data.documents_link || null,
+        notes: data.notes || null,
+      };
+
       const result = studentId
-        ? await api.updateStudent(studentId, data)
-        : await api.createStudent(data);
+        ? await api.updateStudent(studentId, payload)
+        : await api.createStudent(payload);
 
       if (result.ok) {
         toast.success(studentId ? "Aluno atualizado com sucesso!" : "Aluno cadastrado com sucesso!");

@@ -1,3 +1,4 @@
+import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -41,7 +42,7 @@ interface SaleFormProps {
 
 export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
   const { settings } = useSettings();
-  const [selectedStudents, setSelectedStudents] = useState<any[]>(initialData?.students || []);
+  const [selectedStudents, setSelectedStudents] = useState<any[]>([]);
   const [studentSearch, setStudentSearch] = useState("");
   const [openStudentCombobox, setOpenStudentCombobox] = useState(false);
 
@@ -101,6 +102,13 @@ const { data: paymentsData } = useQuery({
 const initialPaid = initialData?.paid_amount ? parseFloat(initialData.paid_amount as string) : 0;
 const currentPaid = (paymentsData as any[])?.reduce((sum, p: any) => sum + parseFloat(p.amount || 0), 0) ?? initialPaid;
 
+  // Sincronizar selectedStudents quando a venda mudar
+  React.useEffect(() => {
+    if (initialData?.students) {
+      setSelectedStudents(initialData.students);
+    }
+  }, [saleId]);
+
   // Função para verificar se um aluno já está em uma venda paga
   const isStudentInPaidSale = async (studentId: number) => {
     for (const sale of allSales) {
@@ -112,7 +120,7 @@ const currentPaid = (paymentsData as any[])?.reduce((sum, p: any) => sum + parse
         const saleDetails = await api.getSale(sale.id);
         if (saleDetails.ok && saleDetails.data) {
           const saleData = saleDetails.data as any;
-          const hasStudent = saleData.students?.some((s: any) => s.student_id === studentId);
+          const hasStudent = saleData.students?.some((s: any) => s.id === studentId);
           if (hasStudent) {
             return { blocked: true, saleCode: sale.sale_code };
           }

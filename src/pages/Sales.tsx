@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Search, Pencil, Trash2, Eye } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Eye, Users } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { formatDateTimeSP } from "@/lib/date-utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const Sales = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -155,7 +156,7 @@ const Sales = () => {
                 <TableRow>
                   <TableHead>Código</TableHead>
                   <TableHead>Pagador</TableHead>
-                  <TableHead>Alunos</TableHead>
+                  <TableHead>Aluno(s)</TableHead>
                   <TableHead className="min-w-[140px]">Data/Hora</TableHead>
                   <TableHead>Valor Total</TableHead>
                   <TableHead>Valor Pago</TableHead>
@@ -170,9 +171,24 @@ const Sales = () => {
                     <TableCell>{sale.payer_name}</TableCell>
                     <TableCell>
                       {sale.students_count > 0 ? (
-                        <Badge variant="default" className="bg-green-500 hover:bg-green-600">
-                          {sale.students_count} aluno{sale.students_count > 1 ? 's' : ''}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">{sale.first_student_name}</span>
+                          {sale.students_count > 1 && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge variant="secondary" className="cursor-help">
+                                    +{sale.students_count - 1}
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p className="font-semibold mb-1">Todos os alunos:</p>
+                                  <p className="text-sm">{sale.student_names}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                        </div>
                       ) : (
                         <Badge variant="secondary">
                           Sem alunos

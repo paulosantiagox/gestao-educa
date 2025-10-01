@@ -14,7 +14,15 @@ router.get('/', requireAuth, async (req, res) => {
     
     const result = await pool.query(
       `SELECT s.*, pm.name as payment_method_name,
-              COUNT(DISTINCT ss.student_id) as students_count
+              COUNT(DISTINCT ss.student_id) as students_count,
+              (SELECT st.name FROM students st 
+               INNER JOIN student_sales ss2 ON st.id = ss2.student_id 
+               WHERE ss2.sale_id = s.id 
+               ORDER BY ss2.id LIMIT 1) as first_student_name,
+              (SELECT string_agg(st.name, ', ' ORDER BY st.name) 
+               FROM students st 
+               INNER JOIN student_sales ss3 ON st.id = ss3.student_id 
+               WHERE ss3.sale_id = s.id) as student_names
        FROM sales s
        LEFT JOIN payment_methods pm ON s.payment_method_id = pm.id
        LEFT JOIN student_sales ss ON s.id = ss.sale_id
