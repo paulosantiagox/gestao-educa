@@ -25,6 +25,12 @@ const Sales = () => {
   // Filtros
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>("all");
+  const [filterPayerName, setFilterPayerName] = useState<string>("");
+  const [filterStudentName, setFilterStudentName] = useState<string>("");
+  const [filterStartDate, setFilterStartDate] = useState<string>("");
+  const [filterEndDate, setFilterEndDate] = useState<string>("");
+  const [filterMinValue, setFilterMinValue] = useState<string>("");
+  const [filterMaxValue, setFilterMaxValue] = useState<string>("");
   
   // Paginação
   const [currentPage, setCurrentPage] = useState(1);
@@ -51,6 +57,43 @@ const Sales = () => {
 
   // Aplicar filtros
   const filteredSales = allSales.filter((sale: any) => {
+    // Filtro por nome do pagador
+    if (filterPayerName.trim() !== "") {
+      const payerName = (sale.payer_name || '').toLowerCase();
+      if (!payerName.includes(filterPayerName.toLowerCase())) return false;
+    }
+
+    // Filtro por nome do aluno
+    if (filterStudentName.trim() !== "") {
+      const studentNames = (sale.student_names || '').toLowerCase();
+      if (!studentNames.includes(filterStudentName.toLowerCase())) return false;
+    }
+
+    // Filtro por data de venda (intervalo)
+    if (filterStartDate) {
+      const saleDate = new Date(sale.sale_date || sale.created_at);
+      const startDate = new Date(filterStartDate);
+      if (saleDate < startDate) return false;
+    }
+    if (filterEndDate) {
+      const saleDate = new Date(sale.sale_date || sale.created_at);
+      const endDate = new Date(filterEndDate);
+      endDate.setHours(23, 59, 59, 999); // Incluir o dia inteiro
+      if (saleDate > endDate) return false;
+    }
+
+    // Filtro por valor
+    if (filterMinValue !== "") {
+      const minValue = parseFloat(filterMinValue);
+      const totalAmount = parseFloat(sale.total_amount || 0);
+      if (totalAmount < minValue) return false;
+    }
+    if (filterMaxValue !== "") {
+      const maxValue = parseFloat(filterMaxValue);
+      const totalAmount = parseFloat(sale.total_amount || 0);
+      if (totalAmount > maxValue) return false;
+    }
+
     // Filtro por status de pagamento
     if (filterStatus !== "all" && sale.payment_status !== filterStatus) return false;
 
@@ -75,6 +118,12 @@ const Sales = () => {
   const clearFilters = () => {
     setFilterStatus("all");
     setFilterPaymentMethod("all");
+    setFilterPayerName("");
+    setFilterStudentName("");
+    setFilterStartDate("");
+    setFilterEndDate("");
+    setFilterMinValue("");
+    setFilterMaxValue("");
     setCurrentPage(1);
   };
 
@@ -294,6 +343,86 @@ const Sales = () => {
             />
           </div>
 
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Nome do Pagador</label>
+              <Input
+                placeholder="Filtrar por nome do pagador..."
+                value={filterPayerName}
+                onChange={(e) => {
+                  setFilterPayerName(e.target.value);
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Nome do Aluno</label>
+              <Input
+                placeholder="Filtrar por nome do aluno..."
+                value={filterStudentName}
+                onChange={(e) => {
+                  setFilterStudentName(e.target.value);
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Data Inicial</label>
+              <Input
+                type="date"
+                value={filterStartDate}
+                onChange={(e) => {
+                  setFilterStartDate(e.target.value);
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Data Final</label>
+              <Input
+                type="date"
+                value={filterEndDate}
+                onChange={(e) => {
+                  setFilterEndDate(e.target.value);
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Valor Mínimo</label>
+              <Input
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                value={filterMinValue}
+                onChange={(e) => {
+                  setFilterMinValue(e.target.value);
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Valor Máximo</label>
+              <Input
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                value={filterMaxValue}
+                onChange={(e) => {
+                  setFilterMaxValue(e.target.value);
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+          </div>
+
           <div className="grid gap-4 md:grid-cols-3">
             <div>
               <label className="text-sm font-medium mb-2 block">Status de Pagamento</label>
@@ -347,7 +476,10 @@ const Sales = () => {
             </div>
           </div>
 
-          {(filterStatus !== "all" || filterPaymentMethod !== "all") && (
+          {(filterStatus !== "all" || filterPaymentMethod !== "all" || 
+            filterPayerName.trim() !== "" || filterStudentName.trim() !== "" ||
+            filterStartDate !== "" || filterEndDate !== "" ||
+            filterMinValue !== "" || filterMaxValue !== "") && (
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Filtros ativos</span>
               <Button variant="ghost" size="sm" onClick={clearFilters}>

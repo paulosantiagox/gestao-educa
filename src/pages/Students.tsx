@@ -22,6 +22,7 @@ const Students = () => {
   // Filtros
   const [filterState, setFilterState] = useState<string>("all");
   const [filterActive, setFilterActive] = useState<string>("all");
+  const [filterCPF, setFilterCPF] = useState<string>("");
   
   // Paginação
   const [currentPage, setCurrentPage] = useState(1);
@@ -39,6 +40,13 @@ const Students = () => {
 
   // Aplicar filtros
   const filteredStudents = allStudents.filter((student: any) => {
+    // Filtro por CPF
+    if (filterCPF.trim() !== "") {
+      const cleanFilterCPF = filterCPF.replace(/\D/g, '');
+      const cleanStudentCPF = (student.cpf || '').replace(/\D/g, '');
+      if (!cleanStudentCPF.includes(cleanFilterCPF)) return false;
+    }
+
     // Filtro por estado
     if (filterState !== "all") {
       if (!student.state || student.state.trim() === "") {
@@ -74,6 +82,7 @@ const Students = () => {
   const clearFilters = () => {
     setFilterState("all");
     setFilterActive("all");
+    setFilterCPF("");
     setCurrentPage(1);
   };
 
@@ -257,7 +266,19 @@ const Students = () => {
             />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">CPF</label>
+              <Input
+                placeholder="Filtrar por CPF..."
+                value={filterCPF}
+                onChange={(e) => {
+                  setFilterCPF(e.target.value);
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+
             <div>
               <label className="text-sm font-medium mb-2 block">Estado</label>
               <Select value={filterState} onValueChange={(value) => handleFilterChange(() => setFilterState(value))}>
@@ -309,7 +330,7 @@ const Students = () => {
             </div>
           </div>
 
-          {(filterState !== "all" || filterActive !== "all") && (
+          {(filterState !== "all" || filterActive !== "all" || filterCPF.trim() !== "") && (
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Filtros ativos</span>
               <Button variant="ghost" size="sm" onClick={clearFilters}>
