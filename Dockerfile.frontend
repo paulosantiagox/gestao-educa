@@ -1,6 +1,11 @@
 # Dockerfile para o frontend do gestao-educa
 FROM nginx:alpine
 
+# Definir versão como argumento de build
+ARG VERSION=1.0.0
+LABEL version=$VERSION
+LABEL description="Sistema de Gestão Educacional - Frontend"
+
 # Copiar arquivos de build do frontend
 COPY dist/ /usr/share/nginx/html/
 

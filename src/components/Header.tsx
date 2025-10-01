@@ -3,6 +3,7 @@ import { Calendar as CalendarIcon, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { VersionDisplay } from "@/components/VersionDisplay";
 import { cn } from "@/lib/utils";
 
 export function Header() {
@@ -36,7 +37,10 @@ export function Header() {
   return (
     <header className="border-b bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50">
       <div className="container flex h-16 items-center justify-between px-4">
-        <h1 className="text-lg font-semibold">Sistema de Gestão Educacional</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-lg font-semibold">Sistema de Gestão Educacional</h1>
+          <VersionDisplay className="hidden sm:block" />
+        </div>
         
         <div className="flex items-center gap-3">
           {/* Relógio com segundos */}

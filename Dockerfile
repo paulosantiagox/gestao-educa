@@ -1,6 +1,11 @@
 # Dockerfile para o backend do sistema-educa
 FROM node:18-alpine
 
+# Definir versão como argumento de build
+ARG VERSION=1.0.0
+LABEL version=$VERSION
+LABEL description="Sistema de Gestão Educacional - Backend"
+
 # Definir diretório de trabalho
 WORKDIR /app
 
