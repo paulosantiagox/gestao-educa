@@ -11,6 +11,7 @@ import {
   UserCog,
   Settings as SettingsIcon,
   Link,
+  Trophy,
 } from "lucide-react";
 import {
   Sidebar,
@@ -49,6 +50,7 @@ const menuItems = [
     items: [
       { title: "Alunos", url: "/students", icon: Users },
       { title: "Vendas", url: "/sales", icon: ShoppingCart },
+      { title: "Ranking de Vendas", url: "/sales-ranking", icon: Trophy },
       { title: "Processo de Certificação", url: "/certification-process", icon: FileCheck },
     ],
   },

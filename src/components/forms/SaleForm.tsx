@@ -12,11 +12,12 @@ import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { X, Check, ChevronsUpDown, Beaker } from "lucide-react";
+import { X, Check, ChevronsUpDown, Beaker, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useSettings } from "@/contexts/SettingsContext";
 import { generateSaleData } from "@/lib/test-data";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const saleSchema = z.object({
   sale_code: z.string().min(3, "Código deve ter no mínimo 3 caracteres"),
@@ -30,6 +31,13 @@ const saleSchema = z.object({
   payment_status: z.string().optional(),
   sale_date: z.string().optional(),
   notes: z.string().optional(),
+  // Campos UTM para rastreamento
+  utm_consultor: z.string().optional().nullable(),
+  utm_source: z.string().optional().nullable(),
+  utm_medium: z.string().optional().nullable(),
+  utm_campaign: z.string().optional().nullable(),
+  utm_content: z.string().optional().nullable(),
+  utm_term: z.string().optional().nullable(),
 });
 
 type SaleFormData = z.infer<typeof saleSchema>;
@@ -45,6 +53,28 @@ export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
   const [selectedStudents, setSelectedStudents] = useState<any[]>([]);
   const [studentSearch, setStudentSearch] = useState("");
   const [openStudentCombobox, setOpenStudentCombobox] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  // Tratamento de erro global para o componente
+  React.useEffect(() => {
+    const handleError = (error: any) => {
+      console.error('SaleForm Error:', error);
+      setHasError(true);
+      setErrorMessage(error?.message || 'Erro desconhecido no formulário de vendas');
+    };
+
+    // Capturar erros não tratados
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', (event) => {
+      handleError(event.reason);
+    });
+
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleError);
+    };
+  }, []);
 
   const form = useForm<SaleFormData>({
     resolver: zodResolver(saleSchema),
@@ -60,6 +90,13 @@ export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
       payment_status: "pending",
       sale_date: new Date().toISOString().split('T')[0],
       notes: "",
+      // Campos UTM - usar null em vez de string vazia
+      utm_consultor: null,
+      utm_source: null,
+      utm_medium: null,
+      utm_campaign: null,
+      utm_content: null,
+      utm_term: null,
     },
   });
 
@@ -83,16 +120,45 @@ export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
   const { data: paymentMethods = [] } = useQuery({
     queryKey: ['payment-methods'],
     queryFn: async () => {
-      const result = await api.getPaymentMethods();
-      return result.ok ? (result.data || []) : [];
+      try {
+        const result = await api.getPaymentMethods();
+        return result.ok ? (result.data || []) : [];
+      } catch (error) {
+        console.error('Erro ao buscar métodos de pagamento:', error);
+        setHasError(true);
+        setErrorMessage('Erro ao carregar métodos de pagamento');
+        return [];
+      }
     },
   });
 
   const { data: students = [] } = useQuery({
     queryKey: ['students', studentSearch],
     queryFn: async () => {
-      const result = await api.getStudents({ search: studentSearch });
-      return result.ok ? (((result.data as any)?.students) || []) : [];
+      try {
+        const result = await api.getStudents({ search: studentSearch });
+        return result.ok ? (((result.data as any)?.students) || []) : [];
+      } catch (error) {
+        console.error('Erro ao buscar alunos:', error);
+        setHasError(true);
+        setErrorMessage('Erro ao carregar lista de alunos');
+        return [];
+      }
+    },
+  });
+
+  const { data: users = [] } = useQuery({
+    queryKey: ['users'],
+    queryFn: async () => {
+      try {
+        const result = await api.getUsers();
+        return result.ok ? (result.data?.users?.filter((user: any) => user.active) || []) : [];
+      } catch (error) {
+        console.error('Erro ao buscar usuários:', error);
+        setHasError(true);
+        setErrorMessage('Erro ao carregar lista de usuários');
+        return [];
+      }
     },
   });
 
@@ -100,10 +166,42 @@ export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
   const { data: allSales = [] } = useQuery({
     queryKey: ['all-sales-for-validation'],
     queryFn: async () => {
-      const result = await api.getSales({});
-      return result.ok ? (((result.data as any)?.sales) || []) : [];
+      try {
+        const result = await api.getSales({});
+        return result.ok ? (((result.data as any)?.sales) || []) : [];
+      } catch (error) {
+        console.error('Erro ao buscar vendas para validação:', error);
+        // Não definir erro aqui pois é uma query secundária
+        return [];
+      }
     },
   });
+
+  // Se houver erro, mostrar alerta de erro
+  if (hasError) {
+    return (
+      <div className="p-4">
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            {errorMessage}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="ml-4"
+              onClick={() => {
+                setHasError(false);
+                setErrorMessage("");
+                window.location.reload();
+              }}
+            >
+              Recarregar
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
 // Pagamentos da venda atual (para calcular valor já pago)
 const { data: paymentsData } = useQuery({
@@ -125,6 +223,32 @@ const currentPaid = (paymentsData as any[])?.reduce((sum, p: any) => sum + parse
       setSelectedStudents(initialData.students);
     }
   }, [saleId]);
+
+  // Resetar o formulário quando initialData muda (para edição)
+  React.useEffect(() => {
+    if (initialData) {
+      form.reset({
+        sale_code: initialData.sale_code || "",
+        payer_name: initialData.payer_name || "",
+        payer_email: initialData.payer_email || "",
+        payer_phone: initialData.payer_phone || "",
+        payer_cpf: initialData.payer_cpf || "",
+        total_amount: initialData.total_amount || "",
+        paid_amount: initialData.paid_amount || "0",
+        payment_method_id: initialData.payment_method_id || "",
+        payment_status: initialData.payment_status || "pending",
+        sale_date: initialData.sale_date || new Date().toISOString().split('T')[0],
+        notes: initialData.notes || "",
+        // Campos UTM - usar valores do initialData ou null
+        utm_consultor: initialData.utm_consultor || null,
+        utm_source: initialData.utm_source || null,
+        utm_medium: initialData.utm_medium || null,
+        utm_campaign: initialData.utm_campaign || null,
+        utm_content: initialData.utm_content || null,
+        utm_term: initialData.utm_term || null,
+      });
+    }
+  }, [initialData, form]);
 
   // Função para verificar se um aluno já está em uma venda paga
   const isStudentInPaidSale = async (studentId: number) => {
@@ -216,9 +340,24 @@ const currentPaid = (paymentsData as any[])?.reduce((sum, p: any) => sum + parse
         payment_status: finalStatus,
         payment_method_id: parseInt(data.payment_method_id),
         student_ids: selectedStudents.map(s => s.id),
+        // Garantir que campos UTM null sejam enviados como null, não como string vazia
+        utm_consultor: data.utm_consultor || null,
+        utm_source: data.utm_source || null,
+        utm_medium: data.utm_medium || null,
+        utm_campaign: data.utm_campaign || null,
+        utm_content: data.utm_content || null,
+        utm_term: data.utm_term || null,
       } as any;
 
       console.log('9. Payload para API:', payload);
+      console.log('9.1. Campos UTM no payload:', {
+        utm_consultor: payload.utm_consultor,
+        utm_source: payload.utm_source,
+        utm_medium: payload.utm_medium,
+        utm_campaign: payload.utm_campaign,
+        utm_content: payload.utm_content,
+        utm_term: payload.utm_term,
+      });
 
       const result = saleId
         ? await api.updateSale(saleId, payload)
@@ -546,6 +685,134 @@ const currentPaid = (paymentsData as any[])?.reduce((sum, p: any) => sum + parse
               </FormItem>
             )}
           />
+        </div>
+
+        {/* Seção UTM - Dados de Rastreamento */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Dados UTM - Rastreamento <span className="text-sm font-normal text-muted-foreground">(Opcionais)</span></h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* UTM Consultor */}
+            <FormField
+              control={form.control}
+              name="utm_consultor"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Consultora</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma consultora" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {users.map((user: any) => (
+                        <SelectItem key={user.id} value={user.name}>
+                          {user.name} ({user.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* UTM Source */}
+            <FormField
+              control={form.control}
+              name="utm_source"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>UTM Source</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Ex: google, facebook, instagram" 
+                      {...field} 
+                      value={field.value || ""} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* UTM Medium */}
+            <FormField
+              control={form.control}
+              name="utm_medium"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>UTM Medium</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Ex: cpc, social, email" 
+                      {...field} 
+                      value={field.value || ""} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* UTM Campaign */}
+            <FormField
+              control={form.control}
+              name="utm_campaign"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>UTM Campaign</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Ex: promocao-verao, black-friday" 
+                      {...field} 
+                      value={field.value || ""} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* UTM Content */}
+            <FormField
+              control={form.control}
+              name="utm_content"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>UTM Content</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Ex: banner-topo, link-rodape" 
+                      {...field} 
+                      value={field.value || ""} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* UTM Term */}
+            <FormField
+              control={form.control}
+              name="utm_term"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>UTM Term</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Ex: curso-online, certificacao" 
+                      {...field} 
+                      value={field.value || ""} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
 
         <div className="flex justify-end gap-4">

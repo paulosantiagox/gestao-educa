@@ -8,13 +8,13 @@ const router = express.Router();
 
 // Criar novo usuário
 router.post("/", requireAuth, async (req, res) => {
-  const { email, name, password, role = "admin", avatar } = req.body || {};
+  const { email, name, password, role = "admin", avatar, utm_consultor } = req.body || {};
   if (!email || !password) return res.status(400).json({ error: "missing_fields" });
   const pass_hash = await bcrypt.hash(password, 10);
   try {
     const { rows } = await pool.query(
-      "INSERT INTO users(email,name,pass_hash,role,avatar) VALUES ($1,$2,$3,$4,$5) RETURNING id,email,name,role,avatar",
-      [email, name || null, pass_hash, role, avatar || null]
+      "INSERT INTO users(email,name,pass_hash,role,avatar,utm_consultor) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id,email,name,role,avatar,utm_consultor",
+      [email, name || null, pass_hash, role, avatar || null, utm_consultor || null]
     );
     res.status(201).json({ ok: true, user: rows[0] });
   } catch (e) {
@@ -26,7 +26,7 @@ router.post("/", requireAuth, async (req, res) => {
 // Listar todos os usuários
 router.get("/", requireAuth, async (_req, res) => {
   const { rows } = await pool.query(
-    "SELECT id, email, name, role, active, avatar, created_at FROM users ORDER BY id DESC"
+    "SELECT id, email, name, role, active, avatar, utm_consultor, created_at FROM users ORDER BY id DESC"
   );
   res.json({ ok: true, users: rows });
 });
@@ -34,7 +34,7 @@ router.get("/", requireAuth, async (_req, res) => {
 // Atualizar usuário
 router.put("/:id", requireAuth, async (req, res) => {
   const { id } = req.params;
-  const { name, email, role, avatar } = req.body || {};
+  const { name, email, role, avatar, utm_consultor } = req.body || {};
   
   if (!name || !email) {
     return res.status(400).json({ error: "missing_fields" });
@@ -42,8 +42,8 @@ router.put("/:id", requireAuth, async (req, res) => {
   
   try {
     const { rows } = await pool.query(
-      "UPDATE users SET name = $1, email = $2, role = $3, avatar = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $5 RETURNING id, email, name, role, avatar",
-      [name, email, role || "user", avatar || null, id]
+      "UPDATE users SET name = $1, email = $2, role = $3, avatar = $4, utm_consultor = $5, updated_at = CURRENT_TIMESTAMP WHERE id = $6 RETURNING id, email, name, role, avatar, utm_consultor",
+      [name, email, role || "user", avatar || null, utm_consultor || null, id]
     );
     
     if (rows.length === 0) {

@@ -200,6 +200,7 @@ export default function Users() {
               <TableHead>Usuário</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Função</TableHead>
+              <TableHead>UTM Consultor</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Criado em</TableHead>
               <TableHead className="text-right">Ações</TableHead>
@@ -220,6 +221,13 @@ export default function Users() {
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{getRoleBadge(user.role)}</TableCell>
+                  <TableCell>
+                    {(user as any).utm_consultor ? (
+                      <span className="text-sm text-muted-foreground">{(user as any).utm_consultor}</span>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     {user.active ? (
                       <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
@@ -286,6 +294,7 @@ export default function Users() {
                 email: userToEdit.email,
                 role: userToEdit.role,
                 avatar: userToEdit.avatar || "",
+                utm_consultor: userToEdit.utm_consultor || "",
               }}
               isEditing={true}
             />

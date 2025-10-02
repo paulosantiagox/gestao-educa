@@ -29,12 +29,13 @@ const userSchema = z.object({
   password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres").max(100).optional(),
   role: z.enum(["admin", "user"]).default("user"),
   avatar: z.string().url("URL inválida").optional().or(z.literal("")),
+  utm_consultor: z.string().optional(),
 });
 
 type UserFormValues = z.infer<typeof userSchema>;
 
 interface UserFormProps {
-  onSubmit: (data: { email: string; name: string; password?: string; role: string; avatar?: string }) => void;
+  onSubmit: (data: { email: string; name: string; password?: string; role: string; avatar?: string; utm_consultor?: string }) => void;
   isLoading?: boolean;
   initialData?: Partial<UserFormValues>;
   isEditing?: boolean;
@@ -51,6 +52,7 @@ export function UserForm({ onSubmit, isLoading, initialData, isEditing }: UserFo
       password: "",
       role: "user",
       avatar: "",
+      utm_consultor: "",
     },
   });
 
@@ -149,6 +151,23 @@ export function UserForm({ onSubmit, isLoading, initialData, isEditing }: UserFo
                 <Input
                   type="url"
                   placeholder="https://exemplo.com/foto.jpg"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="utm_consultor"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>UTM Consultor</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Identificador do consultor"
                   {...field}
                 />
               </FormControl>

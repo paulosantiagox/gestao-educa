@@ -14,6 +14,8 @@ import { PublicRoute } from "@/components/PublicRoute";
 import Dashboard from "./pages/Dashboard";
 import Students from "./pages/Students";
 import Sales from "./pages/Sales";
+import SalesRanking from "./pages/SalesRanking";
+import UTMManagement from "./pages/UTMManagement";
 import Certifications from "./pages/Certifications";
 import CertificationProcess from "./pages/CertificationProcess";
 import PaymentMethods from "./pages/PaymentMethods";
@@ -66,6 +68,8 @@ const App = () => (
                                 <Route path="/" element={<Dashboard />} />
                                 <Route path="/students" element={<Students />} />
                                 <Route path="/sales" element={<Sales />} />
+                                <Route path="/sales-ranking" element={<SalesRanking />} />
+                                <Route path="/utm-management" element={<UTMManagement />} />
                                 <Route path="/certifications" element={<Certifications />} />
                                 <Route path="/certification-process" element={<CertificationProcess />} />
                                 <Route path="/payment-methods" element={<PaymentMethods />} />

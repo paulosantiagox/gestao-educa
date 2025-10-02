@@ -99,7 +99,7 @@ router.get('/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Buscar venda
+    // Buscar venda incluindo campos UTM
     const result = await pool.query(
       `SELECT s.*, pm.name as payment_method_name 
        FROM sales s
@@ -113,6 +113,17 @@ router.get('/:id', requireAuth, async (req, res) => {
     }
     
     const sale = result.rows[0];
+    
+    console.log('\n=== BACKEND: GET SALE ===');
+    console.log('1. Sale ID:', id);
+    console.log('2. CAMPOS UTM RETORNADOS:');
+    console.log('   - utm_consultor:', sale.utm_consultor);
+    console.log('   - utm_source:', sale.utm_source);
+    console.log('   - utm_medium:', sale.utm_medium);
+    console.log('   - utm_campaign:', sale.utm_campaign);
+    console.log('   - utm_content:', sale.utm_content);
+    console.log('   - utm_term:', sale.utm_term);
+    console.log('=== FIM GET SALE ===\n');
     
     // Buscar alunos associados à venda
     const studentsResult = await pool.query(
@@ -141,7 +152,8 @@ router.post('/', requireAuth, async (req, res) => {
 
     const {
       sale_code, payer_name, payer_email, payer_phone, payer_cpf,
-      total_amount, payment_method_id, sale_date, student_ids = []
+      total_amount, payment_method_id, sale_date, student_ids = [],
+      utm_consultor, utm_source, utm_medium, utm_campaign, utm_content, utm_term
     } = req.body;
 
     // Validação básica
@@ -211,12 +223,14 @@ router.post('/', requireAuth, async (req, res) => {
     const result = await client.query(
       `INSERT INTO sales (
         sale_code, payer_name, payer_email, payer_phone, payer_cpf,
-        total_amount, paid_amount, payment_method_id, payment_status, sale_date, notes
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        total_amount, paid_amount, payment_method_id, payment_status, sale_date, notes,
+        utm_consultor, utm_source, utm_medium, utm_campaign, utm_content, utm_term
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
       RETURNING *`,
       [
         sale_code, payer_name, payer_email, payer_phone, payer_cpf,
-        total_amount, 0, payment_method_id, 'pending', sale_date || new Date(), req.body.notes
+        total_amount, 0, payment_method_id, 'pending', sale_date || new Date(), req.body.notes,
+        utm_consultor, utm_source, utm_medium, utm_campaign, utm_content, utm_term
       ]
     );
 
@@ -274,12 +288,20 @@ router.put('/:id', requireAuth, async (req, res) => {
     
     const {
       sale_code, payer_name, payer_email, payer_phone, payer_cpf,
-      total_amount, paid_amount, payment_method_id, payment_status, sale_date, student_ids = []
+      total_amount, paid_amount, payment_method_id, payment_status, sale_date, student_ids = [],
+      utm_consultor, utm_source, utm_medium, utm_campaign, utm_content, utm_term
     } = req.body;
 
     console.log('3. paid_amount recebido:', paid_amount, 'tipo:', typeof paid_amount);
     console.log('4. payment_status recebido:', payment_status);
     console.log('5. student_ids recebido:', student_ids);
+    console.log('6. CAMPOS UTM RECEBIDOS:');
+    console.log('   - utm_consultor:', utm_consultor);
+    console.log('   - utm_source:', utm_source);
+    console.log('   - utm_medium:', utm_medium);
+    console.log('   - utm_campaign:', utm_campaign);
+    console.log('   - utm_content:', utm_content);
+    console.log('   - utm_term:', utm_term);
 
     // Garantir que paid_amount e total_amount sejam números válidos
     const paidAmountValue = paid_amount !== undefined && paid_amount !== null && paid_amount !== '' 
@@ -309,12 +331,15 @@ router.put('/:id', requireAuth, async (req, res) => {
         sale_code = $1, payer_name = $2, payer_email = $3, payer_phone = $4,
         payer_cpf = $5, total_amount = $6, paid_amount = $7, payment_method_id = $8, 
         payment_status = $9, sale_date = $10, notes = $11,
+        utm_consultor = $12, utm_source = $13, utm_medium = $14, 
+        utm_campaign = $15, utm_content = $16, utm_term = $17,
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $12
+      WHERE id = $18
       RETURNING *`,
       [
         sale_code, payer_name, payer_email, payer_phone, payer_cpf,
         totalAmountValue, paidAmountValue, payment_method_id, finalStatus, sale_date, req.body.notes,
+        utm_consultor, utm_source, utm_medium, utm_campaign, utm_content, utm_term,
         id
       ]
     );
@@ -323,6 +348,13 @@ router.put('/:id', requireAuth, async (req, res) => {
     console.log('   - paid_amount no banco:', result.rows[0]?.paid_amount);
     console.log('   - payment_status no banco:', result.rows[0]?.payment_status);
     console.log('   - total_amount no banco:', result.rows[0]?.total_amount);
+    console.log('11. CAMPOS UTM SALVOS NO BANCO:');
+    console.log('   - utm_consultor:', result.rows[0]?.utm_consultor);
+    console.log('   - utm_source:', result.rows[0]?.utm_source);
+    console.log('   - utm_medium:', result.rows[0]?.utm_medium);
+    console.log('   - utm_campaign:', result.rows[0]?.utm_campaign);
+    console.log('   - utm_content:', result.rows[0]?.utm_content);
+    console.log('   - utm_term:', result.rows[0]?.utm_term);
 
     if (result.rows.length === 0) {
       console.error('11. ERRO: Venda não encontrada');
