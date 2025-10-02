@@ -43,6 +43,7 @@ const menuItems = [
     title: "Principal",
     items: [
       { title: "Dashboard", url: "/", icon: LayoutDashboard },
+      { title: "Ranking de Vendas", url: "/sales-ranking", icon: Trophy },
     ],
   },
   {
@@ -50,7 +51,6 @@ const menuItems = [
     items: [
       { title: "Alunos", url: "/students", icon: Users },
       { title: "Vendas", url: "/sales", icon: ShoppingCart },
-      { title: "Ranking de Vendas", url: "/sales-ranking", icon: Trophy },
       { title: "Processo de Certificação", url: "/certification-process", icon: FileCheck },
     ],
   },
