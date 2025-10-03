@@ -24,10 +24,7 @@ services:
         - traefik.http.services.gestao-educa-backend.loadbalancer.server.port=3000
 
   gestao-educa-frontend:
-    image: nginx:alpine
-    volumes:
-      - ./dist:/usr/share/nginx/html:ro
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    image: gestao-educa-frontend:latest
     networks: [OrionNet]
     deploy:
       labels:

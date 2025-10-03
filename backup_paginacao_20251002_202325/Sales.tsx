@@ -34,13 +34,17 @@ const Sales = () => {
   const [filterMinValue, setFilterMinValue] = useState<string>("");
   const [filterMaxValue, setFilterMaxValue] = useState<string>("");
   
+  // Paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(30);
+  
   const queryClient = useQueryClient();
 
   const { data: allSales = [], isLoading } = useQuery({
     queryKey: ["sales", searchTerm],
     queryFn: async () => {
-      const result = await api.getSalesAll({ search: searchTerm });
-      const list = result.ok ? (result.data || []) : [];
+      const result = await api.getSales({ search: searchTerm });
+      const list = result.ok ? (((result.data as any)?.sales) || []) : [];
       return [...list].sort((a: any, b: any) => new Date(b.created_at || b.sale_date).getTime() - new Date(a.created_at || a.sale_date).getTime());
     },
   });
@@ -101,12 +105,16 @@ const Sales = () => {
     return true;
   });
 
-  // Usar todas as vendas filtradas sem paginação
-  const sales = filteredSales;
+  // Calcular paginação
+  const totalPages = Math.ceil(filteredSales.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const sales = filteredSales.slice(startIndex, endIndex);
 
-  // Funções de filtro simplificadas
+  // Reset página quando filtros mudam
   const handleFilterChange = (filterFn: () => void) => {
     filterFn();
+    setCurrentPage(1);
   };
 
   const clearFilters = () => {
@@ -118,6 +126,7 @@ const Sales = () => {
     setFilterEndDate("");
     setFilterMinValue("");
     setFilterMaxValue("");
+    setCurrentPage(1);
   };
 
   const deleteMutation = useMutation({
@@ -345,6 +354,7 @@ const Sales = () => {
                 value={filterPayerName}
                 onChange={(e) => {
                   setFilterPayerName(e.target.value);
+                  setCurrentPage(1);
                 }}
               />
             </div>
@@ -356,6 +366,7 @@ const Sales = () => {
                 value={filterStudentName}
                 onChange={(e) => {
                   setFilterStudentName(e.target.value);
+                  setCurrentPage(1);
                 }}
               />
             </div>
@@ -369,6 +380,7 @@ const Sales = () => {
                 value={filterStartDate}
                 onChange={(e) => {
                   setFilterStartDate(e.target.value);
+                  setCurrentPage(1);
                 }}
               />
             </div>
@@ -380,6 +392,7 @@ const Sales = () => {
                 value={filterEndDate}
                 onChange={(e) => {
                   setFilterEndDate(e.target.value);
+                  setCurrentPage(1);
                 }}
               />
             </div>
@@ -393,6 +406,7 @@ const Sales = () => {
                 value={filterMinValue}
                 onChange={(e) => {
                   setFilterMinValue(e.target.value);
+                  setCurrentPage(1);
                 }}
               />
             </div>
@@ -406,6 +420,7 @@ const Sales = () => {
                 value={filterMaxValue}
                 onChange={(e) => {
                   setFilterMaxValue(e.target.value);
+                  setCurrentPage(1);
                 }}
               />
             </div>
@@ -441,6 +456,24 @@ const Sales = () => {
                       {method.name}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Itens por página</label>
+              <Select value={itemsPerPage.toString()} onValueChange={(value) => {
+                setItemsPerPage(parseInt(value));
+                setCurrentPage(1);
+              }}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="30">30</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -500,9 +533,9 @@ const Sales = () => {
                     <TableCell className="font-medium">{sale.sale_code}</TableCell>
                     <TableCell>{sale.payer_name}</TableCell>
                     <TableCell>
-                      {(sale.students_count && sale.students_count > 0) ? (
+                      {sale.students_count > 0 ? (
                         <div className="flex items-center gap-2">
-                          <span className="text-sm">{sale.first_student_name || 'Nome não disponível'}</span>
+                          <span className="text-sm">{sale.first_student_name}</span>
                           {sale.students_count > 1 && (
                             <TooltipProvider>
                               <Tooltip>
@@ -513,7 +546,7 @@ const Sales = () => {
                                 </TooltipTrigger>
                                 <TooltipContent>
                                   <p className="font-semibold mb-1">Todos os alunos:</p>
-                                  <p className="text-sm">{sale.student_names || 'Nomes não disponíveis'}</p>
+                                  <p className="text-sm">{sale.student_names}</p>
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
@@ -578,6 +611,32 @@ const Sales = () => {
                 ))}
               </TableBody>
             </Table>
+          )}
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                Página {currentPage} de {totalPages}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Próxima
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

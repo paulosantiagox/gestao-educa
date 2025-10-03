@@ -26,10 +26,6 @@ const Students = () => {
   const [filterActive, setFilterActive] = useState<string>("all");
   const [filterCPF, setFilterCPF] = useState<string>("");
   
-  // Paginação
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(30);
-  
   const queryClient = useQueryClient();
 
   const { data: allStudents = [], isLoading } = useQuery({
@@ -40,8 +36,8 @@ const Students = () => {
     },
   });
 
-  // Aplicar filtros
-  const filteredStudents = allStudents.filter((student: any) => {
+  // Aplicar filtros - agora mostra TODOS os alunos filtrados
+  const students = allStudents.filter((student: any) => {
     // Filtro por CPF
     if (filterCPF.trim() !== "") {
       const cleanFilterCPF = filterCPF.replace(/\D/g, '');
@@ -69,23 +65,10 @@ const Students = () => {
     return true;
   });
 
-  // Calcular paginação
-  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const students = filteredStudents.slice(startIndex, endIndex);
-
-  // Reset página quando filtros mudam
-  const handleFilterChange = (filterFn: () => void) => {
-    filterFn();
-    setCurrentPage(1);
-  };
-
   const clearFilters = () => {
     setFilterState("all");
     setFilterActive("all");
     setFilterCPF("");
-    setCurrentPage(1);
   };
 
   // Extrair estados únicos dos alunos
@@ -119,7 +102,7 @@ const Students = () => {
   };
 
   const exportToCSV = () => {
-    if (filteredStudents.length === 0) {
+    if (students.length === 0) {
       toast.error("Não há dados para exportar");
       return;
     }
@@ -142,7 +125,7 @@ const Students = () => {
       "Data de Cadastro"
     ];
 
-    const csvRows = filteredStudents.map((student: any) => [
+    const csvRows = students.map((student: any) => [
       `"${student.name || ''}"`,
       `"${student.email || ''}"`,
       `"${student.cpf || ''}"`,
@@ -177,12 +160,12 @@ const Students = () => {
   };
 
   const exportToExcel = () => {
-    if (filteredStudents.length === 0) {
+    if (students.length === 0) {
       toast.error("Não há dados para exportar");
       return;
     }
 
-    const data = filteredStudents.map((student: any) => ({
+    const data = students.map((student: any) => ({
       "Nome": student.name || '',
       "Email": student.email || '',
       "CPF": student.cpf || '',
@@ -269,22 +252,19 @@ const Students = () => {
             />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-3">
             <div>
               <label className="text-sm font-medium mb-2 block">CPF</label>
               <Input
                 placeholder="Filtrar por CPF..."
                 value={filterCPF}
-                onChange={(e) => {
-                  setFilterCPF(e.target.value);
-                  setCurrentPage(1);
-                }}
+                onChange={(e) => setFilterCPF(e.target.value)}
               />
             </div>
 
             <div>
               <label className="text-sm font-medium mb-2 block">Estado</label>
-              <Select value={filterState} onValueChange={(value) => handleFilterChange(() => setFilterState(value))}>
+              <Select value={filterState} onValueChange={setFilterState}>
                 <SelectTrigger>
                   <SelectValue placeholder="Todos os estados" />
                 </SelectTrigger>
@@ -302,7 +282,7 @@ const Students = () => {
 
             <div>
               <label className="text-sm font-medium mb-2 block">Status</label>
-              <Select value={filterActive} onValueChange={(value) => handleFilterChange(() => setFilterActive(value))}>
+              <Select value={filterActive} onValueChange={setFilterActive}>
                 <SelectTrigger>
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>
@@ -310,24 +290,6 @@ const Students = () => {
                   <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="yes">Ativos</SelectItem>
                   <SelectItem value="no">Inativos</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Itens por página</label>
-              <Select value={itemsPerPage.toString()} onValueChange={(value) => {
-                setItemsPerPage(parseInt(value));
-                setCurrentPage(1);
-              }}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="30">30</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -344,7 +306,7 @@ const Students = () => {
           )}
 
           <div className="text-sm text-muted-foreground">
-            Mostrando {students.length} de {filteredStudents.length} alunos
+            Mostrando {students.length} alunos
             {searchTerm && ` (filtrados de ${allStudents.length} total)`}
           </div>
         </CardContent>
@@ -424,32 +386,6 @@ const Students = () => {
                 ))}
               </TableBody>
             </Table>
-          )}
-
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between pt-4 border-t">
-              <div className="text-sm text-muted-foreground">
-                Página {currentPage} de {totalPages}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                >
-                  Anterior
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  Próxima
-                </Button>
-              </div>
-            </div>
           )}
         </CardContent>
       </Card>

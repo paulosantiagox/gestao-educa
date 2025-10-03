@@ -22,9 +22,21 @@ import { SLAConfigForm } from "@/components/forms/SLAConfigForm";
 import { StudentForm } from "@/components/forms/StudentForm";
 import { formatDateSP, formatDateTimeSP } from "@/lib/date-utils";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useUrlState } from "@/hooks/useUrlState";
 
 const CertificationProcess = () => {
-  const [searchTerm, setSearchTerm] = useState("");
+  // Estados persistidos via URL
+  const [urlState, setUrlState] = useUrlState({
+    search: "",
+    certifier: "all",
+    status: "all",
+    physical: "all",
+    page: 1,
+    itemsPerPage: 30,
+    sortBy: "status"
+  });
+
+  // Estados locais (não persistidos)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedProcess, setSelectedProcess] = useState<any>(null);
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
@@ -35,14 +47,23 @@ const CertificationProcess = () => {
   const [selectedStudentForEdit, setSelectedStudentForEdit] = useState<any>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
-  // Filtros
-  const [filterCertifier, setFilterCertifier] = useState<string>("all");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [filterPhysical, setFilterPhysical] = useState<string>("all");
-  
-  // Paginação
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(30);
+  // Aliases para compatibilidade com código existente
+  const searchTerm = urlState.search;
+  const filterCertifier = urlState.certifier;
+  const filterStatus = urlState.status;
+  const filterPhysical = urlState.physical;
+  const currentPage = urlState.page;
+  const itemsPerPage = urlState.itemsPerPage;
+  const sortBy = urlState.sortBy;
+
+  // Funções para atualizar estado
+  const setSearchTerm = (value: string) => setUrlState({ search: value });
+  const setFilterCertifier = (value: string) => setUrlState({ certifier: value });
+  const setFilterStatus = (value: string) => setUrlState({ status: value });
+  const setFilterPhysical = (value: string) => setUrlState({ physical: value });
+  const setCurrentPage = (value: number) => setUrlState({ page: value });
+  const setItemsPerPage = (value: number) => setUrlState({ itemsPerPage: value, page: 1 });
+  const setSortBy = (value: string) => setUrlState({ sortBy: value });
   
   const queryClient = useQueryClient();
   const { settings } = useSettings();
@@ -768,7 +789,7 @@ const CertificationProcess = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
               >
                 Anterior
@@ -803,7 +824,7 @@ const CertificationProcess = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
               >
                 Próxima

@@ -4,33 +4,22 @@ import { requireAuth } from '../requireAuth.js';
 
 const router = express.Router();
 
-// GET /api/students - Lista alunos com paginação e busca
+// GET /api/students - Lista todos os alunos com busca (sem paginação)
 router.get('/', requireAuth, async (req, res) => {
   try {
-    const { page = 1, limit = 10, q = '' } = req.query;
-    const offset = (page - 1) * limit;
-
+    const { q = '' } = req.query;
     const searchQuery = `%${q}%`;
     
     const result = await pool.query(
       `SELECT * FROM students 
        WHERE name ILIKE $1 OR email ILIKE $1 OR cpf ILIKE $1
-       ORDER BY created_at DESC
-       LIMIT $2 OFFSET $3`,
-      [searchQuery, limit, offset]
-    );
-
-    const countResult = await pool.query(
-      `SELECT COUNT(*) FROM students 
-       WHERE name ILIKE $1 OR email ILIKE $1 OR cpf ILIKE $1`,
+       ORDER BY created_at DESC`,
       [searchQuery]
     );
 
     res.json({
       students: result.rows,
-      total: parseInt(countResult.rows[0].count),
-      page: parseInt(page),
-      limit: parseInt(limit)
+      total: result.rows.length
     });
   } catch (error) {
     console.error('Error fetching students:', error);

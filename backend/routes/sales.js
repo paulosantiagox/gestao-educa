@@ -60,6 +60,41 @@ router.get('/', requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/sales/all - Lista TODAS as vendas sem paginação
+router.get('/all', requireAuth, async (req, res) => {
+  try {
+    const { q = '' } = req.query;
+    const searchQuery = `%${q}%`;
+    
+    const result = await pool.query(
+      `SELECT s.*, pm.name as payment_method_name,
+              COUNT(DISTINCT ss.student_id)::int as students_count,
+              (SELECT st.name FROM students st 
+               INNER JOIN student_sales ss2 ON st.id = ss2.student_id 
+               WHERE ss2.sale_id = s.id 
+               ORDER BY ss2.id LIMIT 1) as first_student_name,
+              (SELECT string_agg(st.name, ', ' ORDER BY st.name) 
+               FROM students st 
+               INNER JOIN student_sales ss3 ON st.id = ss3.student_id 
+               WHERE ss3.sale_id = s.id) as student_names
+       FROM sales s
+       LEFT JOIN payment_methods pm ON s.payment_method_id = pm.id
+       LEFT JOIN student_sales ss ON s.id = ss.sale_id
+       WHERE s.sale_code ILIKE $1 OR s.payer_name ILIKE $1 OR s.payer_email ILIKE $1
+       GROUP BY s.id, pm.name
+       ORDER BY s.created_at DESC, s.id DESC`,
+      [searchQuery]
+    );
+    
+    console.log('📋 Retornando TODAS as vendas - Total:', result.rows.length);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching all sales:', error);
+    res.status(500).json({ error: 'Erro ao buscar venda' });
+  }
+});
+
 // GET /api/sales/next-code - Busca próximo código de venda disponível
 router.get('/next-code', requireAuth, async (req, res) => {
   try {
@@ -82,7 +117,7 @@ router.get('/next-code', requireAuth, async (req, res) => {
       const lastNumberMatch = lastCode.match(/VND-\d{4}-(\d+)/);
       
       if (lastNumberMatch) {
-        nextNumber = parseInt(lastNumberMatch[1]) + 1;
+        nextNumber = parseInt(lastNumberMatch[1], 10) + 1;
       }
     }
     

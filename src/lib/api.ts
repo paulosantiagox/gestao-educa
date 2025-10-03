@@ -177,6 +177,18 @@ class ApiClient {
     return this.request<any[]>(`/api/sales?${query.toString()}`);
   }
 
+  async getSalesAll(params?: { search?: string }) {
+    const query = new URLSearchParams();
+    if (params?.search) query.append('q', params.search);
+    
+    const response = await this.request<any>(`/api/sales/all?${query.toString()}`);
+    console.log('🔍 getSalesAll - Response completa:', response);
+    console.log('🔍 getSalesAll - Dados recebidos:', response.data);
+    console.log('🔍 getSalesAll - Quantidade de vendas:', Array.isArray(response.data) ? response.data.length : 'Não é array');
+    
+    return response;
+  }
+
   async getNextSaleCode() {
     return this.request<{ nextCode: string }>('/api/sales/next-code');
   }
