@@ -12,6 +12,13 @@ import {
   Settings as SettingsIcon,
   Link,
   Trophy,
+  Target,
+  BarChart3,
+  Upload,
+  Activity,
+  Globe,
+  Calendar,
+  Clock,
 } from "lucide-react";
 import {
   Sidebar,
@@ -59,6 +66,18 @@ const menuItems = [
     items: [
       { title: "Certificadoras", url: "/certifications", icon: Award },
       { title: "Formas de Pagamento", url: "/payment-methods", icon: CreditCard },
+    ],
+  },
+  {
+    title: "Marketing & Leads",
+    items: [
+      { title: "Leads", url: "/leads", icon: Target },
+      { title: "Dashboard", url: "/leads/dashboard", icon: BarChart3 },
+      { title: "Dashboard Responsável", url: "/leads/var1", icon: Users },
+      { title: "Dashboard Tráfego", url: "/leads/traffic", icon: Globe },
+      { title: "Relatório Semanal", url: "/leads/weekday", icon: Calendar },
+      { title: "Relatório Horário", url: "/leads/hourly", icon: Clock },
+      { title: "Importar Leads", url: "/leads/import", icon: Upload },
     ],
   },
   {
@@ -133,6 +152,16 @@ const AppSidebar = () => {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
+                {group.title === "Marketing & Leads" && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive("/leads/traffic")}>
+                      <NavLink to="/leads/traffic" end>
+                        <Globe className="h-4 w-4" />
+                        {!isCollapsed && <span>Dashboard Tráfego</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

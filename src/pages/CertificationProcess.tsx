@@ -31,8 +31,6 @@ const CertificationProcess = () => {
     certifier: "all",
     status: "all",
     physical: "all",
-    page: 1,
-    itemsPerPage: 30,
     sortBy: "status"
   });
 
@@ -52,8 +50,6 @@ const CertificationProcess = () => {
   const filterCertifier = urlState.certifier;
   const filterStatus = urlState.status;
   const filterPhysical = urlState.physical;
-  const currentPage = urlState.page;
-  const itemsPerPage = urlState.itemsPerPage;
   const sortBy = urlState.sortBy;
 
   // Funções para atualizar estado
@@ -61,8 +57,6 @@ const CertificationProcess = () => {
   const setFilterCertifier = (value: string) => setUrlState({ certifier: value });
   const setFilterStatus = (value: string) => setUrlState({ status: value });
   const setFilterPhysical = (value: string) => setUrlState({ physical: value });
-  const setCurrentPage = (value: number) => setUrlState({ page: value });
-  const setItemsPerPage = (value: number) => setUrlState({ itemsPerPage: value, page: 1 });
   const setSortBy = (value: string) => setUrlState({ sortBy: value });
   
   const queryClient = useQueryClient();
@@ -177,23 +171,18 @@ const CertificationProcess = () => {
       }
     });
 
-  // Calcular paginação
-  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const students = filteredStudents.slice(startIndex, endIndex);
+  // Todos os estudantes filtrados (sem paginação)
+  const students = filteredStudents;
 
-  // Reset página quando filtros mudam
+  // Reset filtros quando mudam
   const handleFilterChange = (filterFn: () => void) => {
     filterFn();
-    setCurrentPage(1);
   };
 
   const clearFilters = () => {
     setFilterCertifier("all");
     setFilterStatus("all");
     setFilterPhysical("all");
-    setCurrentPage(1);
   };
 
   const deleteMutation = useMutation({
@@ -629,30 +618,6 @@ const CertificationProcess = () => {
 
       <Card>
         <CardContent className="pt-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Mostrando {students.length === 0 ? 0 : startIndex + 1} a {Math.min(endIndex, filteredStudents.length)} de {filteredStudents.length} registros</span>
-            </div>
-            <Select 
-              value={itemsPerPage.toString()} 
-              onValueChange={(value) => {
-                setItemsPerPage(Number(value));
-                setCurrentPage(1);
-              }}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10 por página</SelectItem>
-                <SelectItem value="30">30 por página</SelectItem>
-                <SelectItem value="50">50 por página</SelectItem>
-                <SelectItem value="100">100 por página</SelectItem>
-                <SelectItem value="500">500 por página</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
           {isLoading ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">Carregando...</p>
@@ -662,181 +627,124 @@ const CertificationProcess = () => {
               <p className="text-muted-foreground">Nenhum aluno encontrado com os filtros aplicados</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Aluno</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Certificadora</TableHead>
-                  <TableHead className="w-[300px]">Progresso</TableHead>
-                  <TableHead>Certificado Físico</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {students.map((student: any) => (
-                  <TableRow key={student.id}>
-                    <TableCell className="font-medium">{student.name}</TableCell>
-                    <TableCell>{student.email}</TableCell>
-                    <TableCell>
-                      {student.certification?.certifier_name || "-"}
-                    </TableCell>
-                    <TableCell>
-                      {student.certification ? (
-                        <MiniTimeline 
-                          currentStatus={student.certification.status}
-                          certification={student.certification}
-                          slaConfig={slaConfig}
-                        />
-                      ) : (
-                        <span className="text-sm text-muted-foreground">Não iniciado</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {student.certification?.wants_physical ? (
-                        <Badge variant="outline">Sim</Badge>
-                      ) : student.certification ? (
-                        <Badge variant="secondary">Não</Badge>
-                      ) : (
-                        "-"
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        {student.certification ? (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleViewDetails(student)}
-                              title="Ver detalhes"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEditProcess(student)}
-                              title="Editar processo"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleUpdateStatus(student)}
-                              title="Atualizar status"
-                            >
-                              <FileCheck className="h-4 w-4" />
-                            </Button>
-                            {settings.allowDeletions && (
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" title="Deletar processo">
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Tem certeza que deseja excluir o processo de certificação de <strong>{student.name}</strong>? Esta ação não pode ser desfeita e todas as informações do processo serão perdidas.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => deleteMutation.mutate(student.id)}
-                                    >
-                                      Excluir
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            )}
-                          </>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedProcess({ studentId: student.id, studentName: student.name });
-                              setIsCreateDialogOpen(true);
-                            }}
-                          >
-                            Iniciar
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-
-          {/* Paginação */}
-          {filteredStudents.length > 0 && totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
-              >
-                Primeira
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-              >
-                Anterior
-              </Button>
-              
-              <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  let pageNum;
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (currentPage <= 3) {
-                    pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    pageNum = currentPage - 2 + i;
-                  }
-                  
-                  return (
-                    <Button
-                      key={pageNum}
-                      variant={currentPage === pageNum ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setCurrentPage(pageNum)}
-                    >
-                      {pageNum}
-                    </Button>
-                  );
-                })}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                  Mostrando {filteredStudents.length} processo(s) de certificação
+                </div>
               </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-              >
-                Próxima
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(totalPages)}
-                disabled={currentPage === totalPages}
-              >
-                Última
-              </Button>
+              
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Aluno</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Certificadora</TableHead>
+                    <TableHead className="w-[300px]">Progresso</TableHead>
+                    <TableHead>Certificado Físico</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {students.map((student: any) => (
+                    <TableRow key={student.id}>
+                      <TableCell className="font-medium">{student.name}</TableCell>
+                      <TableCell>{student.email}</TableCell>
+                      <TableCell>
+                        {student.certification?.certifier_name || "-"}
+                      </TableCell>
+                      <TableCell>
+                        {student.certification ? (
+                          <MiniTimeline 
+                            currentStatus={student.certification.status}
+                            certification={student.certification}
+                            slaConfig={slaConfig}
+                          />
+                        ) : (
+                          <span className="text-sm text-muted-foreground">Não iniciado</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {student.certification?.wants_physical ? (
+                          <Badge variant="outline">Sim</Badge>
+                        ) : student.certification ? (
+                          <Badge variant="secondary">Não</Badge>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          {student.certification ? (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleViewDetails(student)}
+                                title="Ver detalhes"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleEditProcess(student)}
+                                title="Editar processo"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleUpdateStatus(student)}
+                                title="Atualizar status"
+                              >
+                                <FileCheck className="h-4 w-4" />
+                              </Button>
+                              {settings.allowDeletions && (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" title="Deletar processo">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Tem certeza que deseja excluir o processo de certificação de <strong>{student.name}</strong>? Esta ação não pode ser desfeita e todas as informações do processo serão perdidas.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => deleteMutation.mutate(student.id)}
+                                      >
+                                        Excluir
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              )}
+                            </>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedProcess({ studentId: student.id, studentName: student.name });
+                                setIsCreateDialogOpen(true);
+                              }}
+                            >
+                              Iniciar
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           )}
         </CardContent>
@@ -880,7 +788,7 @@ const CertificationProcess = () => {
                 
                 {/* Dados Pessoais */}
                 <div className="space-y-3">
-                  <h4 className="text-sm font-semibold text-muted-foreground">Dados Pessoais</h4>
+                  <h4 className="text-sm text-muted-foreground">Dados Pessoais</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
                       <p className="text-sm text-muted-foreground">Nome Completo</p>
@@ -918,7 +826,7 @@ const CertificationProcess = () => {
                     </div>
                   </div>
                 </div>
-
+                
                 {/* Endereço */}
                 <div className="space-y-3 pt-3 border-t">
                   <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-1">
@@ -956,7 +864,7 @@ const CertificationProcess = () => {
                     </div>
                   </div>
                 </div>
-
+                
                 {/* Informações Adicionais */}
                 <div className="space-y-3 pt-3 border-t">
                   <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-1">
@@ -993,7 +901,7 @@ const CertificationProcess = () => {
                   </div>
                 </div>
               </div>
-
+              
               {/* Informações do Processo */}
               <div className="grid grid-cols-2 gap-4 p-4 rounded-lg border bg-muted/50">
                 <div>
@@ -1015,7 +923,7 @@ const CertificationProcess = () => {
                   <p className="font-medium">{formatDateTimeSP(selectedProcess.certification.created_at)}</p>
                 </div>
               </div>
-
+              
               {/* Timeline */}
               <div>
                 <h3 className="font-semibold mb-4 text-lg">Linha do Tempo</h3>
@@ -1026,7 +934,7 @@ const CertificationProcess = () => {
                   studentPhone={selectedProcess.phone}
                 />
               </div>
-
+              
               {/* Botão para atualizar status */}
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => handleEditDates(selectedProcess)}>
@@ -1138,8 +1046,8 @@ const CertificationProcess = () => {
           )}
         </DialogContent>
       </Dialog>
-    </div>
-  );
+</div>
+);
 };
 
 export default CertificationProcess;

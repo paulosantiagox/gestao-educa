@@ -17,6 +17,7 @@ import certification from "./routes/certification.js";
 import dashboard from "./routes/dashboard.js";
 import certificationSLA from "./routes/certification-sla.js";
 import webhook from "./routes/webhook.js";
+import leads from "./routes/leads.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,7 +40,8 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
 }));
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookieParser());
 
 // ===== ROTAS DA API (sempre ANTES do static) =====
@@ -55,6 +57,7 @@ app.use("/api/certification", certification);
 app.use("/api/dashboard", dashboard);
 app.use("/api/certification-sla", certificationSLA);
 app.use("/api/webhook", webhook);
+app.use("/api/leads", leads);
 
 // healthcheck
 app.get("/api/ping", (_req, res) => res.json({ ok: true }));

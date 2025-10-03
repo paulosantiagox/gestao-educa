@@ -25,6 +25,13 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import StudentStatusCheck from "./pages/StudentStatusCheck";
 import Integrations from "./pages/Integrations";
+import Leads from "./pages/Leads";
+import LeadsDashboard from "./pages/LeadsDashboard";
+import LeadsVar1Dashboard from "./pages/LeadsVar1Dashboard";
+import LeadsTrafficDashboard from "./pages/LeadsTrafficDashboard";
+import LeadsWeekdayReport from "./pages/LeadsWeekdayReport";
+import LeadsHourlyReport from "./pages/LeadsHourlyReport";
+import LeadsImport from "./pages/LeadsImport";
 
 const queryClient = new QueryClient();
 
@@ -73,6 +80,13 @@ const App = () => (
                                 <Route path="/certifications" element={<Certifications />} />
                                 <Route path="/certification-process" element={<CertificationProcess />} />
                                 <Route path="/payment-methods" element={<PaymentMethods />} />
+                                <Route path="/leads" element={<Leads />} />
+                                <Route path="/leads/dashboard" element={<LeadsDashboard />} />
+          <Route path="/leads/var1" element={<LeadsVar1Dashboard />} />
+          <Route path="/leads/traffic" element={<LeadsTrafficDashboard />} />
+          <Route path="/leads/weekday" element={<LeadsWeekdayReport />} />
+          <Route path="/leads/hourly" element={<LeadsHourlyReport />} />
+          <Route path="/leads/import" element={<LeadsImport />} />
                                 <Route path="/users" element={<Users />} />
                                 <Route path="/settings" element={<Settings />} />
                                 <Route path="/integrations" element={<Integrations />} />
