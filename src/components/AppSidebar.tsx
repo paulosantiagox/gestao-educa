@@ -68,18 +68,18 @@ const menuItems = [
       { title: "Formas de Pagamento", url: "/payment-methods", icon: CreditCard },
     ],
   },
-  {
-    title: "Marketing & Leads",
-    items: [
-      { title: "Leads", url: "/leads", icon: Target },
-      { title: "Dashboard", url: "/leads/dashboard", icon: BarChart3 },
-      { title: "Dashboard Responsável", url: "/leads/var1", icon: Users },
-      { title: "Dashboard Tráfego", url: "/leads/traffic", icon: Globe },
-      { title: "Relatório Semanal", url: "/leads/weekday", icon: Calendar },
-      { title: "Relatório Horário", url: "/leads/hourly", icon: Clock },
-      { title: "Importar Leads", url: "/leads/import", icon: Upload },
-    ],
-  },
+  // {
+  //   title: "Marketing & Leads",
+  //   items: [
+  //     { title: "Leads", url: "/leads", icon: Target },
+  //     { title: "Dashboard", url: "/leads/dashboard", icon: BarChart3 },
+  //     { title: "Dashboard Responsável", url: "/leads/var1", icon: Users },
+  //     { title: "Dashboard Tráfego", url: "/leads/traffic", icon: Globe },
+  //     { title: "Relatório Semanal", url: "/leads/weekday", icon: Calendar },
+  //     { title: "Relatório Horário", url: "/leads/hourly", icon: Clock },
+  //     { title: "Importar Leads", url: "/leads/import", icon: Upload },
+  //   ],
+  // },
   {
     title: "Sistema",
     items: [

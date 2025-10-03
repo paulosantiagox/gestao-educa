@@ -1,7 +1,7 @@
 {
   "name": "gestao-educa",
   "private": true,
-  "version": "1.3.12",
+  "version": "3.3.14",
   "type": "module",
   "scripts": {
     "dev": "vite",
