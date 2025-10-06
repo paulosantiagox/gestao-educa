@@ -47,6 +47,7 @@ export default function ConsultoresRedirect() {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'google' | 'meta'>('google');
+  const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
 
   const [formData, setFormData] = useState<ConsultorForm>({
     user_id: '',
@@ -151,13 +152,38 @@ export default function ConsultoresRedirect() {
   };
 
   const handleToggleStatus = async (id: number, currentStatus: boolean) => {
+    // Evita múltiplas atualizações simultâneas
+    if (updatingStatus === id) return;
+    
+    setUpdatingStatus(id);
+    
+    // Atualização otimista - atualiza o estado local imediatamente
+    const newStatus = !currentStatus;
+    setConsultores(prev => 
+      prev.map(consultor => 
+        consultor.id === id 
+          ? { ...consultor, ativo: newStatus }
+          : consultor
+      )
+    );
+
     try {
-      await api.put(`/api/consultores-redirect/${id}`, { ativo: !currentStatus });
+      await api.put(`/api/consultores-redirect/${id}`, { ativo: newStatus });
       toast.success('Status atualizado com sucesso!');
-      loadData();
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
       toast.error('Erro ao atualizar status');
+      
+      // Reverte a mudança em caso de erro
+      setConsultores(prev => 
+        prev.map(consultor => 
+          consultor.id === id 
+            ? { ...consultor, ativo: currentStatus }
+            : consultor
+        )
+      );
+    } finally {
+      setUpdatingStatus(null);
     }
   };
 
@@ -243,6 +269,8 @@ export default function ConsultoresRedirect() {
                       <Switch
                         checked={consultor.ativo}
                         onCheckedChange={() => handleToggleStatus(consultor.id, consultor.ativo)}
+                        disabled={updatingStatus === consultor.id}
+                        className={updatingStatus === consultor.id ? 'opacity-50' : ''}
                       />
                       <Badge variant={consultor.ativo ? "default" : "secondary"}>
                         {consultor.ativo ? 'Ativo' : 'Inativo'}
@@ -323,6 +351,8 @@ export default function ConsultoresRedirect() {
                       <Switch
                         checked={consultor.ativo}
                         onCheckedChange={() => handleToggleStatus(consultor.id, consultor.ativo)}
+                        disabled={updatingStatus === consultor.id}
+                        className={updatingStatus === consultor.id ? 'opacity-50' : ''}
                       />
                       <Badge variant={consultor.ativo ? "default" : "secondary"}>
                         {consultor.ativo ? 'Ativo' : 'Inativo'}

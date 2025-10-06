@@ -43,15 +43,15 @@ router.post('/', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Selecione pelo menos uma plataforma' });
     }
 
-    // Verificar se já existe consultor para este usuário
+    // Verificar se o número já existe (independente do usuário)
     const existingQuery = `
       SELECT id FROM consultores_redirect 
-      WHERE user_id = $1
+      WHERE numero = $1
     `;
-    const existing = await db.query(existingQuery, [user_id]);
+    const existing = await db.query(existingQuery, [numero]);
     
     if (existing.rows.length > 0) {
-      return res.status(400).json({ error: 'Já existe um consultor cadastrado para este usuário' });
+      return res.status(400).json({ error: 'Este número já está cadastrado no sistema' });
     }
 
     const insertQuery = `
@@ -77,7 +77,7 @@ router.post('/', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('Erro ao criar consultor:', error);
     if (error.code === '23505') { // Unique violation
-      res.status(400).json({ error: 'Já existe um consultor cadastrado para este usuário' });
+      res.status(400).json({ error: 'Já existe um número cadastrado para este usuário nesta plataforma' });
     } else {
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
@@ -90,40 +90,64 @@ router.put('/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
     const { numero, plataforma_google, plataforma_meta, ativo, observacoes } = req.body;
 
-    if (!numero) {
-      return res.status(400).json({ error: 'numero é obrigatório' });
+    // Se apenas o status está sendo atualizado (toggle), não exigir outros campos
+    const isStatusOnlyUpdate = ativo !== undefined && !numero && plataforma_google === undefined && plataforma_meta === undefined;
+
+    if (!isStatusOnlyUpdate) {
+      // Validações completas apenas para atualizações completas
+      if (!numero) {
+        return res.status(400).json({ error: 'numero é obrigatório' });
+      }
+
+      // Validação: número deve ser associado apenas a uma plataforma
+      if (plataforma_google && plataforma_meta) {
+        return res.status(400).json({ error: 'Um número não pode estar associado a ambas as plataformas' });
+      }
+
+      if (!plataforma_google && !plataforma_meta) {
+        return res.status(400).json({ error: 'Selecione pelo menos uma plataforma' });
+      }
     }
 
-    // Validação: número deve ser associado apenas a uma plataforma
-    if (plataforma_google && plataforma_meta) {
-      return res.status(400).json({ error: 'Um número não pode estar associado a ambas as plataformas' });
-    }
+    let updateQuery;
+    let queryParams;
 
-    if (!plataforma_google && !plataforma_meta) {
-      return res.status(400).json({ error: 'Selecione pelo menos uma plataforma' });
+    if (isStatusOnlyUpdate) {
+      // Atualização apenas do status
+      updateQuery = `
+        UPDATE consultores_redirect 
+        SET 
+          ativo = $1,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = $2
+        RETURNING *
+      `;
+      queryParams = [ativo, id];
+    } else {
+      // Atualização completa
+      updateQuery = `
+        UPDATE consultores_redirect 
+        SET 
+          numero = $1,
+          plataforma_google = $2,
+          plataforma_meta = $3,
+          ativo = $4,
+          observacoes = $5,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = $6
+        RETURNING *
+      `;
+      queryParams = [
+        numero,
+        plataforma_google || false,
+        plataforma_meta || false,
+        ativo !== false,
+        observacoes || null,
+        id
+      ];
     }
-
-    const updateQuery = `
-      UPDATE consultores_redirect 
-      SET 
-        numero = $1,
-        plataforma_google = $2,
-        plataforma_meta = $3,
-        ativo = $4,
-        observacoes = $5,
-        updated_at = CURRENT_TIMESTAMP
-      WHERE id = $6
-      RETURNING *
-    `;
     
-    const result = await db.query(updateQuery, [
-      numero,
-      plataforma_google || false,
-      plataforma_meta || false,
-      ativo !== false,
-      observacoes || null,
-      id
-    ]);
+    const result = await db.query(updateQuery, queryParams);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Consultor não encontrado' });
