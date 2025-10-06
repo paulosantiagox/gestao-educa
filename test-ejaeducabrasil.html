@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EJA Educa Brasil - Teste de Tracking</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .button {
+            background-color: #3498db;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            display: inline-block;
+            text-decoration: none;
+        }
+        .button:hover {
+            background-color: #2980b9;
+        }
+        .form-container {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .info {
+            background-color: #e8f5e8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 EJA Educa Brasil - Teste de Tracking</h1>
+        
+        <div class="info">
+            <strong>📊 Esta página está sendo monitorada pelo sistema de tracking!</strong><br>
+            Todas as suas ações (cliques, scroll, tempo na página) estão sendo registradas.
+        </div>
+
+        <p>Esta é uma página de teste para verificar se o sistema de tracking está funcionando corretamente no domínio ejaeducabrasil.com.</p>
+
+        <div>
+            <button class="button" onclick="testarClique('botao-1')">🖱️ Clique Aqui - Botão 1</button>
+            <button class="button" onclick="testarClique('botao-2')">🖱️ Clique Aqui - Botão 2</button>
+            <a href="#secao2" class="button">🔗 Link Interno</a>
+        </div>
+
+        <div class="form-container">
+            <h3>📝 Formulário de Teste</h3>
+            <form onsubmit="testarFormulario(event)">
+                <input type="text" placeholder="Seu nome" required>
+                <input type="email" placeholder="Seu email" required>
+                <textarea placeholder="Sua mensagem" rows="4"></textarea>
+                <button type="submit" class="button">📤 Enviar Formulário</button>
+            </form>
+        </div>
+
+        <div id="secao2" style="margin-top: 50px;">
+            <h3>📈 Seção 2 - Mais Conteúdo</h3>
+            <p>Role a página para baixo para testar o tracking de scroll...</p>
+            
+            <div style="height: 500px; background: linear-gradient(45deg, #3498db, #2ecc71); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">
+                🌟 Área de Scroll Testing 🌟
+            </div>
+        </div>
+
+        <div style="margin-top: 50px;">
+            <h3>🎯 Eventos Customizados</h3>
+            <button class="button" onclick="enviarEventoCustomizado('video_play')">▶️ Simular Play de Vídeo</button>
+            <button class="button" onclick="enviarEventoCustomizado('download')">⬇️ Simular Download</button>
+            <button class="button" onclick="enviarEventoCustomizado('newsletter')">📧 Simular Newsletter</button>
+        </div>
+
+        <div style="margin-top: 100px; text-align: center; color: #7f8c8d;">
+            <p>🔍 Verifique os logs do backend e o banco de dados para confirmar que os dados estão sendo registrados!</p>
+        </div>
+    </div>
+
+    <!-- EJA Tracking Script -->
+    <script>
+    (function(w,d,s,l,i){
+      w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});
+      var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';
+      j.async=true;j.src='https://gestao-educa.autoflixtreinamentos.com/api/tracking/script.js?id='+i+dl;
+      f.parentNode.insertBefore(j,f);
+    })(window,document,'script','EJATracking','eja_localhost_8000_1759603330846');
+    </script>
+
+    <script>
+        // Funções de teste
+        function testarClique(botao) {
+            console.log('Clique registrado:', botao);
+            alert('Clique registrado: ' + botao + '\nVerifique os logs do backend!');
+        }
+
+        function testarFormulario(event) {
+            event.preventDefault();
+            console.log('Formulário enviado');
+            alert('Formulário enviado!\nVerifique os logs do backend!');
+        }
+
+        function enviarEventoCustomizado(tipo) {
+            // Usando a API do EJA Tracking
+            if (window.EJATracking && window.EJATracking.push) {
+                window.EJATracking.push(['event', tipo, {
+                    category: 'teste',
+                    action: tipo,
+                    label: 'Teste de evento customizado',
+                    value: 1.0
+                }]);
+            }
+            console.log('Evento customizado enviado:', tipo);
+            alert('Evento customizado enviado: ' + tipo + '\nVerifique os logs do backend!');
+        }
+
+        // Log quando a página carrega
+        console.log('Página de teste carregada - ejaeducabrasil.com');
+        
+        // Simular tempo na página
+        setTimeout(() => {
+            console.log('Usuário permaneceu 10 segundos na página');
+        }, 10000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EJA Educa Brasil - Chat Widget Completo</title>
+    <style>
+        /* Reset básico */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Overlay do chat */
+        .chat-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            backdrop-filter: blur(2px);
+        }
+
+        /* Container principal do chat */
+        .chat-popup {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease-out;
+            position: relative;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Header do chat */
+        .chat-header {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+
+        .chat-header h3 {
+            color: white;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .chat-header p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9em;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+
+        .close-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Corpo do chat */
+        .chat-body {
+            background: white;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        /* Mensagens do chat */
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .message.bot {
+            flex-direction: row;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .message-content {
+            background: #f5f5f5;
+            padding: 12px 15px;
+            border-radius: 18px;
+            max-width: 80%;
+            font-size: 14px;
+            line-height: 1.4;
+            position: relative;
+        }
+
+        .message.bot .message-content {
+            border-bottom-left-radius: 5px;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        /* Formulário */
+        .form-container {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+
+        .form-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Status de carregamento */
+        .loading-status {
+            text-align: center;
+            padding: 10px;
+            font-size: 14px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .loading-status.success {
+            color: #28a745;
+        }
+
+        .loading-status.error {
+            color: #dc3545;
+        }
+
+        /* Botão flutuante */
+        .chat-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .chat-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        /* Responsividade */
+        @media (max-width: 480px) {
+            .chat-popup {
+                width: 95%;
+                max-height: 95vh;
+            }
+            
+            .chat-body {
+                max-height: 350px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Botão flutuante para abrir o chat -->
+    <button class="chat-button" onclick="openChat()">💬</button>
+
+    <!-- Overlay do chat -->
+    <div class="chat-overlay" id="chatOverlay" onclick="closeChat(event)">
+        <div class="chat-popup" onclick="event.stopPropagation()">
+            <!-- Header -->
+            <div class="chat-header">
+                <button class="close-btn" onclick="closeChat()">&times;</button>
+                <h3>EJA Educa Brasil</h3>
+                <p>Converse conosco pelo WhatsApp</p>
+            </div>
+
+            <!-- Corpo do chat -->
+            <div class="chat-body">
+                <!-- Mensagens simuladas -->
+                <div class="message bot">
+                    <div class="message-avatar">🎓</div>
+                    <div class="message-content">
+                        Olá! Bem-vindo ao EJA Educa Brasil! 👋
+                    </div>
+                </div>
+
+                <div class="message bot">
+                    <div class="message-avatar">🎓</div>
+                    <div class="message-content">
+                        Estamos aqui para ajudar você a conquistar seu diploma! Para conectá-lo com um de nossos consultores especializados, preciso apenas do seu WhatsApp.
+                    </div>
+                </div>
+
+                <!-- Formulário -->
+                <div class="form-container">
+                    <div class="form-title">📱 Vamos conversar no WhatsApp!</div>
+                    
+                    <form id="leadForm">
+                        <div class="form-group">
+                            <label for="whatsapp">Seu WhatsApp:</label>
+                            <input 
+                                type="tel" 
+                                id="whatsapp" 
+                                name="whatsapp" 
+                                placeholder="(11) 99999-9999"
+                                required
+                            >
+                        </div>
+                        
+                        <div class="loading-status" id="loadingStatus" style="display: none;">
+                            Conectando você com um consultor...
+                        </div>
+                        
+                        <button type="submit" class="submit-btn" id="submitBtn">
+                            Falar com Consultor 🚀
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== CONFIGURAÇÕES =====
+        const CONFIG = {
+            BACKEND_URL: 'https://gestao-educa.autoflixtreinamentos.com',
+            PLATFORM: 'whatsapp',
+            ESCOLA: 'EJA Educa Brasil',
+            FORM_ID: 'eja-lead-form',
+            FORM_NAME: 'EJA Lead Capture',
+            WEBHOOK_URL: 'https://gestao-educa.autoflixtreinamentos.com/api/webhook/eja-leads',
+            USE_BUTTONS_MODE: false, // true = botões, false = redirecionamento direto
+            DEBUG: false
+        };
+
+        // ===== UTILITÁRIOS =====
+        function log(message, data = null) {
+            if (CONFIG.DEBUG) {
+                console.log(`[EJA Widget] ${message}`, data || '');
+            }
+        }
+
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        function normalizeDigits(str) {
+            return str.replace(/\D/g, '');
+        }
+
+        function formatPhone(phone) {
+            const digits = normalizeDigits(phone);
+            if (digits.length === 11) {
+                return digits.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+            } else if (digits.length === 10) {
+                return digits.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+            }
+            return phone;
+        }
+
+        function formatDateBR() {
+            const now = new Date();
+            return now.toLocaleString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // ===== SISTEMA DE REDIRECIONAMENTO =====
+        class RedirectSystem {
+            constructor() {
+                this.currentRedirect = null;
+                this.token = null;
+            }
+
+            async getNextConsultor() {
+                try {
+                    log('Buscando próximo consultor...');
+                    
+                    const response = await fetch(`${CONFIG.BACKEND_URL}/api/public/next-redirect?platform=${CONFIG.PLATFORM}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+                    
+                    if (!result.success) {
+                        throw new Error(result.error || 'Erro desconhecido');
+                    }
+
+                    this.currentRedirect = result.data;
+                    this.token = result.data.token;
+                    
+                    log('Consultor obtido:', result.data);
+                    return result.data;
+
+                } catch (error) {
+                    log('Erro ao buscar consultor:', error);
+                    throw error;
+                }
+            }
+
+            async confirmRedirect(leadData) {
+                if (!this.currentRedirect || !this.token) {
+                    throw new Error('Nenhum redirecionamento ativo para confirmar');
+                }
+
+                try {
+                    log('Confirmando redirecionamento...', { leadData });
+
+                    const response = await fetch(`${CONFIG.BACKEND_URL}/api/public/confirm-redirect`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            numero: this.currentRedirect.numero,
+                            platform: CONFIG.PLATFORM,
+                            token: this.token,
+                            lead_data: leadData
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+                    
+                    if (!result.success) {
+                        throw new Error(result.error || 'Erro ao confirmar redirecionamento');
+                    }
+
+                    log('Redirecionamento confirmado:', result);
+                    return result;
+
+                } catch (error) {
+                    log('Erro ao confirmar redirecionamento:', error);
+                    throw error;
+                }
+            }
+
+            getWhatsAppUrl(phone, message) {
+                if (!this.currentRedirect) {
+                    throw new Error('Nenhum consultor selecionado');
+                }
+
+                const numero = this.currentRedirect.numero;
+                const encodedMessage = encodeURIComponent(message);
+                return `https://wa.me/55${numero}?text=${encodedMessage}`;
+            }
+        }
+
+        // ===== INSTÂNCIA GLOBAL =====
+        const redirectSystem = new RedirectSystem();
+
+        // ===== CONTROLE DO CHAT =====
+        function openChat() {
+            document.getElementById('chatOverlay').style.display = 'flex';
+            log('Chat aberto');
+        }
+
+        function closeChat(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('chatOverlay').style.display = 'none';
+            log('Chat fechado');
+        }
+
+        // ===== PROCESSAMENTO DO FORMULÁRIO =====
+        async function processForm(formData) {
+            const loadingStatus = document.getElementById('loadingStatus');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            try {
+                // Mostrar loading
+                loadingStatus.style.display = 'block';
+                loadingStatus.textContent = 'Conectando você com um consultor...';
+                loadingStatus.className = 'loading-status';
+                submitBtn.disabled = true;
+
+                // 1. Buscar próximo consultor
+                loadingStatus.textContent = 'Selecionando consultor especializado...';
+                const consultorData = await redirectSystem.getNextConsultor();
+
+                // 2. Preparar dados do lead
+                const leadData = {
+                    whatsapp: formData.whatsapp,
+                    whatsapp_formatted: formatPhone(formData.whatsapp),
+                    escola: CONFIG.ESCOLA,
+                    form_id: CONFIG.FORM_ID,
+                    form_name: CONFIG.FORM_NAME,
+                    data_captura: formatDateBR(),
+                    consultor_id: consultorData.consultor.id,
+                    consultor_name: consultorData.consultor.name,
+                    numero_redirecionado: consultorData.numero,
+                    plataforma: CONFIG.PLATFORM,
+                    utm_source: getUrlParameter('utm_source') || '',
+                    utm_medium: getUrlParameter('utm_medium') || '',
+                    utm_campaign: getUrlParameter('utm_campaign') || '',
+                    utm_term: getUrlParameter('utm_term') || '',
+                    utm_content: getUrlParameter('utm_content') || '',
+                    utm_consultor: getUrlParameter('utm_consultor') || '',
+                    url_origem: window.location.href,
+                    user_agent: navigator.userAgent
+                };
+
+                // 3. Enviar para webhook (opcional)
+                loadingStatus.textContent = 'Registrando seus dados...';
+                try {
+                    await sendToWebhook(leadData);
+                } catch (webhookError) {
+                    log('Erro no webhook (não crítico):', webhookError);
+                }
+
+                // 4. Confirmar redirecionamento
+                loadingStatus.textContent = 'Finalizando conexão...';
+                await redirectSystem.confirmRedirect(leadData);
+
+                // 5. Preparar mensagem do WhatsApp
+                const message = `Olá! Vim através do site ${CONFIG.ESCOLA} e gostaria de saber mais sobre o EJA. Meu WhatsApp é ${leadData.whatsapp_formatted}`;
+
+                // 6. Sucesso
+                loadingStatus.textContent = `✅ Conectado com ${consultorData.consultor.name}!`;
+                loadingStatus.className = 'loading-status success';
+
+                // 7. Redirecionamento
+                setTimeout(() => {
+                    if (CONFIG.USE_BUTTONS_MODE) {
+                        // Modo botões - mostrar opções
+                        showRedirectOptions(consultorData, message);
+                    } else {
+                        // Redirecionamento direto
+                        const whatsappUrl = redirectSystem.getWhatsAppUrl(formData.whatsapp, message);
+                        window.open(whatsappUrl, '_blank');
+                        closeChat();
+                    }
+                }, 1500);
+
+            } catch (error) {
+                log('Erro no processamento:', error);
+                loadingStatus.textContent = `❌ Erro: ${error.message}`;
+                loadingStatus.className = 'loading-status error';
+                submitBtn.disabled = false;
+            }
+        }
+
+        async function sendToWebhook(data) {
+            try {
+                const response = await fetch(CONFIG.WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Webhook HTTP ${response.status}`);
+                }
+
+                log('Dados enviados para webhook com sucesso');
+            } catch (error) {
+                // Fallback com sendBeacon
+                if (navigator.sendBeacon) {
+                    const formData = new FormData();
+                    formData.append('data', JSON.stringify(data));
+                    navigator.sendBeacon(CONFIG.WEBHOOK_URL, formData);
+                    log('Dados enviados via sendBeacon');
+                } else {
+                    throw error;
+                }
+            }
+        }
+
+        function showRedirectOptions(consultorData, message) {
+            // Implementar interface de botões se necessário
+            const whatsappUrl = redirectSystem.getWhatsAppUrl('', message);
+            window.open(whatsappUrl, '_blank');
+            closeChat();
+        }
+
+        // ===== INICIALIZAÇÃO =====
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Widget EJA inicializado');
+
+            // Formatação automática do telefone
+            const whatsappInput = document.getElementById('whatsapp');
+            whatsappInput.addEventListener('input', function(e) {
+                e.target.value = formatPhone(e.target.value);
+            });
+
+            // Submissão do formulário
+            document.getElementById('leadForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const formData = {
+                    whatsapp: normalizeDigits(whatsappInput.value)
+                };
+
+                if (formData.whatsapp.length < 10) {
+                    alert('Por favor, insira um número de WhatsApp válido');
+                    return;
+                }
+
+                await processForm(formData);
+            });
+
+            // Fechar com ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeChat();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

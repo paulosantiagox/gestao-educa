@@ -18,6 +18,9 @@ import dashboard from "./routes/dashboard.js";
 import certificationSLA from "./routes/certification-sla.js";
 import webhook from "./routes/webhook.js";
 import leads from "./routes/leads.js";
+import tracking from "./routes/tracking.js";
+import redirect from "./routes/redirect.js";
+import consultoresRedirectRoutes from "./routes/consultores-redirect.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,6 +36,8 @@ app.use(cors({
     "https://42a90389-1914-4013-8ede-b39eed274805.lovableproject.com",
     "https://connect-my-rest.lovable.app",
     "https://sistema-educa.lovable.app",
+    "https://ejaeducabrasil.com",
+    "http://localhost:8000",
     /\.lovableproject\.com$/,
     /\.lovable\.app$/,
   ],
@@ -58,9 +63,22 @@ app.use("/api/dashboard", dashboard);
 app.use("/api/certification-sla", certificationSLA);
 app.use("/api/webhook", webhook);
 app.use("/api/leads", leads);
+app.use("/api/tracking", tracking);
+app.use("/api/public", redirect);
+app.use("/api/consultores-redirect", consultoresRedirectRoutes);
 
 // healthcheck
 app.get("/api/ping", (_req, res) => res.json({ ok: true }));
+
+// ===== ARQUIVOS PÚBLICOS (ANTES do front estático) =====
+const publicDir = path.resolve(__dirname, "public");
+app.use('/api/tracking/script.js', express.static(path.join(publicDir, 'tracking-script.js')));
+
+// Middleware para debug de rotas
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  next();
+});
 
 // ===== FRONT ESTÁTICO (DEPOIS da API) =====
 const dist = path.resolve(__dirname, "../client/dist");

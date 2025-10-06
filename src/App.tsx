@@ -32,6 +32,8 @@ import LeadsTrafficDashboard from "./pages/LeadsTrafficDashboard";
 import LeadsWeekdayReport from "./pages/LeadsWeekdayReport";
 import LeadsHourlyReport from "./pages/LeadsHourlyReport";
 import LeadsImport from "./pages/LeadsImport";
+import TrackingDashboard from "./pages/TrackingDashboard";
+import ConsultoresRedirect from "./pages/ConsultoresRedirect";
 
 const queryClient = new QueryClient();
 
@@ -83,10 +85,12 @@ const App = () => (
                                 <Route path="/leads" element={<Leads />} />
                                 <Route path="/leads/dashboard" element={<LeadsDashboard />} />
           <Route path="/leads/var1" element={<LeadsVar1Dashboard />} />
-          <Route path="/leads/traffic" element={<LeadsTrafficDashboard />} />
-          <Route path="/leads/weekday" element={<LeadsWeekdayReport />} />
-          <Route path="/leads/hourly" element={<LeadsHourlyReport />} />
-          <Route path="/leads/import" element={<LeadsImport />} />
+                                <Route path="/leads/traffic" element={<LeadsTrafficDashboard />} />
+                                <Route path="/leads/weekday" element={<LeadsWeekdayReport />} />
+                                <Route path="/leads/hourly" element={<LeadsHourlyReport />} />
+                                <Route path="/leads/import" element={<LeadsImport />} />
+                                <Route path="/tracking" element={<TrackingDashboard />} />
+                                <Route path="/consultores-redirect" element={<ConsultoresRedirect />} />
                                 <Route path="/users" element={<Users />} />
                                 <Route path="/settings" element={<Settings />} />
                                 <Route path="/integrations" element={<Integrations />} />

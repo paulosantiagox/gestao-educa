@@ -19,6 +19,9 @@ import {
   Globe,
   Calendar,
   Clock,
+  MessageCircle,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import {
   Sidebar,
@@ -30,6 +33,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -42,8 +48,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { useAuth } from "@/contexts/AuthContext";
 import { VersionDisplay } from "@/components/VersionDisplay";
+import { useState } from "react";
 
 const menuItems = [
   {
@@ -81,11 +93,24 @@ const menuItems = [
   //   ],
   // },
   {
+    title: "Analytics",
+    items: [
+      { title: "Tracking Dashboard", url: "/tracking", icon: Activity },
+    ],
+  },
+  {
     title: "Sistema",
     items: [
       { title: "Usuários", url: "/users", icon: UserCog },
       { title: "Integrações", url: "/integrations", icon: Link },
       { title: "Configurações", url: "/settings", icon: SettingsIcon },
+      {
+        title: "Config Global",
+        icon: Globe,
+        submenu: [
+          { title: "Consultores Redirecionamento", url: "/consultores-redirect", icon: MessageCircle },
+        ],
+      },
     ],
   },
 ];
@@ -97,8 +122,16 @@ const AppSidebar = () => {
   const navigate = useNavigate();
   const currentPath = location.pathname;
   const isCollapsed = state === "collapsed";
+  const [openSubmenus, setOpenSubmenus] = useState<Record<string, boolean>>({});
 
   const isActive = (path: string) => currentPath === path;
+
+  const toggleSubmenu = (title: string) => {
+    setOpenSubmenus(prev => ({
+      ...prev,
+      [title]: !prev[title]
+    }));
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -144,12 +177,45 @@ const AppSidebar = () => {
               <SidebarMenu>
                 {group.items.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                      <NavLink to={item.url} end>
-                        <item.icon className="h-4 w-4" />
-                        {!isCollapsed && <span>{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
+                    {item.submenu ? (
+                      <Collapsible
+                        open={openSubmenus[item.title]}
+                        onOpenChange={() => toggleSubmenu(item.title)}
+                      >
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton>
+                            <item.icon className="h-4 w-4" />
+                            {!isCollapsed && <span>{item.title}</span>}
+                            {!isCollapsed && (
+                              openSubmenus[item.title] ? 
+                                <ChevronDown className="h-4 w-4 ml-auto" /> : 
+                                <ChevronRight className="h-4 w-4 ml-auto" />
+                            )}
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <SidebarMenuSub>
+                            {item.submenu.map((subItem) => (
+                              <SidebarMenuSubItem key={subItem.title}>
+                                <SidebarMenuSubButton asChild isActive={isActive(subItem.url)}>
+                                  <NavLink to={subItem.url} end>
+                                    <subItem.icon className="h-4 w-4" />
+                                    <span>{subItem.title}</span>
+                                  </NavLink>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ))}
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    ) : (
+                      <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                        <NavLink to={item.url} end>
+                          <item.icon className="h-4 w-4" />
+                          {!isCollapsed && <span>{item.title}</span>}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    )}
                   </SidebarMenuItem>
                 ))}
                 {group.title === "Marketing & Leads" && (

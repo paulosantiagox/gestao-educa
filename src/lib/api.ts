@@ -357,6 +357,31 @@ class ApiClient {
       method: "DELETE",
     });
   }
+
+  // CONSULTORES REDIRECT
+  async getConsultoresRedirect(): Promise<ApiResponse<any[]>> {
+    return this.request("/api/consultores-redirect");
+  }
+
+  async createConsultorRedirect(data: any): Promise<ApiResponse<any>> {
+    return this.request("/api/consultores-redirect", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateConsultorRedirect(id: number, data: any): Promise<ApiResponse<any>> {
+    return this.request(`/api/consultores-redirect/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteConsultorRedirect(id: number): Promise<ApiResponse<any>> {
+    return this.request(`/api/consultores-redirect/${id}`, {
+      method: "DELETE",
+    });
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL);

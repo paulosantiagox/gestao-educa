@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EJA Chat Widget - Sistema de Distribuição de Leads</title>
+</head>
+<body>
+
+<!-- ====== POPUP CHAT EJA (Classe .abrirChatEja) ====== -->
+<div id="eja-chat-overlay" aria-hidden="true">
+  <div class="eja-chat-modal" role="dialog" aria-label="EJA Educa Brasil - Chat">
+    <!-- Cabeçalho -->
+    <div class="eja-chat-header">
+      <div class="eja-brand">
+        <div class="eja-logo-wrap">
+          <img 
+            src="https://ejaeducabrasil.com/wp-content/uploads/2024/06/cropped-EJA-1.png" 
+            alt="EJA Educa Brasil" class="eja-logo" loading="lazy" 
+          />
+        </div>
+        <div class="eja-titles">
+          <div class="eja-name">EJA Educa Brasil <span class="eja-verified">✅</span></div>
+          <div class="eja-status" id="consultorStatus">Online agora</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conteúdo -->
+    <div class="eja-chat-body" id="ejaChatBody">
+      <div class="bubble user">Quero concluir meu Ensino Médio com EJA EAD</div>
+      <div class="bubble bot">Que legal, você está quase lá.. parabéns</div>
+      <div class="bubble bot" id="consultorMessage">Me confirma seu número de WhatsApp com DDD, por favor 👇</div>
+
+      <!-- Form do número -->
+      <form id="ejaPhoneForm" class="eja-phone-row" autocomplete="off">
+        <div class="ddi-box">+<input id="ejaDDI" name="ddi" inputmode="numeric" value="55" maxlength="3" aria-label="DDI" /></div>
+        <input id="ejaPhone" name="phone" inputmode="numeric" placeholder="WhatsApp com DDD" aria-label="WhatsApp com DDD" />
+        <button class="send" type="submit" aria-label="Confirmar número">➜</button>
+      </form>
+
+      <!-- Etapa 2 (somente renderiza se usar botões) -->
+      <div id="ejaConfirmRow" class="hidden"></div>
+    </div>
+
+    <div class="eja-chat-footer">ejaeducabrasil.com</div>
+  </div>
+</div>
+
+<style>
+  :root {
+    /* Cores do Brasil */
+    --eja-green: #009739; /* Verde da bandeira do Brasil */
+    --eja-green-strong: #007a2e;
+    --eja-yellow: #FFDF00; /* Amarelo da bandeira do Brasil */
+    --eja-yellow-strong: #e6c700;
+    --eja-bg: #f8fffe;
+    --eja-white: #ffffff;
+    --eja-text: #202124;
+    --eja-muted: #6b7280;
+    --eja-bubble: #e8f5e8;
+    --eja-shadow: 0 10px 30px rgba(0,0,0,.18);
+  }
+  
+  #eja-chat-overlay{
+    position:fixed;
+    inset:0;
+    z-index:999999;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background:rgba(0,0,0,.45);
+    padding:16px;
+  }
+  
+  #eja-chat-overlay.show{display:flex}
+  
+  .eja-chat-modal{
+    width:100%;
+    max-width:430px;
+    background:var(--eja-white);
+    border-radius:22px;
+    overflow:hidden;
+    box-shadow:var(--eja-shadow);
+    display:grid;
+    grid-template-rows:auto 1fr auto;
+    max-height:92vh;
+    border: 3px solid var(--eja-green);
+  }
+  
+  .eja-chat-header{
+    background:linear-gradient(135deg, var(--eja-green) 0%, var(--eja-yellow) 100%);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 14px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+  }
+  
+  .eja-brand{display:flex;align-items:center;gap:12px;min-width:0}
+  
+  .eja-logo-wrap{
+    width:46px;
+    height:46px;
+    border-radius:50%;
+    overflow:hidden;
+    background:#fff;
+    border:3px solid rgba(255,255,255,.6);
+    display:grid;
+    place-items:center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  
+  .eja-logo{width:100%;height:100%;object-fit:contain;background:#fff}
+  
+  .eja-titles{display:flex;flex-direction:column;line-height:1.2}
+  
+  .eja-name{
+    font-weight:800;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:16px;
+  }
+  
+  .eja-verified{font-size:14px;padding:0;margin:0}
+  
+  .eja-status{
+    font-size:13px;
+    opacity:.95;
+    font-weight:500;
+  }
+
+  .eja-chat-body{
+    background:var(--eja-bg);
+    padding:16px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  
+  .bubble{
+    max-width:85%;
+    padding:12px 14px;
+    border-radius:18px;
+    font-size:14px;
+    line-height:1.4;
+    word-break:break-word;
+    background:#fff;
+    color:var(--eja-text);
+    box-shadow:0 2px 4px rgba(0,0,0,.08);
+    font-weight:500;
+  }
+  
+  .bubble.bot{
+    background:var(--eja-bubble);
+    border-left: 4px solid var(--eja-green);
+  }
+  
+  .bubble.user{
+    margin-left:auto;
+    background:linear-gradient(135deg, #e8f4fd 0%, #d1e7dd 100%);
+    border-right: 4px solid var(--eja-yellow);
+  }
+  
+  .bubble.ok{
+    background:linear-gradient(135deg, var(--eja-green) 0%, var(--eja-yellow) 100%);
+    color: white;
+    font-weight: 700;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+  }
+
+  /* Layout responsivo do form */
+  .eja-phone-row{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    margin-top:6px;
+    flex-wrap:nowrap;
+  }
+  
+  .ddi-box{
+    flex:0 0 72px;
+    background:#fff;
+    border-radius:14px;
+    padding:0 10px;
+    display:flex;
+    align-items:center;
+    gap:4px;
+    border:2px solid var(--eja-green);
+    height:48px;
+    font-weight:700;
+    color:var(--eja-green);
+  }
+  
+  .ddi-box input{
+    width:42px;
+    border:0;
+    outline:0;
+    font-size:16px;
+    background:transparent;
+    text-align:left;
+    font-weight:700;
+    color:var(--eja-green);
+  }
+  
+  #ejaPhone{
+    flex:1;
+    height:48px;
+    border-radius:14px;
+    border:2px solid var(--eja-green);
+    background:#fff;
+    padding:0 14px;
+    font-size:16px;
+    outline:0;
+    min-width:0;
+    font-weight:600;
+    transition: all 0.3s ease;
+  }
+  
+  #ejaPhone:focus{
+    border-color:var(--eja-yellow);
+    box-shadow: 0 0 0 3px rgba(255, 223, 0, 0.2);
+  }
+  
+  .send{
+    flex:0 0 52px;
+    height:48px;
+    border-radius:16px;
+    border:0;
+    background:linear-gradient(135deg, var(--eja-green) 0%, var(--eja-yellow) 100%);
+    color:#fff;
+    font-weight:800;
+    font-size:20px;
+    cursor:pointer;
+    transition:all .2s ease;
+    box-shadow: 0 4px 12px rgba(0,151,57,0.3);
+  }
+  
+  .send:hover{
+    transform:translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,151,57,0.4);
+  }
+  
+  .send:active{
+    transform:translateY(0px);
+  }
+
+  .cta-buttons{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:12px;
+    margin-top:12px;
+  }
+  
+  .cta{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    height:56px;
+    padding:0 16px;
+    border-radius:18px;
+    font-weight:800;
+    font-size:15px;
+    text-decoration:none;
+    box-shadow:0 6px 16px rgba(0,0,0,.12);
+    transition: all 0.3s ease;
+    text-align: center;
+  }
+  
+  .cta.primary{
+    background:linear-gradient(135deg, var(--eja-green) 0%, var(--eja-yellow) 100%);
+    color:#fff;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+  }
+  
+  .cta.success{
+    background:linear-gradient(135deg, var(--eja-yellow) 0%, var(--eja-green) 100%);
+    color:#fff;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+  }
+  
+  .cta.outline{
+    background:#fff;
+    color:var(--eja-green);
+    border:2px solid var(--eja-green);
+  }
+  
+  .cta:hover{
+    transform:translateY(-2px);
+    box-shadow:0 8px 20px rgba(0,0,0,.16);
+  }
+
+  .eja-chat-footer{
+    text-align:center;
+    font-size:12px;
+    color:var(--eja-muted);
+    padding:12px 14px;
+    background:linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-top:2px solid var(--eja-green);
+    font-weight:600;
+  }
+  
+  /* Responsividade melhorada para dispositivos antigos */
+  @media (max-width: 480px) {
+    .eja-chat-modal{
+      max-width:95vw;
+      margin:8px;
+    }
+    
+    .eja-phone-row{
+      gap:8px;
+    }
+    
+    .ddi-box{
+      flex:0 0 65px;
+      height:44px;
+    }
+    
+    #ejaPhone{
+      height:44px;
+      font-size:15px;
+    }
+    
+    .send{
+      flex:0 0 48px;
+      height:44px;
+      font-size:18px;
+    }
+  }
+  
+  @media (min-width: 992px){
+    .eja-chat-modal{max-width:480px}
+  }
+  
+  .hidden{display:none !important}
+  
+  /* Loading state */
+  .loading {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+  
+  .loading .send {
+    background: #ccc;
+  }
+</style>
+
+<script>
+(function () {
+  const USE_BUTTONS_MODE = false; // false = sem botões (vai direto pro WhatsApp), true = com botões
+  const API_BASE_URL = 'https://gestao-educa.autoflixtreinamentos.com/api/public';
+  
+  // Configurações do webhook original (mantido para compatibilidade)
+  const WEBHOOK_URL = 'https://n8n.centrodaautomacao.net/webhook/eja-webhook';
+  const ESCOLA = 'EJA EDUCA BRASIL';
+  const FORM_ID = '193152d';
+  const FORM_NAME = 'CADASTRO N8N';
+
+  const qs = (s, c=document)=>c.querySelector(s);
+  function getParam(n){const u=new URL(location.href);return u.searchParams.get(n)||''}
+  function normalizeDigits(s){return (s||'').replace(/\D+/g,'')}
+  
+  function dateBR(){
+    const d=new Date();
+    const dia=String(d.getDate()).padStart(2,'0');
+    const mes=String(d.getMonth()+1).padStart(2,'0');
+    const ano=d.getFullYear();
+    const h=String(d.getHours()).padStart(2,'0');
+    const m=String(d.getMinutes()).padStart(2,'0');
+    const s=String(d.getSeconds()).padStart(2,'0');
+    return `${dia}/${mes}/${ano} ${h}:${m}:${s}`;
+  }
+
+  // Função para detectar plataforma baseada na URL
+  function detectPlatform() {
+    const url = window.location.href.toLowerCase();
+    const referrer = document.referrer.toLowerCase();
+    
+    if (url.includes('gclid') || url.includes('google') || referrer.includes('google')) {
+      return 'google';
+    }
+    if (url.includes('fbclid') || url.includes('facebook') || url.includes('instagram') || 
+        referrer.includes('facebook') || referrer.includes('instagram')) {
+      return 'meta';
+    }
+    return 'whatsapp'; // default
+  }
+
+  // Função para obter próximo consultor do sistema
+  async function getNextConsultor() {
+    try {
+      const platform = detectPlatform();
+      const response = await fetch(`${API_BASE_URL}/next-redirect?platform=${platform}`);
+      
+      if (!response.ok) {
+        throw new Error('Erro ao obter consultor');
+      }
+      
+      const data = await response.json();
+      return {
+        nome: data.consultor_nome,
+        numero: data.numero,
+        token: data.token
+      };
+    } catch (error) {
+      console.error('Erro ao obter consultor:', error);
+      // Fallback para consultor padrão
+      return {
+        nome: 'Consultor EJA',
+        numero: '47991010463',
+        token: null
+      };
+    }
+  }
+
+  // Função para confirmar redirecionamento
+  async function confirmRedirect(token, phoneNumber, leadData) {
+    if (!token) return;
+    
+    try {
+      const platform = detectPlatform();
+      await fetch(`${API_BASE_URL}/confirm-redirect`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          token: token,
+          phone_number: phoneNumber,
+          platform: platform,
+          lead_data: leadData
+        })
+      });
+    } catch (error) {
+      console.error('Erro ao confirmar redirecionamento:', error);
+    }
+  }
+
+  function buildPayload(whatsComDDD, campos){
+    return {
+      "WhatsApp com DDD": whatsComDDD,
+      "escola": ESCOLA,
+      "nome": campos.nome || "",
+      "email": campos.email || "",
+      "utm": campos.utm || "",
+      "utm_source": campos.utm_source || "",
+      "utm_campaign": campos.utm_campaign || "",
+      "utm_term": campos.utm_term || "",
+      "utm_content": campos.utm_content || "",
+      "utm_medium": campos.utm_medium || "",
+      "lancamento": campos.lancamento || "",
+      "data_cadastro": dateBR(),
+      "var1": campos.var1 || "",
+      "var2": campos.var2 || "",
+      "var3": campos.var3 || "",
+      "form_id": FORM_ID,
+      "form_name": FORM_NAME
+    }
+  }
+  
+  function sendPayloadFireAndForget(payload){
+    try{
+      if (navigator.sendBeacon) {
+        const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+        navigator.sendBeacon(WEBHOOK_URL, blob);
+        return;
+      }
+    }catch(_){}
+    try{
+      fetch(WEBHOOK_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    }catch(_){}
+  }
+
+  function openPopup(){
+    qs('#eja-chat-overlay').classList.add('show');
+    setTimeout(()=>qs('#ejaPhone')?.focus(),50);
+  }
+  
+  function closePopup(){
+    qs('#eja-chat-overlay').classList.remove('show');
+  }
+
+  document.addEventListener('click',(e)=>{ 
+    if(e.target?.id==='eja-chat-overlay') closePopup(); 
+  });
+  
+  document.addEventListener('click',function(e){
+    const btn=e.target.closest('.abrirChatEja');
+    if(btn){
+      e.preventDefault();
+      e.stopPropagation();
+      openPopup();
+    }
+  });
+
+  async function init(){
+    // Obter consultor do sistema
+    const consultor = await getNextConsultor();
+    
+    // Atualizar interface com nome do consultor
+    const statusEl = qs('#consultorStatus');
+    if (statusEl && consultor.nome) {
+      statusEl.textContent = `${consultor.nome} - Online agora`;
+    }
+
+    const campos={
+      utm:getParam('utm')||'',
+      utm_source:getParam('utm_source')||'',
+      utm_medium:getParam('utm_medium')||'',
+      utm_campaign:getParam('utm_campaign')||'',
+      utm_term:getParam('utm_term')||'',
+      utm_content:getParam('utm_content')||'',
+      var1: consultor.nome || '',
+      var2: consultor.numero || '',
+      lancamento:getParam('lancamento')||'',
+      nome:getParam('nome')||'',
+      email:getParam('email')||''
+    };
+
+    const form=qs('#ejaPhoneForm');
+    const inputPhone=qs('#ejaPhone');
+    const inputDDI=qs('#ejaDDI');
+
+    // Formatação automática do telefone
+    inputPhone.addEventListener('input',()=>{
+      const digits=normalizeDigits(inputPhone.value);
+      if(digits.length>=2){
+        const ddd=digits.slice(0,2);
+        const isCel=digits.length>10;
+        const p1=isCel?digits.slice(2,7):digits.slice(2,6);
+        const p2=isCel?digits.slice(7,11):digits.slice(6,10);
+        inputPhone.value=p2?`(${ddd}) ${p1}-${p2}`:p1?`(${ddd}) ${p1}`:`(${ddd})`;
+      }else inputPhone.value=digits;
+    });
+    
+    inputPhone.addEventListener('keydown',(ev)=>{
+      if(ev.key==='Enter'){
+        ev.preventDefault();
+        form.requestSubmit();
+      }
+    });
+
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      
+      // Adicionar estado de loading
+      form.classList.add('loading');
+      
+      const ddi=normalizeDigits(inputDDI.value)||'55';
+      const phoneDigits=normalizeDigits(inputPhone.value);
+      
+      if(phoneDigits.length<10){
+        inputPhone.focus();
+        form.classList.remove('loading');
+        return;
+      }
+      
+      const whatsComDDD=`(${ddi}) (${phoneDigits.slice(0,2)}) ${phoneDigits.slice(2,7)}-${phoneDigits.slice(7)}`;
+      const payload=buildPayload(whatsComDDD,campos);
+      const numeroConsultor=normalizeDigits(consultor.numero);
+      const baseWA=`https://wa.me/${ddi}${numeroConsultor}`;
+
+      // Confirmar redirecionamento no sistema
+      await confirmRedirect(consultor.token, `${ddi}${phoneDigits}`, {
+        utm_source: campos.utm_source,
+        utm_campaign: campos.utm_campaign,
+        utm_medium: campos.utm_medium,
+        platform: detectPlatform()
+      });
+
+      if(!USE_BUTTONS_MODE){
+        sendPayloadFireAndForget(payload);
+        window.location.replace(`${baseWA}?text=${encodeURIComponent('Olá! Quero informações sobre minha matrícula do EJA EAD.')}`);
+        return;
+      }
+
+      // Modo com botões (se ativado manualmente)
+      fetch(WEBHOOK_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const row=qs('#ejaConfirmRow');
+      row.innerHTML = `
+        <div class="bubble ok">🔒 Número confirmado e seguro!</div>
+        <div class="bubble bot">Qual seria sua forma de pagamento?</div>
+        <div class="cta-buttons">
+          <a href="${baseWA}?text=${encodeURIComponent('Olá! Quero parcelar minha matrícula do EJA EAD (até 12x R$ 89,90).')}" class="cta primary">💳 Parcelado até 12x R$ 89,90</a>
+          <a href="${baseWA}?text=${encodeURIComponent('Olá! Quero pagar à vista no Pix (R$ 899).')}" class="cta success">💰 À vista no Pix R$ 899</a>
+          <a href="${baseWA}?text=${encodeURIComponent('Olá! Preciso falar com um especialista sobre a matrícula do EJA EAD.')}" class="cta outline">👨‍🎓 Falar com especialista</a>
+        </div>`;
+      form.classList.add('hidden');
+      row.classList.remove('hidden');
+      form.classList.remove('loading');
+    });
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',init);
+  }else{
+    init();
+  }
+})();
+</script>
+
+<!-- 
+INSTRUÇÕES DE USO:
+1. Para ativar o chat, adicione a classe "abrirChatEja" em qualquer botão/link
+2. Exemplo: <button class="abrirChatEja">Falar no WhatsApp</button>
+3. O sistema distribui automaticamente entre os consultores cadastrados no painel administrativo
+4. Cores do Brasil (verde e amarelo) aplicadas em todo o design
+5. Campo DDD mantido para entrada manual do usuário
+6. Compatível com dispositivos móveis antigos e de baixa qualidade
+7. Detecta automaticamente a plataforma (Google, Meta, WhatsApp) para direcionamento correto
+-->
+
+</body>
+</html>
