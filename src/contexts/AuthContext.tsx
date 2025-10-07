@@ -27,9 +27,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadUser = async () => {
     try {
-      console.log('🔍 [Mobile Debug] Carregando usuário...');
+      console.log('🔍 [Auth Debug] Carregando usuário...');
       const response = await api.getMe();
-      console.log('🔍 [Mobile Debug] Resposta getMe:', response);
+      console.log('🔍 [Auth Debug] Resposta getMe:', response);
       
       if (response.ok && response.data) {
         // Se /me retornar dados parciais, complementa com localStorage
@@ -47,19 +47,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // Mescla dados do /me com dados armazenados
         const finalUser = { ...fullUser, ...userData } as User;
-        console.log('✅ [Mobile Debug] Usuário carregado:', finalUser);
+        console.log('✅ [Auth Debug] Usuário carregado:', finalUser);
         setUser(finalUser);
       } else {
-        console.log('❌ [Mobile Debug] Falha ao carregar usuário - response não ok');
+        console.log('❌ [Auth Debug] Falha ao carregar usuário - response não ok:', response.error);
         setUser(null);
         localStorage.removeItem('user');
       }
     } catch (error) {
-      console.error('❌ [Mobile Debug] Error loading user:', error);
+      console.error('❌ [Auth Debug] Error loading user:', error);
       setUser(null);
       localStorage.removeItem('user');
     } finally {
-      console.log('🔍 [Mobile Debug] Loading finalizado');
+      console.log('🔍 [Auth Debug] Loading finalizado');
       setLoading(false);
     }
   };

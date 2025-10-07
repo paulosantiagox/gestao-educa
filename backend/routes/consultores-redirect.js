@@ -18,7 +18,7 @@ router.get('/', requireAuth, async (req, res) => {
     `;
     
     const result = await db.query(query);
-    res.json(result.rows);
+    res.json({ ok: true, data: result.rows });
   } catch (error) {
     console.error('Erro ao buscar consultores:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
@@ -28,59 +28,58 @@ router.get('/', requireAuth, async (req, res) => {
 // POST /api/consultores-redirect - Criar novo consultor
 router.post('/', requireAuth, async (req, res) => {
   try {
-    const { user_id, numero, plataforma_google, plataforma_meta, ativo, observacoes } = req.body;
+    const { user_id, numero, plataformas, ativo, observacoes } = req.body;
 
     if (!user_id || !numero) {
       return res.status(400).json({ error: 'user_id e numero são obrigatórios' });
     }
 
-    // Validação: número deve ser associado apenas a uma plataforma
-    if (plataforma_google && plataforma_meta) {
-      return res.status(400).json({ error: 'Um número não pode estar associado a ambas as plataformas' });
-    }
-
-    if (!plataforma_google && !plataforma_meta) {
+    if (!plataformas || plataformas.length === 0) {
       return res.status(400).json({ error: 'Selecione pelo menos uma plataforma' });
     }
 
-    // Verificar se o número já existe (independente do usuário)
-    const existingQuery = `
-      SELECT id FROM consultores_redirect 
-      WHERE numero = $1
-    `;
-    const existing = await db.query(existingQuery, [numero]);
-    
-    if (existing.rows.length > 0) {
-      return res.status(400).json({ error: 'Este número já está cadastrado no sistema' });
+    const createdConsultors = [];
+
+    // Criar um registro para cada plataforma selecionada
+    for (const plataforma of plataformas) {
+      // Verificar se já existe um registro para este número nesta plataforma
+      const conflictQuery = `
+        SELECT id FROM consultores_redirect 
+        WHERE numero = $1 AND plataforma = $2
+      `;
+      
+      const conflictResult = await db.query(conflictQuery, [numero, plataforma]);
+      
+      if (conflictResult.rows.length > 0) {
+        return res.status(400).json({ 
+          error: `Este número já está cadastrado na plataforma ${plataforma === 'google' ? 'Google Ads' : 'Meta Ads'}` 
+        });
+      }
+
+      // Criar o registro
+      const insertQuery = `
+        INSERT INTO consultores_redirect (user_id, numero, plataforma, ativo, observacoes)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING *
+      `;
+      
+      const values = [user_id, numero, plataforma, ativo !== false, observacoes || ''];
+      const result = await db.query(insertQuery, values);
+      createdConsultors.push(result.rows[0]);
     }
 
-    const insertQuery = `
-      INSERT INTO consultores_redirect 
-      (user_id, numero, plataforma, plataforma_google, plataforma_meta, ativo, observacoes)
-      VALUES ($1, $2, 'whatsapp', $3, $4, $5, $6)
-      RETURNING *
-    `;
-    
-    const result = await db.query(insertQuery, [
-      user_id, 
-      numero, 
-      plataforma_google || false, 
-      plataforma_meta || false, 
-      ativo !== false, 
-      observacoes || null
-    ]);
-
-    // Atualizar contador de consultores ativos
+    // Atualizar contadores
     await updateActiveConsultorsCount();
 
-    res.status(201).json(result.rows[0]);
+    res.status(201).json(createdConsultors);
   } catch (error) {
     console.error('Erro ao criar consultor:', error);
-    if (error.code === '23505') { // Unique violation
-      res.status(400).json({ error: 'Já existe um número cadastrado para este usuário nesta plataforma' });
-    } else {
-      res.status(500).json({ error: 'Erro interno do servidor' });
+    
+    if (error.code === '23505') {
+      return res.status(400).json({ error: 'Este número já está cadastrado nesta plataforma' });
     }
+    
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
@@ -88,24 +87,39 @@ router.post('/', requireAuth, async (req, res) => {
 router.put('/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const { numero, plataforma_google, plataforma_meta, ativo, observacoes } = req.body;
+    const { user_id, numero, ativo, observacoes } = req.body;
+
+    // Verificar se o consultor existe
+    const existingQuery = `SELECT * FROM consultores_redirect WHERE id = $1`;
+    const existingResult = await db.query(existingQuery, [id]);
+    
+    if (existingResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Consultor não encontrado' });
+    }
+
+    const existingConsultor = existingResult.rows[0];
 
     // Se apenas o status está sendo atualizado (toggle), não exigir outros campos
-    const isStatusOnlyUpdate = ativo !== undefined && !numero && plataforma_google === undefined && plataforma_meta === undefined;
+    const isStatusOnlyUpdate = ativo !== undefined && !numero;
 
-    if (!isStatusOnlyUpdate) {
-      // Validações completas apenas para atualizações completas
-      if (!numero) {
-        return res.status(400).json({ error: 'numero é obrigatório' });
-      }
+    if (!isStatusOnlyUpdate && !numero) {
+      return res.status(400).json({ error: 'numero é obrigatório' });
+    }
 
-      // Validação: número deve ser associado apenas a uma plataforma
-      if (plataforma_google && plataforma_meta) {
-        return res.status(400).json({ error: 'Um número não pode estar associado a ambas as plataformas' });
-      }
-
-      if (!plataforma_google && !plataforma_meta) {
-        return res.status(400).json({ error: 'Selecione pelo menos uma plataforma' });
+    // Se está atualizando o número, verificar se já existe na mesma plataforma
+    if (!isStatusOnlyUpdate && numero !== existingConsultor.numero) {
+      const conflictQuery = `
+        SELECT id FROM consultores_redirect 
+        WHERE numero = $1 AND plataforma = $2 AND id != $3
+      `;
+      
+      const conflictResult = await db.query(conflictQuery, [numero, existingConsultor.plataforma, id]);
+      
+      if (conflictResult.rows.length > 0) {
+        const plataformaName = existingConsultor.plataforma === 'google' ? 'Google Ads' : 'Meta Ads';
+        return res.status(400).json({ 
+          error: `Este número já está cadastrado na plataforma ${plataformaName}` 
+        });
       }
     }
 
@@ -128,37 +142,36 @@ router.put('/:id', requireAuth, async (req, res) => {
       updateQuery = `
         UPDATE consultores_redirect 
         SET 
-          numero = $1,
-          plataforma_google = $2,
-          plataforma_meta = $3,
-          ativo = $4,
-          observacoes = $5,
+          user_id = $1,
+          numero = $2,
+          ativo = $3,
+          observacoes = $4,
           updated_at = CURRENT_TIMESTAMP
-        WHERE id = $6
+        WHERE id = $5
         RETURNING *
       `;
       queryParams = [
+        user_id || existingConsultor.user_id,
         numero,
-        plataforma_google || false,
-        plataforma_meta || false,
         ativo !== false,
-        observacoes || null,
+        observacoes || '',
         id
       ];
     }
-    
+
     const result = await db.query(updateQuery, queryParams);
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Consultor não encontrado' });
-    }
-
-    // Atualizar contador de consultores ativos
+    // Atualizar contadores
     await updateActiveConsultorsCount();
 
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Erro ao atualizar consultor:', error);
+    
+    if (error.code === '23505') {
+      return res.status(400).json({ error: 'Este número já está cadastrado nesta plataforma' });
+    }
+    
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
@@ -199,9 +212,9 @@ async function updateActiveConsultorsCount() {
     const updateControlQuery = `
       UPDATE redirect_control 
       SET 
-        total_consultores = $1,
-        updated_at = CURRENT_TIMESTAMP
-      WHERE id = 1
+        total_ativos = $1,
+        ultima_atualizacao = CURRENT_TIMESTAMP
+      WHERE plataforma = 'whatsapp'
     `;
     await db.query(updateControlQuery, [totalAtivos]);
   } catch (error) {

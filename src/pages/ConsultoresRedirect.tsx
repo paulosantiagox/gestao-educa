@@ -22,20 +22,24 @@ interface Consultor {
   id: number;
   user_id: number;
   numero: string;
-  plataforma_google: boolean;
-  plataforma_meta: boolean;
+  plataforma: string;
   ativo: boolean;
   observacoes?: string;
   nome: string;
   email: string;
   created_at: string;
+  ordem_atual: number;
+  reservado_ate?: string;
+  reservado_por?: string;
+  ultimo_uso: string;
+  total_usos: number;
+  updated_at: string;
 }
 
 interface ConsultorForm {
   user_id: string;
   numero: string;
-  plataforma_google: boolean;
-  plataforma_meta: boolean;
+  plataforma: string;
   ativo: boolean;
   observacoes: string;
 }
@@ -44,45 +48,143 @@ export default function ConsultoresRedirect() {
   const [consultores, setConsultores] = useState<Consultor[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<'google' | 'meta'>('google');
   const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
-
+  const [activeTab, setActiveTab] = useState<'google' | 'meta'>('google');
   const [formData, setFormData] = useState<ConsultorForm>({
     user_id: '',
     numero: '',
-    plataforma_google: false,
-    plataforma_meta: false,
+    plataforma: '',
     ativo: true,
     observacoes: ''
   });
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [consultorToDelete, setConsultorToDelete] = useState<number | null>(null);
+
+  // FORÇAR DADOS DE TESTE PARA DEBUG
+  const [debugMode] = useState(false); // DESABILITADO - USAR DADOS REAIS
+
+  console.log('🔍 Render - showModal:', showModal);
+  console.log('🔍 Render - loading:', loading);
+  console.log('🔍 Render - users length:', users.length);
+  console.log('🔍 Render - consultores length:', consultores.length);
+  console.log('🔍 Render - debugMode:', debugMode);
 
   useEffect(() => {
+    console.log('🔍 [ConsultoresRedirect] useEffect executado - carregando dados...');
+    
+    if (debugMode) {
+      // DADOS DE TESTE FORÇADOS
+      console.log('🚨 [DEBUG] Usando dados de teste forçados!');
+      const dadosTeste: Consultor[] = [
+        {
+          id: 1,
+          user_id: 21,
+          numero: "(47) 99101-0463",
+          plataforma: "google",
+          ativo: true,
+          nome: "Teste Google 1",
+          email: "teste1@gmail.com",
+          created_at: "2025-01-01T00:00:00.000Z",
+          ordem_atual: 0,
+          ultimo_uso: "2025-01-01T00:00:00.000Z",
+          total_usos: 0,
+          updated_at: "2025-01-01T00:00:00.000Z"
+        },
+        {
+          id: 2,
+          user_id: 22,
+          numero: "(47) 99101-0464",
+          plataforma: "google",
+          ativo: true,
+          nome: "Teste Google 2",
+          email: "teste2@gmail.com",
+          created_at: "2025-01-01T00:00:00.000Z",
+          ordem_atual: 0,
+          ultimo_uso: "2025-01-01T00:00:00.000Z",
+          total_usos: 0,
+          updated_at: "2025-01-01T00:00:00.000Z"
+        },
+        {
+          id: 3,
+          user_id: 23,
+          numero: "(47) 99101-0465",
+          plataforma: "meta",
+          ativo: true,
+          nome: "Teste Meta 1",
+          email: "teste3@gmail.com",
+          created_at: "2025-01-01T00:00:00.000Z",
+          ordem_atual: 0,
+          ultimo_uso: "2025-01-01T00:00:00.000Z",
+          total_usos: 0,
+          updated_at: "2025-01-01T00:00:00.000Z"
+        }
+      ];
+      
+      setConsultores(dadosTeste);
+      setUsers([
+        { id: 21, name: "Teste Google 1", email: "teste1@gmail.com" },
+        { id: 22, name: "Teste Google 2", email: "teste2@gmail.com" },
+        { id: 23, name: "Teste Meta 1", email: "teste3@gmail.com" }
+      ]);
+      setLoading(false);
+      return;
+    }
+    
     loadData();
-  }, []);
+  }, [debugMode]);
 
   const loadData = async () => {
+    console.log('🔍 [ConsultoresRedirect] Iniciando carregamento de dados...');
+    setLoading(true);
     try {
-      setLoading(true);
-      const [consultoresRes, usersRes] = await Promise.all([
-        api.get('/api/consultores-redirect'),
-        api.get('/api/users')
-      ]);
-
-      setConsultores(consultoresRes.data);
+      console.log('🔍 [ConsultoresRedirect] Fazendo requisição para consultores...');
+      const consultoresResponse = await api.getConsultoresRedirect();
+      console.log('🔍 [ConsultoresRedirect] Resposta consultores:', consultoresResponse);
       
-      // Handle users data structure
-      if (usersRes.data && typeof usersRes.data === 'object' && 'users' in usersRes.data) {
-        const usersData = (usersRes.data as unknown) as { users: User[] };
-        setUsers(usersData.users);
+      console.log('🔍 [ConsultoresRedirect] Fazendo requisição para usuários...');
+      const usersResponse = await api.getUsers();
+      console.log('🔍 [ConsultoresRedirect] Resposta usuários:', usersResponse);
+
+      if (consultoresResponse.ok && consultoresResponse.data) {
+        console.log('✅ [ConsultoresRedirect] Dados de consultores carregados:', consultoresResponse);
+        
+        // O API client retorna {ok: true, data: {ok: true, data: [...]}}
+        // Precisamos acessar consultoresResponse.data.data para obter o array real
+        let consultoresArray = [];
+        
+        if (typeof consultoresResponse.data === 'object' && 
+            consultoresResponse.data !== null && 
+            'ok' in consultoresResponse.data && 
+            'data' in consultoresResponse.data) {
+          // Estrutura dupla: API client + backend response
+          consultoresArray = Array.isArray(consultoresResponse.data.data) ? consultoresResponse.data.data : [];
+          console.log('🔍 [ConsultoresRedirect] Usando estrutura dupla - data.data');
+        } else if (Array.isArray(consultoresResponse.data)) {
+          // Estrutura simples: apenas array
+          consultoresArray = consultoresResponse.data;
+          console.log('🔍 [ConsultoresRedirect] Usando estrutura simples - data');
+        }
+        
+        console.log('🔍 [ConsultoresRedirect] Array de consultores processado:', consultoresArray);
+        setConsultores(consultoresArray);
       } else {
-        setUsers((usersRes.data as unknown) as User[]);
+        console.error('❌ [ConsultoresRedirect] Erro ao carregar consultores:', consultoresResponse.error);
+        setConsultores([]); // Garantir que seja um array vazio em caso de erro
+      }
+
+      if (usersResponse.ok && usersResponse.data) {
+        console.log('✅ [ConsultoresRedirect] Dados de usuários carregados:', usersResponse.data);
+        setUsers(usersResponse.data.users || []);
+      } else {
+        console.error('❌ [ConsultoresRedirect] Erro ao carregar usuários:', usersResponse.error);
       }
     } catch (error) {
-      console.error('Erro ao carregar dados:', error);
+      console.error('❌ [ConsultoresRedirect] Erro geral no carregamento:', error);
       toast.error('Erro ao carregar dados');
     } finally {
+      console.log('🔍 [ConsultoresRedirect] Finalizando carregamento...');
       setLoading(false);
     }
   };
@@ -90,100 +192,87 @@ export default function ConsultoresRedirect() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.user_id || !formData.numero) {
+    if (!formData.user_id || !formData.numero || !formData.plataforma) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
 
     try {
-      const submitData = {
-        ...formData,
-        user_id: parseInt(formData.user_id)
-      };
-
       if (editingId) {
-        await api.put(`/api/consultores-redirect/${editingId}`, submitData);
+        // ✨ OTIMIZAÇÃO: Atualização otimista para edição
+        const updatedConsultor = {
+          id: editingId,
+          user_id: parseInt(formData.user_id),
+          numero: formData.numero,
+          plataforma: formData.plataforma,
+          ativo: formData.ativo,
+          observacoes: formData.observacoes,
+          nome: users.find(u => u.id === parseInt(formData.user_id))?.name || '',
+          email: users.find(u => u.id === parseInt(formData.user_id))?.email || '',
+          created_at: new Date().toISOString(),
+          ordem_atual: 0,
+          ultimo_uso: new Date().toISOString(),
+          total_usos: 0,
+          updated_at: new Date().toISOString()
+        };
+
+        setConsultores(prev => 
+          prev.map(c => c.id === editingId ? updatedConsultor : c)
+        );
+
+        // Edição completa - enviar todos os campos
+        const response = await api.updateConsultorRedirect(editingId, {
+          user_id: parseInt(formData.user_id),
+          numero: formData.numero,
+          plataforma: formData.plataforma,
+          ativo: formData.ativo,
+          observacoes: formData.observacoes
+        });
+        console.log('🔍 PUT Response:', response);
         toast.success('Consultor atualizado com sucesso!');
       } else {
-        await api.post('/api/consultores-redirect', submitData);
-        toast.success('Consultor cadastrado com sucesso!');
+        // ✨ OTIMIZAÇÃO: Adição otimista para novo consultor
+        const tempId = Date.now(); // ID temporário
+        const newConsultor = {
+          id: tempId,
+          user_id: parseInt(formData.user_id),
+          numero: formData.numero,
+          plataforma: formData.plataforma,
+          ativo: formData.ativo,
+          observacoes: formData.observacoes,
+          nome: users.find(u => u.id === parseInt(formData.user_id))?.name || '',
+          email: users.find(u => u.id === parseInt(formData.user_id))?.email || '',
+          created_at: new Date().toISOString(),
+          ordem_atual: 0,
+          ultimo_uso: new Date().toISOString(),
+          total_usos: 0,
+          updated_at: new Date().toISOString()
+        };
+
+        setConsultores(prev => [...prev, newConsultor]);
+
+        // Criação - backend espera 'plataformas' como array
+        const response = await api.createConsultorRedirect({
+          user_id: parseInt(formData.user_id),
+          numero: formData.numero,
+          plataformas: [formData.plataforma], // ← CORREÇÃO: array em vez de string
+          ativo: formData.ativo,
+          observacoes: formData.observacoes
+        });
+        console.log('🔍 POST Response:', response);
+        toast.success('Consultor criado com sucesso!');
       }
-
-      resetForm();
-      loadData();
-    } catch (error: any) {
-      console.error('Erro ao salvar:', error);
-      toast.error(error.response?.data?.error || 'Erro ao salvar consultor');
-    }
-  };
-
-  const handleEdit = (consultor: Consultor) => {
-    setFormData({
-      user_id: consultor.user_id.toString(),
-      numero: consultor.numero,
-      plataforma_google: consultor.plataforma_google,
-      plataforma_meta: consultor.plataforma_meta,
-      ativo: consultor.ativo,
-      observacoes: consultor.observacoes || ''
-    });
-    setEditingId(consultor.id);
-    
-    // Set active tab based on platform
-    if (consultor.plataforma_google && !consultor.plataforma_meta) {
-      setActiveTab('google');
-    } else if (consultor.plataforma_meta && !consultor.plataforma_google) {
-      setActiveTab('meta');
-    }
-    
-    setShowModal(true);
-  };
-
-  const handleDelete = async (id: number) => {
-    if (!confirm('Tem certeza que deseja excluir este consultor?')) return;
-
-    try {
-      await api.delete(`/api/consultores-redirect/${id}`);
-      toast.success('Consultor excluído com sucesso!');
-      loadData();
-    } catch (error) {
-      console.error('Erro ao excluir:', error);
-      toast.error('Erro ao excluir consultor');
-    }
-  };
-
-  const handleToggleStatus = async (id: number, currentStatus: boolean) => {
-    // Evita múltiplas atualizações simultâneas
-    if (updatingStatus === id) return;
-    
-    setUpdatingStatus(id);
-    
-    // Atualização otimista - atualiza o estado local imediatamente
-    const newStatus = !currentStatus;
-    setConsultores(prev => 
-      prev.map(consultor => 
-        consultor.id === id 
-          ? { ...consultor, ativo: newStatus }
-          : consultor
-      )
-    );
-
-    try {
-      await api.put(`/api/consultores-redirect/${id}`, { ativo: newStatus });
-      toast.success('Status atualizado com sucesso!');
-    } catch (error) {
-      console.error('Erro ao atualizar status:', error);
-      toast.error('Erro ao atualizar status');
       
-      // Reverte a mudança em caso de erro
-      setConsultores(prev => 
-        prev.map(consultor => 
-          consultor.id === id 
-            ? { ...consultor, ativo: currentStatus }
-            : consultor
-        )
-      );
-    } finally {
-      setUpdatingStatus(null);
+      // Recarregar dados para sincronizar com o servidor
+      await loadData();
+      resetForm();
+      setShowModal(false);
+    } catch (error) {
+      console.error('Erro ao salvar consultor:', error);
+      toast.error('Erro ao salvar consultor');
+      
+      // ❌ ROLLBACK: Reverter mudanças otimistas em caso de erro
+      await loadData();
     }
   };
 
@@ -191,235 +280,305 @@ export default function ConsultoresRedirect() {
     setFormData({
       user_id: '',
       numero: '',
-      plataforma_google: false,
-      plataforma_meta: false,
+      plataforma: '',
       ativo: true,
       observacoes: ''
     });
     setEditingId(null);
-    setShowModal(false);
-  };
-
-  const formatPhoneNumber = (phone: string) => {
-    return phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
   };
 
   const handleNewConsultor = (platform: 'google' | 'meta') => {
+    console.log('🔍 handleNewConsultor chamado com platform:', platform);
+    console.log('🔍 Estado atual showModal:', showModal);
     resetForm();
     setActiveTab(platform);
     setFormData(prev => ({
       ...prev,
-      plataforma_google: platform === 'google',
-      plataforma_meta: platform === 'meta'
+      plataforma: platform
     }));
+    setShowModal(true);
+    console.log('🔍 Novo estado showModal será:', true);
+  };
+
+  const handleEdit = (consultor: Consultor) => {
+    setFormData({
+      user_id: consultor.user_id.toString(),
+      numero: consultor.numero,
+      plataforma: consultor.plataforma,
+      ativo: consultor.ativo,
+      observacoes: consultor.observacoes || ''
+    });
+    setEditingId(consultor.id);
+    setActiveTab(consultor.plataforma as 'google' | 'meta');
     setShowModal(true);
   };
 
-  // Filter consultants by platform
-  const googleConsultores = consultores.filter(c => c.plataforma_google && !c.plataforma_meta);
-  const metaConsultores = consultores.filter(c => c.plataforma_meta && !c.plataforma_google);
+  const handleDeleteConsultor = (id: number) => {
+    setConsultorToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!consultorToDelete) return;
+    
+    // ✨ OTIMIZAÇÃO: Remoção otimista da UI
+    const consultorBackup = consultores.find(c => c.id === consultorToDelete);
+    
+    try {
+      setConsultores(prev => prev.filter(c => c.id !== consultorToDelete));
+      
+      await api.deleteConsultorRedirect(consultorToDelete);
+      toast.success('Consultor excluído com sucesso!');
+      
+      // Recarregar para sincronizar
+      await loadData();
+    } catch (error) {
+      console.error('Erro ao excluir consultor:', error);
+      toast.error('Erro ao excluir consultor');
+      
+      // ❌ ROLLBACK: Restaurar consultor em caso de erro
+      if (consultorBackup) {
+        setConsultores(prev => [...prev, consultorBackup].sort((a, b) => a.id - b.id));
+      }
+    } finally {
+      setShowDeleteModal(false);
+      setConsultorToDelete(null);
+    }
+  };
+
+  const handleToggleStatus = async (id: number, currentStatus: boolean) => {
+    try {
+      setUpdatingStatus(id);
+      
+      // Buscar dados completos do consultor para enviar no PUT
+      const consultor = consultores.find(c => c.id === id);
+      if (!consultor) {
+        toast.error('Consultor não encontrado');
+        return;
+      }
+
+      // ✨ OTIMIZAÇÃO: Atualização otimista da UI (sem piscar)
+      const newStatus = !currentStatus;
+      setConsultores(prev => 
+        prev.map(c => 
+          c.id === id ? { ...c, ativo: newStatus } : c
+        )
+      );
+
+      // PUT com dados completos (backend exige numero)
+      const response = await api.updateConsultorRedirect(id, {
+        user_id: consultor.user_id,
+        numero: consultor.numero,
+        plataforma: consultor.plataforma,
+        ativo: newStatus,
+        observacoes: consultor.observacoes || ''
+      });
+      
+      console.log('🔍 Toggle Response:', response);
+      toast.success('Status atualizado com sucesso!');
+      
+      // ✨ REMOVIDO: Não recarregar dados para evitar scroll para o topo
+      // await loadData();
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      toast.error('Erro ao atualizar status');
+      
+      // ❌ ROLLBACK: Reverter mudança otimista em caso de erro
+      setConsultores(prev => 
+        prev.map(c => 
+          c.id === id ? { ...c, ativo: currentStatus } : c
+        )
+      );
+    } finally {
+      setUpdatingStatus(null);
+    }
+  };
+
+  const formatPhoneNumber = (phone: string) => {
+    if (!phone) return '';
+    return phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+  };
+
+  // Filtrar consultores por plataforma - garantir que consultores seja um array
+  const consultoresArray = Array.isArray(consultores) ? consultores : [];
+  const googleConsultores = consultoresArray.filter(c => c.plataforma === 'google');
+  const metaConsultores = consultoresArray.filter(c => c.plataforma === 'meta');
+
+  console.log('🔍 [ConsultoresRedirect] Estado atual:', {
+    loading,
+    totalConsultores: consultores.length,
+    googleConsultores: googleConsultores.length,
+    metaConsultores: metaConsultores.length,
+    users: users.length
+  });
+
+  console.log('🔍 [ConsultoresRedirect] Dados detalhados:', {
+    consultoresRaw: consultores,
+    googleConsultoresDetalhado: googleConsultores,
+    metaConsultoresDetalhado: metaConsultores
+  });
+
+  const renderConsultorTable = (consultoresList: Consultor[], platform: string) => (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Consultor</TableHead>
+          <TableHead>Número</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Observações</TableHead>
+          <TableHead>Ações</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {consultoresList.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={5} className="text-center text-gray-500">
+              Nenhum consultor cadastrado para {platform === 'google' ? 'Google Ads' : 'Meta Ads'}
+            </TableCell>
+          </TableRow>
+        ) : (
+          consultoresList.map((consultor) => (
+            <TableRow key={consultor.id}>
+              <TableCell>
+                <div>
+                  <div className="font-medium">{consultor.nome}</div>
+                  <div className="text-sm text-gray-500">{consultor.email}</div>
+                </div>
+              </TableCell>
+              <TableCell>{formatPhoneNumber(consultor.numero)}</TableCell>
+              <TableCell>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={consultor.ativo}
+                    onCheckedChange={() => handleToggleStatus(consultor.id, consultor.ativo)}
+                    disabled={updatingStatus === consultor.id}
+                  />
+                  <Badge variant={consultor.ativo ? "default" : "secondary"}>
+                    {consultor.ativo ? 'Ativo' : 'Inativo'}
+                  </Badge>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="max-w-xs truncate">
+                  {consultor.observacoes || '-'}
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEdit(consultor)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteConsultor(consultor.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))
+        )}
+      </TableBody>
+    </Table>
+  );
 
   if (loading) {
-    return <div className="flex justify-center items-center h-64">Carregando...</div>;
+    console.log('🔍 [ConsultoresRedirect] Renderizando estado de loading...');
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg">Carregando...</div>
+      </div>
+    );
   }
 
+  console.log('🔍 [ConsultoresRedirect] Renderizando componente principal...');
+
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="container mx-auto p-6">
+      <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Consultores Redirecionamento</h1>
       </div>
 
-      {/* Google Ads Section */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-xl text-blue-600">📱 Números Google Ads</CardTitle>
-          <Button 
-            onClick={() => handleNewConsultor('google')}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Número Google
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Consultor</TableHead>
-                <TableHead>Número</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Observações</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {googleConsultores.map((consultor) => (
-                <TableRow key={consultor.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{consultor.nome}</div>
-                      <div className="text-sm text-gray-500">{consultor.email}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-mono">
-                    {formatPhoneNumber(consultor.numero)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        checked={consultor.ativo}
-                        onCheckedChange={() => handleToggleStatus(consultor.id, consultor.ativo)}
-                        disabled={updatingStatus === consultor.id}
-                        className={updatingStatus === consultor.id ? 'opacity-50' : ''}
-                      />
-                      <Badge variant={consultor.ativo ? "default" : "secondary"}>
-                        {consultor.ativo ? 'Ativo' : 'Inativo'}
-                      </Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell>{consultor.observacoes || '-'}</TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(consultor)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(consultor.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {googleConsultores.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center text-gray-500 py-8">
-                    Nenhum número Google cadastrado
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        {/* Google Ads - EM CIMA */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xl font-semibold text-blue-600">
+              Google Ads ({googleConsultores.length} consultores)
+            </CardTitle>
+            <Button 
+              onClick={() => handleNewConsultor('google')}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Número Google
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {renderConsultorTable(googleConsultores, 'google')}
+          </CardContent>
+        </Card>
 
-      {/* Meta Section */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-xl text-green-600">📱 Números Meta</CardTitle>
-          <Button 
-            onClick={() => handleNewConsultor('meta')}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Número Meta
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Consultor</TableHead>
-                <TableHead>Número</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Observações</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {metaConsultores.map((consultor) => (
-                <TableRow key={consultor.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{consultor.nome}</div>
-                      <div className="text-sm text-gray-500">{consultor.email}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-mono">
-                    {formatPhoneNumber(consultor.numero)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        checked={consultor.ativo}
-                        onCheckedChange={() => handleToggleStatus(consultor.id, consultor.ativo)}
-                        disabled={updatingStatus === consultor.id}
-                        className={updatingStatus === consultor.id ? 'opacity-50' : ''}
-                      />
-                      <Badge variant={consultor.ativo ? "default" : "secondary"}>
-                        {consultor.ativo ? 'Ativo' : 'Inativo'}
-                      </Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell>{consultor.observacoes || '-'}</TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(consultor)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(consultor.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {metaConsultores.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center text-gray-500 py-8">
-                    Nenhum número Meta cadastrado
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+        {/* Meta Ads - EM BAIXO */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xl font-semibold text-green-600">
+              Meta Ads ({metaConsultores.length} consultores)
+            </CardTitle>
+            <Button 
+              onClick={() => handleNewConsultor('meta')}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Número Meta
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {renderConsultorTable(metaConsultores, 'meta')}
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Modal */}
+      {/* Modal/Form */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">
-                {editingId ? 'Editar' : 'Novo'} Número {activeTab === 'google' ? 'Google' : 'Meta'}
+                {editingId ? 'Editar Consultor' : 'Novo Consultor'}
               </h2>
-              <Button variant="ghost" size="sm" onClick={resetForm}>
-                <X className="w-4 h-4" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowModal(false);
+                  resetForm();
+                }}
+              >
+                <X className="h-4 w-4" />
               </Button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="user_id">Consultor *</Label>
+                <Label htmlFor="user_id">Usuário *</Label>
                 <Select
                   value={formData.user_id}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, user_id: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione um consultor" />
+                    <SelectValue placeholder="Selecione um usuário" />
                   </SelectTrigger>
                   <SelectContent>
                     {users.map((user) => (
                       <SelectItem key={user.id} value={user.id.toString()}>
-                        {user.name} - {user.email}
+                        {user.name} ({user.email})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -427,24 +586,30 @@ export default function ConsultoresRedirect() {
               </div>
 
               <div>
-                <Label htmlFor="numero">Número WhatsApp *</Label>
+                <Label htmlFor="numero">Número *</Label>
                 <Input
                   id="numero"
                   type="text"
-                  placeholder="11999999999"
                   value={formData.numero}
                   onChange={(e) => setFormData(prev => ({ ...prev, numero: e.target.value }))}
-                  required
+                  placeholder="Ex: 11999999999"
                 />
               </div>
 
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <Label className="text-sm font-medium">
-                  Plataforma: {activeTab === 'google' ? 'Google Ads' : 'Meta'}
-                </Label>
-                <p className="text-xs text-gray-600 mt-1">
-                  Este número será usado exclusivamente para {activeTab === 'google' ? 'Google Ads' : 'Meta'}
-                </p>
+              <div>
+                <Label htmlFor="plataforma">Plataforma *</Label>
+                <Select 
+                  value={formData.plataforma} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, plataforma: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a plataforma" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="google">Google Ads</SelectItem>
+                    <SelectItem value="meta">Meta Ads</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex items-center space-x-2">
@@ -460,22 +625,65 @@ export default function ConsultoresRedirect() {
                 <Label htmlFor="observacoes">Observações</Label>
                 <Textarea
                   id="observacoes"
-                  placeholder="Observações sobre o consultor..."
                   value={formData.observacoes}
                   onChange={(e) => setFormData(prev => ({ ...prev, observacoes: e.target.value }))}
+                  placeholder="Observações opcionais..."
                 />
               </div>
 
-              <div className="flex space-x-2 pt-4">
-                <Button type="submit" className="flex-1">
-                  <Save className="w-4 h-4 mr-2" />
-                  {editingId ? 'Atualizar' : 'Salvar'}
-                </Button>
-                <Button type="button" variant="outline" onClick={resetForm}>
+              <div className="flex justify-end space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowModal(false);
+                    resetForm();
+                  }}
+                >
+                  <X className="h-4 w-4 mr-2" />
                   Cancelar
+                </Button>
+                <Button type="submit">
+                  <Save className="h-4 w-4 mr-2" />
+                  Salvar
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Exclusão */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="mb-4">
+              <h2 className="text-xl font-semibold mb-2">Confirmar Exclusão</h2>
+              <p className="text-gray-600">
+                Tem certeza que deseja excluir este consultor? Esta ação não pode ser desfeita.
+              </p>
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setConsultorToDelete(null);
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={confirmDelete}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Excluir
+              </Button>
+            </div>
           </div>
         </div>
       )}

@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Popup EJA Elementor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #666;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            margin: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .btn-google {
+            background: #4285f4;
+            color: white;
+        }
+        .btn-google:hover {
+            background: #3367d6;
+            transform: translateY(-2px);
+        }
+        .btn-meta {
+            background: #1877f2;
+            color: white;
+        }
+        .btn-meta:hover {
+            background: #166fe5;
+            transform: translateY(-2px);
+        }
+        .info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border-left: 4px solid #2196f3;
+        }
+        .code {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        .warning {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border-left: 4px solid #ffc107;
+            color: #856404;
+        }
+        .current-config {
+            background: #d4edda;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste - Popup EJA para Elementor</h1>
+        
+        <div class="info">
+            <strong>📋 Sobre este teste:</strong><br>
+            Esta página testa o popup EJA que será usado no Elementor. O popup mantém a estrutura original do EJA Educa Brasil, mas agora permite escolher entre especialistas do Google ou Meta através de uma variável de configuração.
+        </div>
+
+        <div class="current-config">
+            <strong>⚙️ Configuração Atual:</strong><br>
+            <span id="configAtual">Carregando...</span>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Teste do Popup EJA</h3>
+            <p>Clique no botão abaixo para testar o popup com a configuração atual:</p>
+            <button class="abrirChatEja btn btn-google">
+                🧑‍🎓 Quero concluir meu Ensino Médio
+            </button>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Como alterar a configuração:</strong><br>
+            Para mudar entre Google e Meta, edite a variável <code>PLATAFORMA_TRAFEGO</code> no início do código HTML.
+        </div>
+
+        <div class="test-section">
+            <h3>📝 Código para Elementor:</h3>
+            <p>Este é o código que você deve copiar e colar no widget HTML do Elementor:</p>
+            <div class="code">
+                &lt;!-- Altere esta linha para escolher a plataforma --&gt;<br>
+                &lt;script&gt;<br>
+                &nbsp;&nbsp;const PLATAFORMA_TRAFEGO = 'google'; // ou 'meta'<br>
+                &lt;/script&gt;<br><br>
+                &lt;!-- Resto do código do popup... --&gt;<br><br>
+                &lt;!-- Botão para abrir o popup --&gt;<br>
+                &lt;button class="abrirChatEja"&gt;Falar com Especialista&lt;/button&gt;
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔄 Funcionamento:</h3>
+            <ul>
+                <li><strong>Google:</strong> Direciona para especialistas cadastrados como "Google"</li>
+                <li><strong>Meta:</strong> Direciona para especialistas cadastrados como "Meta"</li>
+                <li><strong>Seleção automática:</strong> Escolhe um especialista ativo aleatoriamente</li>
+                <li><strong>Fallback:</strong> Se não houver especialistas ativos, usa um padrão</li>
+                <li><strong>Tracking:</strong> Envia dados para o sistema de rastreamento</li>
+            </ul>
+        </div>
+
+        <div class="info">
+            <strong>🎯 Vantagens desta solução:</strong><br>
+            • Mantém a identidade visual original do EJA<br>
+            • Um código único para ambas as plataformas<br>
+            • Integração completa com o sistema existente<br>
+            • Fácil configuração através de uma variável<br>
+            • Rastreamento automático de origem do tráfego
+        </div>
+    </div>
+
+    <!-- Incluir o popup EJA -->
+    <script>
+        // Configuração para este teste (Meta)
+        const PLATAFORMA_TRAFEGO = 'meta';
+        
+        // Mostrar configuração atual
+        document.getElementById('configAtual').textContent = 
+            `Plataforma: ${PLATAFORMA_TRAFEGO.toUpperCase()} - Os leads serão direcionados para especialistas cadastrados como "${PLATAFORMA_TRAFEGO}"`;
+    </script>
+
+    <!-- Popup EJA -->
+    <div id="eja-chat-overlay" aria-hidden="true">
+      <div class="eja-chat-modal" role="dialog" aria-label="EJA Educa Brasil - Chat">
+        <!-- Cabeçalho -->
+        <div class="eja-chat-header">
+          <div class="eja-brand">
+            <div class="eja-logo-wrap">
+              <img
+                src="https://ejaeducabrasil.com/wp-content/uploads/2024/06/cropped-EJA-1.png"
+                alt="EJA Educa Brasil" class="eja-logo" loading="lazy"
+              />
+            </div>
+            <div class="eja-titles">
+              <div class="eja-name">EJA Educa Brasil <span class="eja-verified">✅</span></div>
+              <div class="eja-status">Online agora</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Conteúdo -->
+        <div class="eja-chat-body" id="ejaChatBody">
+          <div class="bubble user">Quero concluir meu Ensino Médio com EJA EAD</div>
+          <div class="bubble bot">Que legal, você está quase lá.. parabéns</div>
+          <div class="bubble bot">Me confirma seu número de WhatsApp com DDD, por favor 👇</div>
+
+          <!-- Form do número -->
+          <form id="ejaPhoneForm" class="eja-phone-row" autocomplete="off">
+            <div class="ddi-box">+<input id="ejaDDI" name="ddi" inputmode="numeric" value="55" maxlength="3" aria-label="DDI" /></div>
+            <input id="ejaPhone" name="phone" inputmode="numeric" placeholder="WhatsApp com DDD" aria-label="WhatsApp com DDD" />
+            <button class="send" type="submit" aria-label="Confirmar número">➜</button>
+          </form>
+
+          <!-- Etapa 2 -->
+          <div id="ejaConfirmRow" class="hidden"></div>
+        </div>
+
+        <div class="eja-chat-footer">ejaeducabrasil.com</div>
+      </div>
+    </div>
+
+    <style>
+      :root {
+        --eja-green: #1db954;
+        --eja-green-strong: #12a345;
+        --eja-bg: #f5f7f9;
+        --eja-white: #ffffff;
+        --eja-text: #202124;
+        --eja-muted: #6b7280;
+        --eja-bubble: #e9fbe8;
+        --eja-shadow: 0 10px 30px rgba(0,0,0,.18);
+      }
+      #eja-chat-overlay{position:fixed;inset:0;z-index:999999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.45);padding:16px}
+      #eja-chat-overlay.show{display:flex}
+      .eja-chat-modal{width:100%;max-width:430px;background:var(--eja-white);border-radius:22px;overflow:hidden;box-shadow:var(--eja-shadow);display:grid;grid-template-rows:auto 1fr auto;max-height:92vh}
+      .eja-chat-header{background:linear-gradient(90deg,var(--eja-green),#2dd16f);color:#fff;display:flex;align-items:center;gap:12px;padding:10px 12px}
+      .eja-brand{display:flex;align-items:center;gap:10px;min-width:0}
+      .eja-logo-wrap{width:42px;height:42px;border-radius:50%;overflow:hidden;background:#fff;border:2px solid rgba(255,255,255,.4);display:grid;place-items:center}
+      .eja-logo{width:100%;height:100%;object-fit:contain;background:#fff}
+      .eja-titles{display:flex;flex-direction:column;line-height:1.1}
+      .eja-name{font-weight:700;display:flex;align-items:center;gap:6px}
+      .eja-verified{font-size:14px;padding:0;margin:0}
+      .eja-status{font-size:12px;opacity:.95}
+
+      .eja-chat-body{background:var(--eja-bg);padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+      .bubble{max-width:85%;padding:10px 12px;border-radius:16px;font-size:14px;line-height:1.35;word-break:break-word;background:#fff;color:var(--eja-text);box-shadow:0 1px 0 rgba(0,0,0,.04)}
+      .bubble.bot{background:var(--eja-bubble)}
+      .bubble.user{margin-left:auto;background:#e8f0fe}
+      .bubble.ok{background:#e6fff2;border:1px solid #b7f2d2}
+
+      .eja-phone-row{
+        display:flex;
+        gap:8px;
+        align-items:center;
+        margin-top:4px;
+        flex-wrap:nowrap;
+      }
+      .ddi-box{flex:0 0 68px;background:#fff;border-radius:12px;padding:0 8px;display:flex;align-items:center;gap:4px;border:1px solid #e5e7eb;height:44px}
+      .ddi-box input{width:40px;border:0;outline:0;font-size:16px;background:transparent;text-align:left}
+      #ejaPhone{flex:1;height:44px;border-radius:12px;border:1px solid #e5e7eb;background:#fff;padding:0 12px;font-size:16px;outline:0;min-width:0}
+      .send{flex:0 0 48px;height:44px;border-radius:14px;border:0;background:var(--eja-green);color:#fff;font-weight:700;font-size:18px;cursor:pointer;transition:transform .04s ease, background .2s ease}
+      .send:hover{background:var(--eja-green-strong)}
+      .send:active{transform:translateY(1px)}
+
+      .hidden{display:none !important}
+      
+      .whatsapp-btn {
+        width: 100%;
+        padding: 12px 16px;
+        margin-top: 12px;
+        background: var(--eja-green);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      
+      .whatsapp-btn:hover {
+        background: var(--eja-green-strong);
+        transform: translateY(-1px);
+      }
+      
+      .whatsapp-btn:active {
+        transform: translateY(0);
+      }
+    </style>
+
+    <script>
+    (function () {
+      const USE_BUTTONS_MODE = false;
+      const WEBHOOK_URL = 'https://gestao-educa.autoflixtreinamentos.com/api/webhook-eja';
+      const API_BASE_URL = 'https://gestao-educa.autoflixtreinamentos.com/api';
+      const ESCOLA = 'EJA EDUCA BRASIL';
+      const FORM_ID = '193152d';
+      const FORM_NAME = 'CADASTRO EJA';
+
+      let especialistasData = { google: [], meta: [] };
+
+      const qs = (s, c=document)=>c.querySelector(s);
+      function getParam(n){const u=new URL(location.href);return u.searchParams.get(n)||''}
+      function normalizeDigits(s){return (s||'').replace(/\D+/g,'')}
+      function dateBR(){
+        const d=new Date();
+        const dia=String(d.getDate()).padStart(2,'0');
+        const mes=String(d.getMonth()+1).padStart(2,'0');
+        const ano=d.getFullYear();
+        const h=String(d.getHours()).padStart(2,'0');
+        const m=String(d.getMinutes()).padStart(2,'0');
+        const s=String(d.getSeconds()).padStart(2,'0');
+        return `${dia}/${mes}/${ano} ${h}:${m}:${s}`;
+      }
+
+      async function carregarEspecialistas() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/consultores-redirect`);
+          const data = await response.json();
+          
+          if (data.success) {
+            especialistasData.google = data.data.google || [];
+            especialistasData.meta = data.data.meta || [];
+          }
+        } catch (error) {
+          console.error('Erro ao carregar especialistas:', error);
+          especialistasData = {
+            google: [{ nome: 'Especialista Google', numero: '47991010463', ativo: true }],
+            meta: [{ nome: 'Especialista Meta', numero: '92981617322', ativo: true }]
+          };
+        }
+      }
+
+      function selectEspecialista(){
+        const plataforma = window.PLATAFORMA_TRAFEGO || 'google';
+        const especialistas = especialistasData[plataforma] || [];
+        const ativos = especialistas.filter(e => e.ativo);
+        
+        if (ativos.length === 0) {
+          console.warn(`Nenhum especialista ${plataforma} ativo encontrado`);
+          const todosEspecialistas = [...especialistasData.google, ...especialistasData.meta];
+          const todosAtivos = todosEspecialistas.filter(e => e.ativo);
+          if (todosAtivos.length > 0) {
+            return todosAtivos[Math.floor(Math.random() * todosAtivos.length)];
+          }
+          return { nome: 'Especialista EJA', numero: '47991010463', ativo: true };
+        }
+        
+        return ativos[Math.floor(Math.random() * ativos.length)];
+      }
+
+      function buildPayload(whatsComDDD, campos){
+        return {
+          "WhatsApp com DDD": whatsComDDD,
+          "escola": ESCOLA,
+          "plataforma": window.PLATAFORMA_TRAFEGO || 'google',
+          "especialista": campos.especialista || "",
+          "nome": campos.nome || "",
+          "email": campos.email || "",
+          "utm": campos.utm || "",
+          "utm_source": campos.utm_source || "",
+          "utm_campaign": campos.utm_campaign || "",
+          "utm_term": campos.utm_term || "",
+          "utm_content": campos.utm_content || "",
+          "utm_medium": campos.utm_medium || "",
+          "lancamento": campos.lancamento || "",
+          "data_cadastro": dateBR(),
+          "var1": campos.var1 || "",
+          "var2": campos.var2 || "",
+          "var3": campos.var3 || "",
+          "form_id": FORM_ID,
+          "form_name": FORM_NAME,
+          "source": window.location.hostname,
+          "userAgent": navigator.userAgent,
+          "referrer": document.referrer || 'direct'
+        }
+      }
+
+      function sendPayloadFireAndForget(payload){
+        try{
+          if (navigator.sendBeacon) {
+            const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+            navigator.sendBeacon(WEBHOOK_URL, blob);
+            return;
+          }
+        }catch(_){}
+        try{
+          fetch(WEBHOOK_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        }catch(_){}
+      }
+
+      function openPopup(){qs('#eja-chat-overlay').classList.add('show');setTimeout(()=>qs('#ejaPhone')?.focus(),50);}
+      function closePopup(){qs('#eja-chat-overlay').classList.remove('show');}
+
+      document.addEventListener('click',(e)=>{ if(e.target?.id==='eja-chat-overlay') closePopup(); });
+      document.addEventListener('click',function(e){
+        const btn=e.target.closest('.abrirChatEja');
+        if(btn){e.preventDefault();e.stopPropagation();openPopup();}
+      });
+
+      async function init(){
+        await carregarEspecialistas();
+        
+        const especialista = selectEspecialista();
+        let var1 = getParam('var1') || (window.PLATAFORMA_TRAFEGO || 'google');
+        let var2 = getParam('var2') || especialista.numero;
+
+        const campos={
+          utm:getParam('utm')||'',
+          utm_source:getParam('utm_source')||'',
+          utm_medium:getParam('utm_medium')||'',
+          utm_campaign:getParam('utm_campaign')||'',
+          utm_term:getParam('utm_term')||'',
+          utm_content:getParam('utm_content')||'',
+          especialista: especialista.nome,
+          var1,var2,
+          lancamento:getParam('lancamento')||'',
+          nome:getParam('nome')||'',
+          email:getParam('email')||''
+        };
+
+        const form=qs('#ejaPhoneForm');
+        const inputPhone=qs('#ejaPhone');
+        const inputDDI=qs('#ejaDDI');
+
+        inputPhone.addEventListener('input',()=>{
+          const digits=normalizeDigits(inputPhone.value);
+          if(digits.length>=2){
+            const ddd=digits.slice(0,2);
+            const isCel=digits.length>10;
+            const p1=isCel?digits.slice(2,7):digits.slice(2,6);
+            const p2=isCel?digits.slice(7,11):digits.slice(6,10);
+            inputPhone.value=p2?`(${ddd}) ${p1}-${p2}`:p1?`(${ddd}) ${p1}`:`(${ddd})`;
+          }else inputPhone.value=digits;
+        });
+        inputPhone.addEventListener('keydown',(ev)=>{if(ev.key==='Enter'){ev.preventDefault();form.requestSubmit();}});
+
+        form.addEventListener('submit',(e)=>{
+          e.preventDefault();
+          const ddi=normalizeDigits(inputDDI.value)||'55';
+          const phoneDigits=normalizeDigits(inputPhone.value);
+          if(phoneDigits.length<10){inputPhone.focus();return;}
+          const whatsComDDD=`(${ddi}) (${phoneDigits.slice(0,2)}) ${phoneDigits.slice(2,7)}-${phoneDigits.slice(7)}`;
+          const payload=buildPayload(whatsComDDD,campos);
+          const numeroEspecialista=normalizeDigits(campos.var2);
+          const baseWA=`https://wa.me/55${numeroEspecialista}`;
+
+          // Mostrar informações do consultor
+          const confirmRow = qs('#ejaConfirmRow');
+          confirmRow.innerHTML = `
+            <div class="bubble ok">
+              ✅ Perfeito! Você será direcionado para:<br>
+              <strong>📱 ${campos.especialista}</strong><br>
+              <strong>📞 (${phoneDigits.slice(0,2)}) ${phoneDigits.slice(2,7)}-${phoneDigits.slice(7)}</strong>
+            </div>
+            <button id="ejaWhatsAppBtn" class="whatsapp-btn">
+              💬 Falar no WhatsApp Agora
+            </button>
+          `;
+          confirmRow.classList.remove('hidden');
+          
+          // Esconder o formulário
+          form.style.display = 'none';
+
+          // Adicionar evento ao botão do WhatsApp
+          qs('#ejaWhatsAppBtn').addEventListener('click', () => {
+            window.open(`${baseWA}?text=${encodeURIComponent('Olá! Quero informações sobre a matrícula do EJA EAD. 🧑‍🎓')}`, '_blank');
+          });
+
+          sendPayloadFireAndForget(payload);
+          
+          // Redirecionar automaticamente em nova aba após 2 segundos
+          setTimeout(() => {
+            window.open(`${baseWA}?text=${encodeURIComponent('Olá! Quero informações sobre a matrícula do EJA EAD. 🧑‍🎓')}`, '_blank');
+          }, 2000);
+        });
+      }
+
+      if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
+    })();
+    </script>
+</body>
+</html>

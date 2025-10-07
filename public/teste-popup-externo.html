@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Popup Externo Google e Meta</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #666;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .btn-google {
+            background: #4285f4;
+            color: white;
+        }
+        .btn-google:hover {
+            background: #3367d6;
+        }
+        .btn-meta {
+            background: #1877f2;
+            color: white;
+        }
+        .btn-meta:hover {
+            background: #166fe5;
+        }
+        .btn-unified {
+            background: #28a745;
+            color: white;
+        }
+        .btn-unified:hover {
+            background: #218838;
+        }
+        .info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border-left: 4px solid #2196f3;
+        }
+        .code {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste - Popup Externo para Consultores</h1>
+        
+        <div class="info">
+            <strong>📋 Instruções:</strong><br>
+            Esta página serve para testar os popups externos que serão integrados em sites externos.
+            Cada botão possui um ID específico que aciona o popup correspondente.
+        </div>
+
+        <div class="test-section">
+            <h3>🔵 Teste Popup Google</h3>
+            <p>Clique no botão abaixo para testar o popup do Google Ads:</p>
+            <button id="abrirPopupGoogle" class="btn btn-google">
+                🚀 Abrir Popup Google
+            </button>
+            <div class="code">
+                <strong>ID do botão:</strong> abrirPopupGoogle
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔵 Teste Popup Meta</h3>
+            <p>Clique no botão abaixo para testar o popup do Meta Ads:</p>
+            <button id="abrirPopupMeta" class="btn btn-meta">
+                📱 Abrir Popup Meta
+            </button>
+            <div class="code">
+                <strong>ID do botão:</strong> abrirPopupMeta
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🟢 Teste Popup Unificado (Recomendado)</h3>
+            <p>Clique no botão abaixo para testar o popup unificado com seleção de plataforma:</p>
+            <button id="abrirPopupConsultor" class="btn btn-unified">
+                ⚡ Abrir Popup Unificado
+            </button>
+            <div class="code">
+                <strong>ID do botão:</strong> abrirPopupConsultor
+            </div>
+        </div>
+
+        <div class="info">
+            <strong>🎯 IDs Disponíveis:</strong><br>
+            • <code>abrirPopupGoogle</code> - Para popup específico do Google<br>
+            • <code>abrirPopupMeta</code> - Para popup específico do Meta<br>
+            • <code>abrirPopupConsultor</code> - Para popup unificado (recomendado)
+        </div>
+
+        <div class="test-section">
+            <h3>📝 Como usar em sites externos:</h3>
+            <div class="code">
+                &lt;!-- Exemplo de uso --&gt;<br>
+                &lt;button id="abrirPopupConsultor"&gt;Falar com Consultor&lt;/button&gt;<br>
+                &lt;script src="URL_DO_SCRIPT_POPUP"&gt;&lt;/script&gt;
+            </div>
+        </div>
+    </div>
+
+    <!-- Script do popup -->
+    <script src="popup-consultor-externo.js"></script>
+</body>
+</html>

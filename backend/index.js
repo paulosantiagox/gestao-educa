@@ -49,7 +49,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookieParser());
 
-// ===== ROTAS DA API (sempre ANTES do static) =====
+// Rotas da API
 app.use("/api/auth", auth);
 app.use("/api/users", users);
 app.use("/api/certifiers", certifiers);
@@ -66,6 +66,19 @@ app.use("/api/leads", leads);
 app.use("/api/tracking", tracking);
 app.use("/api/public", redirect);
 app.use("/api/consultores-redirect", consultoresRedirectRoutes);
+
+// Rotas sem /api/ que retornam JSON (REMOVER ESTAS)
+// app.use("/consultores-redirect", consultoresRedirectRoutes);
+// app.use("/users", users);
+// app.use("/students", students);
+// app.use("/sales", sales);
+// app.use("/certifiers", certifiers);
+// app.use("/payment-methods", paymentMethods);
+// app.use("/certification", certification);
+// app.use("/dashboard", dashboard);
+// app.use("/certification-sla", certificationSLA);
+// app.use("/payments", payments);
+// app.use("/auth", auth);
 
 // healthcheck
 app.get("/api/ping", (_req, res) => res.json({ ok: true }));
