@@ -50,6 +50,25 @@ if [ -z "$(git status --porcelain)" ]; then
         git push origin main
         if [ $? -eq 0 ]; then
             echo -e "${GREEN}✅ Push realizado com sucesso!${NC}"
+            # Criar e enviar tag baseada na versão do package.json
+            echo -e "${BLUE}🏷️ Gerando tag de versão baseada no package.json...${NC}"
+            VERSION=$(grep -m1 '"version"' package.json | sed -E 's/.*"version": *"([^"]+)".*/\1/')
+            if [ -n "$VERSION" ]; then
+                TAG="v$VERSION"
+                if git rev-parse "$TAG" >/dev/null 2>&1; then
+                    echo -e "${YELLOW}🔖 Tag ${TAG} já existe, pulando criação.${NC}"
+                else
+                    git tag -a "$TAG" -m "Release ${TAG} - ${COMMIT_MESSAGE}"
+                    if [ $? -eq 0 ]; then
+                        git push origin "$TAG"
+                        echo -e "${GREEN}✅ Tag ${TAG} criada e enviada com sucesso!${NC}"
+                    else
+                        echo -e "${YELLOW}⚠️  Não foi possível criar/enviar a tag ${TAG}.${NC}"
+                    fi
+                fi
+            else
+                echo -e "${YELLOW}⚠️  Não foi possível obter versão do package.json.${NC}"
+            fi
         else
             echo -e "${RED}❌ Erro no push!${NC}"
             exit 1
@@ -102,6 +121,26 @@ if [ $? -ne 0 ]; then
     echo -e "${RED}❌ Erro no push para GitHub!${NC}"
     echo -e "${YELLOW}💡 Verifique sua conexão e credenciais do Git.${NC}"
     exit 1
+fi
+
+# 6.1 Criar e enviar tag da versão (package.json)
+echo -e "${BLUE}🏷️ Gerando tag de versão baseada no package.json...${NC}"
+VERSION=$(grep -m1 '"version"' package.json | sed -E 's/.*"version": *"([^"]+)".*/\1/')
+if [ -n "$VERSION" ]; then
+    TAG="v$VERSION"
+    if git rev-parse "$TAG" >/dev/null 2>&1; then
+        echo -e "${YELLOW}🔖 Tag ${TAG} já existe, pulando criação.${NC}"
+    else
+        git tag -a "$TAG" -m "Release ${TAG} - ${COMMIT_MESSAGE}"
+        if [ $? -eq 0 ]; then
+            git push origin "$TAG"
+            echo -e "${GREEN}✅ Tag ${TAG} criada e enviada com sucesso!${NC}"
+        else
+            echo -e "${YELLOW}⚠️  Não foi possível criar/enviar a tag ${TAG}.${NC}"
+        fi
+    fi
+else
+    echo -e "${YELLOW}⚠️  Não foi possível obter versão do package.json.${NC}"
 fi
 
 # 7. Verificar se o push foi bem-sucedido

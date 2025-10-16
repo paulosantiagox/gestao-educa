@@ -343,7 +343,9 @@ const CertificationProcess = () => {
     const headers = [
       "Nome do Aluno",
       "Email",
+      "Telefone",
       "CPF",
+      "Data de Cadastro",
       "Certificadora",
       "Status",
       "Certificado Físico",
@@ -365,7 +367,9 @@ const CertificationProcess = () => {
       return [
         `"${student.name || ''}"`,
         `"${student.email || ''}"`,
+        `"${student.phone || ''}"`,
         `"${student.cpf || ''}"`,
+        student.created_at ? formatDate(student.created_at) : "-",
         `"${cert?.certifier_name || '-'}"`,
         `"${statusLabel}"`,
         cert?.wants_physical ? "Sim" : cert ? "Não" : "-",
@@ -410,7 +414,9 @@ const CertificationProcess = () => {
       return {
         "Nome do Aluno": student.name || '',
         "Email": student.email || '',
+        "Telefone": student.phone || '',
         "CPF": student.cpf || '',
+        "Data de Cadastro": student.created_at ? formatDate(student.created_at) : "-",
         "Certificadora": cert?.certifier_name || '-',
         "Status": statusLabel,
         "Certificado Físico": cert?.wants_physical ? "Sim" : cert ? "Não" : "-",
@@ -433,9 +439,11 @@ const CertificationProcess = () => {
     // Ajustar largura das colunas
     const maxWidth = 30;
     worksheet['!cols'] = [
-      { wch: 25 }, // Nome
+      { wch: 25 }, // Nome do Aluno
       { wch: 30 }, // Email
+      { wch: 18 }, // Telefone
       { wch: 15 }, // CPF
+      { wch: 18 }, // Data de Cadastro
       { wch: 25 }, // Certificadora
       { wch: 20 }, // Status
       { wch: 18 }, // Certificado Físico
@@ -445,7 +453,7 @@ const CertificationProcess = () => {
       { wch: 22 }, // Documentação Solicitada
       { wch: 22 }, // Documentação em Análise
       { wch: 20 }, // Certificação Iniciada
-      { wch: 25 }, // Certificado Digital
+      { wch: 25 }, // Certificado Digital Enviado
       { wch: 25 }, // Certificado Físico Enviado
       { wch: 15 }, // Concluído
     ];
