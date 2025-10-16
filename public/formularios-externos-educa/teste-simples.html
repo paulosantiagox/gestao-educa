@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Simples - EJA Widget</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 50px;
+            text-align: center;
+        }
+        
+        .test-btn {
+            background: #009639;
+            color: white;
+            padding: 20px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 20px;
+            display: block;
+            width: 300px;
+            margin: 20px auto;
+        }
+        
+        .test-btn:hover {
+            background: #007a2e;
+        }
+        
+        .debug-info {
+            background: #f0f0f0;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 8px;
+            text-align: left;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎓 Teste Simples - EJA Widget</h1>
+    
+    <p>Clique no botão abaixo para testar o widget:</p>
+    
+    <!-- Botão de teste -->
+    <button class="eja-popup-trigger test-btn">
+        🎓 Concluir Ensino Médio EAD
+    </button>
+    
+    <!-- Botão alternativo -->
+    <button onclick="abrirWidget()" class="test-btn">
+        📚 Abrir Widget (Função Direta)
+    </button>
+    
+    <!-- Informações de debug -->
+    <div class="debug-info" id="debugInfo">
+        <h3>Debug Info:</h3>
+        <div id="debugContent">Carregando...</div>
+    </div>
+
+    <!-- Incorporar o widget -->
+    <script src="https://gestao-educa.autoflixtreinamentos.com/formularios-externos-educa/eja-widget-embed.js"></script>
+    
+    <script>
+        function abrirWidget() {
+            console.log('Tentando abrir widget...');
+            if (window.openEJAWidget) {
+                window.openEJAWidget();
+            } else {
+                alert('Widget não carregado ainda!');
+            }
+        }
+        
+        function updateDebugInfo() {
+            const debugContent = document.getElementById('debugContent');
+            const info = [
+                `EJA Widget Carregado: ${window.EJAWidgetLoaded || 'false'}`,
+                `Função openEJAWidget: ${typeof window.openEJAWidget}`,
+                `EJAExternalWidget: ${typeof window.EJAExternalWidget}`,
+                `Botões encontrados: ${document.querySelectorAll('.eja-popup-trigger').length}`,
+                `Timestamp: ${new Date().toLocaleTimeString()}`
+            ];
+            debugContent.innerHTML = info.join('<br>');
+        }
+        
+        // Atualizar debug info a cada segundo
+        setInterval(updateDebugInfo, 1000);
+        
+        // Log inicial
+        console.log('Página carregada, aguardando widget...');
+        
+        // Verificar após 3 segundos
+        setTimeout(() => {
+            console.log('=== DEBUG APÓS 3 SEGUNDOS ===');
+            console.log('EJA Widget carregado:', window.EJAWidgetLoaded);
+            console.log('Função openEJAWidget:', typeof window.openEJAWidget);
+            console.log('EJAExternalWidget:', typeof window.EJAExternalWidget);
+            
+            const triggers = document.querySelectorAll('.eja-popup-trigger');
+            console.log('Botões encontrados:', triggers.length);
+            
+            triggers.forEach((btn, i) => {
+                console.log(`Botão ${i+1}:`, btn);
+                console.log(`  - Classes:`, btn.className);
+                console.log(`  - Event listeners:`, getEventListeners ? getEventListeners(btn) : 'N/A');
+            });
+        }, 3000);
+    </script>
+</body>
+</html>

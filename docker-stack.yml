@@ -13,6 +13,9 @@ services:
       DATABASE_URL: postgres://sistema_educa:paulo123456@postgres_postgres:5432/sistema_educa
       JWT_SECRET: paulo123456
       PGSSLMODE: disable
+      REDIRECT_BACKUP_DEFAULT: ${REDIRECT_BACKUP_DEFAULT}
+      REDIRECT_BACKUP_GOOGLE: ${REDIRECT_BACKUP_GOOGLE}
+      REDIRECT_BACKUP_META: ${REDIRECT_BACKUP_META}
     networks: [OrionNet]
     deploy:
       labels:

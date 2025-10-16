@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EJA Chat - Teste</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        
+        .demo-button {
+            background: #25d366;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 20px;
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+        }
+        
+        .demo-button:hover {
+            background: #20c55a;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(37, 211, 102, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <h1>🎓 EJA Chat Popup - Demonstração</h1>
+    <p>Clique no botão abaixo para ver o popup simulando chat do WhatsApp:</p>
+    
+    <button class="demo-button" onclick="abrirChatPopup()">
+        💬 Abrir Chat EJA
+    </button>
+
+    <!-- POPUP CHAT WHATSAPP -->
+    <div id="whatsapp-popup-overlay" style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        backdrop-filter: blur(3px);
+    ">
+        <div id="whatsapp-popup-container" style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 380px;
+            max-height: 85vh;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        ">
+            <!-- Header do Chat -->
+            <div style="
+                background: #25d366;
+                color: white;
+                padding: 15px 20px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                position: relative;
+            ">
+                <img src="https://ejaeducabrasil.com/wp-content/uploads/2024/06/cropped-EJA-1.png" 
+                     alt="EJA Educa Brasil" 
+                     style="
+                         width: 40px;
+                         height: 40px;
+                         border-radius: 50%;
+                         object-fit: cover;
+                         border: 2px solid rgba(255, 255, 255, 0.3);
+                     ">
+                <div style="flex: 1;">
+                    <div style="
+                        font-weight: 600;
+                        font-size: 16px;
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                    ">
+                        EJA Educa Brasil
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                    </div>
+                    <div style="
+                        font-size: 13px;
+                        opacity: 0.9;
+                        font-weight: 400;
+                    ">Online agora</div>
+                </div>
+                <button onclick="fecharChatPopup()" style="
+                    background: rgba(255, 255, 255, 0.2);
+                    border: none;
+                    color: white;
+                    font-size: 20px;
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                ">&times;</button>
+            </div>
+
+            <!-- Área de Mensagens -->
+            <div style="
+                background: #e5ddd5;
+                background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 1px, transparent 1px);
+                background-size: 20px 20px;
+                padding: 20px;
+                min-height: 300px;
+                max-height: 400px;
+                overflow-y: auto;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            ">
+                <!-- Mensagem do Sistema -->
+                <div style="
+                    background: #fff3cd;
+                    border: 1px solid #ffeaa7;
+                    border-radius: 12px;
+                    padding: 12px;
+                    text-align: center;
+                    font-size: 13px;
+                    color: #856404;
+                    margin-bottom: 10px;
+                ">
+                    🔒 As mensagens são protegidas com criptografia de ponta a ponta
+                </div>
+
+                <!-- Mensagem Recebida 1 -->
+                <div style="
+                    display: flex;
+                    justify-content: flex-start;
+                    margin-bottom: 8px;
+                ">
+                    <div style="
+                        background: white;
+                        padding: 12px 16px;
+                        border-radius: 18px 18px 18px 4px;
+                        max-width: 80%;
+                        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+                        position: relative;
+                    ">
+                        <div style="
+                            font-size: 14px;
+                            line-height: 1.4;
+                            color: #303030;
+                        ">Quero concluir meu Ensino Médio com EJA EAD</div>
+                        <div style="
+                            font-size: 11px;
+                            color: #667781;
+                            margin-top: 4px;
+                            text-align: right;
+                        ">14:32</div>
+                    </div>
+                </div>
+
+                <!-- Mensagem Recebida 2 -->
+                <div style="
+                    display: flex;
+                    justify-content: flex-start;
+                    margin-bottom: 8px;
+                ">
+                    <div style="
+                        background: #dcf8c6;
+                        padding: 12px 16px;
+                        border-radius: 18px 18px 18px 4px;
+                        max-width: 80%;
+                        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+                        position: relative;
+                    ">
+                        <div style="
+                            font-size: 14px;
+                            line-height: 1.4;
+                            color: #303030;
+                        ">Que legal, você está quase lá.. parabéns</div>
+                        <div style="
+                            font-size: 11px;
+                            color: #667781;
+                            margin-top: 4px;
+                            text-align: right;
+                        ">14:33</div>
+                    </div>
+                </div>
+
+                <!-- Mensagem Recebida 3 -->
+                <div style="
+                    display: flex;
+                    justify-content: flex-start;
+                    margin-bottom: 15px;
+                ">
+                    <div style="
+                        background: #dcf8c6;
+                        padding: 12px 16px;
+                        border-radius: 18px 18px 18px 4px;
+                        max-width: 80%;
+                        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+                        position: relative;
+                    ">
+                        <div style="
+                            font-size: 14px;
+                            line-height: 1.4;
+                            color: #303030;
+                        ">Me confirma seu número de WhatsApp com DDD, por favor 👇</div>
+                        <div style="
+                            font-size: 11px;
+                            color: #667781;
+                            margin-top: 4px;
+                            text-align: right;
+                        ">14:33</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Área de Input -->
+            <div style="
+                background: #f0f0f0;
+                padding: 12px 16px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                border-top: 1px solid #e0e0e0;
+            ">
+                <div style="
+                    background: white;
+                    border-radius: 25px;
+                    padding: 8px 16px;
+                    flex: 1;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    border: 1px solid #e0e0e0;
+                ">
+                    <span style="
+                        font-size: 14px;
+                        color: #667781;
+                        font-weight: 500;
+                    ">+ 55</span>
+                    <input 
+                        type="tel" 
+                        id="whatsapp-number"
+                        placeholder="WhatsApp com DDD"
+                        style="
+                            border: none;
+                            outline: none;
+                            flex: 1;
+                            font-size: 15px;
+                            color: #303030;
+                            background: transparent;
+                        "
+                        maxlength="15"
+                    >
+                </div>
+                <button onclick="enviarWhatsApp()" style="
+                    background: #25d366;
+                    border: none;
+                    border-radius: 50%;
+                    width: 44px;
+                    height: 44px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3);
+                ">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Rodapé -->
+            <div style="
+                background: #f8f9fa;
+                padding: 8px 16px;
+                text-align: center;
+                font-size: 11px;
+                color: #667781;
+                border-top: 1px solid #e0e0e0;
+            ">
+                ejaeducabrasil.com
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configurações
+        const CONFIG = {
+            backendUrl: 'https://gestao-educa.autoflixtreinamentos.com',
+            webhookUrl: 'https://n8n.centrodaautomacao.net/webhook/eja-webhook' // Webhook externo
+        };
+
+        // Abrir popup chat
+        function abrirChatPopup() {
+            document.getElementById('whatsapp-popup-overlay').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            
+            // Foco no input após abrir
+            setTimeout(() => {
+                document.getElementById('whatsapp-number').focus();
+            }, 300);
+        }
+
+        // Fechar popup chat
+        function fecharChatPopup() {
+            document.getElementById('whatsapp-popup-overlay').style.display = 'none';
+            document.body.style.overflow = '';
+            document.getElementById('whatsapp-number').value = '';
+        }
+
+        // Capturar parâmetros UTM da URL
+        function capturarUTMs() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return {
+                utm_source: urlParams.get('utm_source') || '',
+                utm_medium: urlParams.get('utm_medium') || '',
+                utm_campaign: urlParams.get('utm_campaign') || '',
+                utm_term: urlParams.get('utm_term') || '',
+                utm_content: urlParams.get('utm_content') || '',
+                var1: urlParams.get('var1') || '',
+                var2: urlParams.get('var2') || '',
+                var3: urlParams.get('var3') || ''
+            };
+        }
+
+        // Obter próximo consultor disponível
+        async function obterConsultor() {
+            try {
+                const response = await fetch(`${CONFIG.backendUrl}/api/public/next-redirect?platform=whatsapp`);
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao obter consultor');
+                }
+                
+                const data = await response.json();
+                return data.data;
+            } catch (error) {
+                console.error('Erro ao obter consultor:', error);
+                // Fallback para número padrão
+                return {
+                    numero: '5511999999999',
+                    consultor: { name: 'Consultor EJA' }
+                };
+            }
+        }
+
+        // Enviar WhatsApp
+        async function enviarWhatsApp() {
+            const numeroInput = document.getElementById('whatsapp-number');
+            const numero = numeroInput.value.replace(/\D/g, '');
+            
+            if (!numero || numero.length < 10) {
+                alert('Por favor, digite um número válido com DDD');
+                numeroInput.focus();
+                return;
+            }
+
+            try {
+                // 1. Obter consultor disponível
+                const consultorData = await obterConsultor();
+                
+                // 2. Capturar UTMs
+                const utmData = capturarUTMs();
+                
+                // 3. Preparar dados para webhook externo
+                const webhookData = {
+                    "WhatsApp com DDD": numero,
+                    "escola": "EJA EDUCA BRASIL",
+                    "nome": "",
+                    "email": "",
+                    "utm": utmData.utm_source || "",
+                    "utm_source": utmData.utm_source || "",
+                    "utm_campaign": utmData.utm_campaign || "",
+                    "utm_term": utmData.utm_term || "",
+                    "utm_content": utmData.utm_content || "",
+                    "utm_medium": utmData.utm_medium || "",
+                    "lancamento": "",
+                    "data_cadastro": new Date().toLocaleString('pt-BR'),
+                    "var1": utmData.var1 || "",
+                    "var2": utmData.var2 || "",
+                    "var3": utmData.var3 || "",
+                    "form_id": "eja-chat-" + Date.now(),
+                    "form_name": "EJA CHAT POPUP",
+                    "plataforma": "whatsapp",
+                    "consultor_numero": consultorData.numero,
+                    "consultor_nome": consultorData.consultor?.name || "Consultor EJA"
+                };
+
+                // 4. Enviar para webhook externo (fire and forget)
+                fetch(CONFIG.webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(webhookData)
+                }).catch(() => {}); // Ignora erros
+
+                // 5. Redirecionar para WhatsApp do consultor
+                const mensagem = encodeURIComponent('Olá! Quero concluir meu Ensino Médio com EJA EAD. Vim através do site.');
+                const whatsappUrl = `https://wa.me/${consultorData.numero}?text=${mensagem}`;
+                
+                // Abrir WhatsApp
+                window.open(whatsappUrl, '_blank');
+                
+                // Fechar popup
+                fecharChatPopup();
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                
+                // Fallback: usar número padrão
+                const mensagem = encodeURIComponent('Olá! Quero concluir meu Ensino Médio com EJA EAD. Vim através do site.');
+                const whatsappUrl = `https://wa.me/5511999999999?text=${mensagem}`;
+                window.open(whatsappUrl, '_blank');
+                fecharChatPopup();
+            }
+        }
+
+        // Fechar clicando fora
+        document.getElementById('whatsapp-popup-overlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                fecharChatPopup();
+            }
+        });
+
+        // Fechar com ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                fecharChatPopup();
+            }
+        });
+
+        // Enter para enviar
+        document.getElementById('whatsapp-number').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                enviarWhatsApp();
+            }
+        });
+
+        // Formatação do número
+        document.getElementById('whatsapp-number').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            
+            // Limita a 11 dígitos (DDD + 9 dígitos)
+            if (value.length > 11) {
+                value = value.substring(0, 11);
+            }
+            
+            // Formatar: (11) 99999-9999
+            if (value.length >= 11) {
+                value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+            } else if (value.length >= 7) {
+                value = value.replace(/(\d{2})(\d{4})(\d+)/, '($1) $2-$3');
+            } else if (value.length >= 3) {
+                value = value.replace(/(\d{2})(\d+)/, '($1) $2');
+            }
+            
+            e.target.value = value;
+        });
+    </script>
+
+    <style>
+        /* Responsividade */
+        @media (max-width: 768px) {
+            #whatsapp-popup-container {
+                width: 95% !important;
+                max-height: 90vh !important;
+                border-radius: 16px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #whatsapp-popup-container {
+                width: 98% !important;
+                border-radius: 12px !important;
+            }
+            
+            #whatsapp-popup-container > div:first-child {
+                padding: 12px 16px !important;
+                border-radius: 12px 12px 0 0 !important;
+            }
+        }
+
+        /* Animações */
+        #whatsapp-popup-overlay {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        #whatsapp-popup-container {
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translate(-50%, -40%) scale(0.9);
+            }
+            to { 
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        /* Scrollbar personalizada */
+        #whatsapp-popup-container div:nth-child(2)::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #whatsapp-popup-container div:nth-child(2)::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #whatsapp-popup-container div:nth-child(2)::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 2px;
+        }
+    </style>
+</body>
+</html>

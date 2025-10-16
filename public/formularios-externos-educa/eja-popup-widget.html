@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EJA Educa Brasil - Widget</title>
+    <style>
+        /* Reset e base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Overlay do popup - SEMPRE VISÍVEL */
+        .eja-overlay {
+            display: block !important;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 999999;
+            backdrop-filter: blur(3px);
+        }
+
+        /* Container do popup */
+        .eja-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 400px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            z-index: 1000000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        /* Header com cores do Brasil */
+        .eja-header {
+            background: linear-gradient(135deg, #009639 0%, #FEDF00 50%, #009639 100%);
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .eja-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, #009639 25%, transparent 25%, transparent 75%, #009639 75%);
+            opacity: 0.1;
+        }
+
+        .eja-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: #fff;
+            font-weight: bold;
+            font-size: 18px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .eja-flag {
+            width: 30px;
+            height: 20px;
+            background: linear-gradient(to bottom, #009639 33%, #FEDF00 33%, #FEDF00 66%, #009639 66%);
+            border-radius: 3px;
+            position: relative;
+        }
+
+        .eja-flag::after {
+            content: '🇧🇷';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            font-size: 24px;
+        }
+
+        .eja-status {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 12px;
+            margin-top: 8px;
+            display: inline-block;
+        }
+
+        /* Botão fechar */
+        .eja-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .eja-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        /* Conteúdo do chat */
+        .eja-content {
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .eja-message {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            line-height: 1.4;
+            color: #333;
+            border-left: 4px solid #009639;
+        }
+
+        .eja-message.highlight {
+            background: #e8f5e8;
+            border-left-color: #FEDF00;
+        }
+
+        /* Formulário */
+        .eja-form {
+            background: #fff;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .eja-input-group {
+            margin-bottom: 15px;
+        }
+
+        .eja-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 14px;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .eja-input:focus {
+            border-color: #009639;
+            box-shadow: 0 0 0 3px rgba(0, 150, 57, 0.1);
+        }
+
+        .eja-input::placeholder {
+            color: #999;
+        }
+
+        /* Botão principal */
+        .eja-submit {
+            width: 100%;
+            background: linear-gradient(135deg, #009639 0%, #00b347 100%);
+            color: #fff;
+            border: none;
+            padding: 15px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .eja-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 150, 57, 0.3);
+        }
+
+        .eja-submit:active {
+            transform: translateY(0);
+        }
+
+        .eja-submit:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Loading */
+        .eja-loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .eja-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #009639;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Resultado */
+        .eja-result {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .eja-consultant-info {
+            background: linear-gradient(135deg, #009639 0%, #00b347 100%);
+            color: #fff;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+        }
+
+        .eja-consultant-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .eja-consultant-number {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .eja-whatsapp-btn {
+            background: #25D366;
+            color: #fff;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .eja-whatsapp-btn:hover {
+            background: #128C7E;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3);
+        }
+
+        /* Responsivo */
+        @media (max-width: 768px) {
+            .eja-popup {
+                width: 95%;
+                max-width: none;
+                margin: 5px;
+                border-radius: 15px;
+            }
+            
+            .eja-header {
+                padding: 15px;
+            }
+            
+            .eja-content {
+                padding: 15px;
+            }
+            
+            .eja-form {
+                padding: 15px;
+            }
+            
+            .eja-input {
+                padding: 10px 12px;
+                font-size: 16px; /* Evita zoom no iOS */
+            }
+            
+            .eja-submit {
+                padding: 12px;
+                font-size: 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .eja-popup {
+                width: 98%;
+                margin: 2px;
+                border-radius: 10px;
+                max-height: 95vh;
+                overflow-y: auto;
+            }
+            
+            .eja-header {
+                padding: 12px;
+            }
+            
+            .eja-content {
+                padding: 12px;
+            }
+            
+            .eja-form {
+                padding: 12px;
+            }
+            
+            .eja-logo {
+                font-size: 16px;
+            }
+            
+            .eja-message {
+                padding: 12px;
+                font-size: 13px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .eja-popup {
+                width: 100%;
+                margin: 0;
+                border-radius: 8px;
+                max-height: 100vh;
+            }
+            
+            .eja-header {
+                padding: 10px;
+            }
+            
+            .eja-content {
+                padding: 10px;
+            }
+            
+            .eja-form {
+                 padding: 10px;
+             }
+         }
+    </style>
+</head>
+<body>
+    <!-- Overlay e Popup -->
+    <div class="eja-overlay" id="ejaOverlay">
+        <div class="eja-popup">
+            <!-- Header -->
+            <div class="eja-header">
+                <button class="eja-close" onclick="EJAWidget.close()">&times;</button>
+                <div class="eja-logo">
+                    <div class="eja-flag"></div>
+                    <span>EJA Educa Brasil</span>
+                </div>
+                <div class="eja-status">✅ Online agora</div>
+            </div>
+
+            <!-- Conteúdo -->
+            <div class="eja-content">
+                <!-- Mensagens do chat -->
+                <div id="ejaMessages">
+                    <div class="eja-message">
+                        Quero concluir meu Ensino Médio com EJA EAD
+                    </div>
+                    <div class="eja-message highlight">
+                        Que legal, você está quase lá.. parabéns
+                    </div>
+                    <div class="eja-message">
+                        Me confirma seu número de WhatsApp com DDD, por favor 👇
+                    </div>
+                </div>
+
+                <!-- Formulário -->
+                <div class="eja-form" id="ejaForm">
+                    <div class="eja-input-group">
+                        <input type="text" class="eja-input" id="countryCode" 
+                               value="+55" 
+                               placeholder="+55"
+                               style="width: 20%; display: inline-block; margin-right: 2%; text-align: center;">
+                        <input type="tel" class="eja-input" id="whatsappNumber" 
+                               placeholder="(11) 99999-9999" 
+                               style="width: 76%; display: inline-block;"
+                               required>
+                    </div>
+                    <button type="submit" class="eja-submit" id="ejaSubmitBtn">
+                        ➤ Enviar
+                    </button>
+                </div>
+
+                <!-- Loading -->
+                <div class="eja-loading" id="ejaLoading">
+                    <div class="eja-spinner"></div>
+                    <p>Conectando com consultor...</p>
+                </div>
+
+                <!-- Resultado -->
+                <div class="eja-result" id="ejaResult">
+                    <div class="eja-consultant-info">
+                        <div class="eja-consultant-name" id="consultantName">Carregando...</div>
+                        <div class="eja-consultant-number" id="consultantNumber">Carregando...</div>
+                    </div>
+                    <a href="#" class="eja-whatsapp-btn" id="whatsappBtn" target="_blank">
+                        💬 Continuar no WhatsApp
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Widget EJA - Sistema completo
+        const EJAWidget = {
+            // Configurações
+            config: {
+                backendUrl: 'https://gestao-educa.autoflixtreinamentos.com',
+                webhookUrl: 'https://n8n.centrodaautomacao.net/webhook/eja-webhook',
+                defaultPlatform: 'google' // google ou meta
+            },
+
+            // Dados coletados
+            data: {
+                utm: {},
+                platform: 'google',
+                consultant: null,
+                token: null
+            },
+
+            // Inicializar widget
+            init() {
+                this.captureUTMs();
+                this.determinePlatform();
+                this.setupEventListeners();
+                console.log('EJA Widget inicializado', this.data);
+            },
+
+            // Capturar parâmetros UTM da URL
+            captureUTMs() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const utmParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
+                
+                utmParams.forEach(param => {
+                    const value = urlParams.get(param);
+                    if (value) {
+                        this.data.utm[param] = value;
+                    }
+                });
+
+                // Capturar outros parâmetros relevantes
+                ['fbclid', 'gclid', 'var1', 'var2', 'var3'].forEach(param => {
+                    const value = urlParams.get(param);
+                    if (value) {
+                        this.data.utm[param] = value;
+                    }
+                });
+            },
+
+            // Determinar plataforma baseado em utm_source
+            determinePlatform() {
+                const utmSource = this.data.utm.utm_source?.toLowerCase() || '';
+                
+                if (utmSource.includes('fb') || utmSource.includes('ig') || utmSource.includes('facebook') || utmSource.includes('instagram')) {
+                    this.data.platform = 'meta';
+                } else {
+                    this.data.platform = 'google';
+                }
+
+                console.log(`Plataforma determinada: ${this.data.platform} (utm_source: ${utmSource})`);
+            },
+
+            // Configurar event listeners
+            setupEventListeners() {
+                // Fechar popup ao clicar no overlay
+                document.getElementById('ejaOverlay').addEventListener('click', (e) => {
+                    if (e.target.id === 'ejaOverlay') {
+                        this.close();
+                    }
+                });
+
+                // Submit do formulário
+                document.getElementById('ejaForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleSubmit();
+                });
+
+                // Tecla ESC para fechar
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        this.close();
+                    }
+                });
+            },
+
+            // Abrir popup
+            open() {
+                document.getElementById('ejaOverlay').style.display = 'block';
+                document.body.style.overflow = 'hidden';
+                
+                // Focus no input
+                setTimeout(() => {
+                    document.getElementById('whatsappNumber').focus();
+                }, 300);
+            },
+
+            // Fechar popup
+            close() {
+                document.getElementById('ejaOverlay').style.display = 'none';
+                document.body.style.overflow = 'auto';
+                this.resetForm();
+            },
+
+            // Reset do formulário
+            resetForm() {
+                document.getElementById('ejaForm').style.display = 'block';
+                document.getElementById('ejaLoading').style.display = 'none';
+                document.getElementById('ejaResult').style.display = 'none';
+                document.getElementById('countryCode').value = '+55'; // Reset para Brasil
+                document.getElementById('whatsappNumber').value = '';
+            },
+
+            // Processar envio do formulário
+            async handleSubmit() {
+                const countryCode = document.getElementById('countryCode').value;
+                const whatsappNumber = document.getElementById('whatsappNumber').value.trim();
+                
+                if (!whatsappNumber) {
+                    alert('Por favor, informe seu número do WhatsApp');
+                    return;
+                }
+
+                // Combinar DDI + DDD + número
+                const fullWhatsappNumber = `${countryCode} ${whatsappNumber}`;
+
+                // Mostrar loading
+                this.showLoading();
+
+                try {
+                    // 1. Obter próximo consultor
+                    const consultant = await this.getNextConsultant();
+                    
+                    // 2. Enviar dados para webhook
+                    await this.sendToWebhook(fullWhatsappNumber, consultant);
+                    
+                    // 3. Confirmar redirecionamento no backend
+                    await this.confirmRedirect(fullWhatsappNumber);
+                    
+                    // 4. Mostrar resultado e redirecionar
+                    this.showResult(consultant);
+                    
+                } catch (error) {
+                    console.error('Erro no processo:', error);
+                    alert('Ocorreu um erro. Tente novamente.');
+                    this.resetForm();
+                }
+            },
+
+            // Mostrar loading
+            showLoading() {
+                document.getElementById('ejaForm').style.display = 'none';
+                document.getElementById('ejaLoading').style.display = 'block';
+            },
+
+            // Obter próximo consultor do backend
+            async getNextConsultant() {
+                const response = await fetch(`${this.config.backendUrl}/api/public/next-redirect?platform=${this.data.platform}`);
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao obter consultor');
+                }
+                
+                const data = await response.json();
+                this.data.consultant = data;
+                this.data.token = data.token;
+                
+                return data;
+            },
+
+            // Enviar dados para webhook N8N
+            async sendToWebhook(whatsappNumber, consultant) {
+                const webhookData = {
+                    "WhatsApp com DDD": whatsappNumber,
+                    "escola": "EJA EDUCA BRASIL",
+                    "nome": "",
+                    "email": "",
+                    "utm": this.data.utm.utm || "",
+                    "utm_source": this.data.utm.utm_source || "",
+                    "utm_campaign": this.data.utm.utm_campaign || "",
+                    "utm_term": this.data.utm.utm_term || "",
+                    "utm_content": this.data.utm.utm_content || "",
+                    "utm_medium": this.data.utm.utm_medium || "",
+                    "lancamento": "",
+                    "data_cadastro": new Date().toLocaleString('pt-BR'),
+                    "var1": this.data.utm.var1 || "",
+                    "var2": this.data.utm.var2 || "",
+                    "var3": this.data.utm.var3 || "",
+                    "form_id": "eja-widget-" + Date.now(),
+                    "form_name": "EJA WIDGET EXTERNO",
+                    "plataforma": this.data.platform,
+                    "consultor_numero": consultant.numero,
+                    "consultor_token": consultant.token
+                };
+
+                const response = await fetch(this.config.webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(webhookData)
+                });
+
+                if (!response.ok) {
+                    console.warn('Webhook falhou, mas continuando processo');
+                }
+            },
+
+            // Confirmar redirecionamento no backend
+            async confirmRedirect(whatsappNumber) {
+                const confirmData = {
+                    token: this.data.token,
+                    dados_lead: {
+                        whatsapp: whatsappNumber,
+                        utm: this.data.utm,
+                        platform: this.data.platform,
+                        timestamp: new Date().toISOString()
+                    }
+                };
+
+                const response = await fetch(`${this.config.backendUrl}/api/public/confirm-redirect`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(confirmData)
+                });
+
+                if (!response.ok) {
+                    console.warn('Confirmação falhou, mas continuando processo');
+                }
+            },
+
+            // Mostrar resultado e configurar redirecionamento
+            showResult(consultant) {
+                document.getElementById('ejaLoading').style.display = 'none';
+                document.getElementById('ejaResult').style.display = 'block';
+                
+                // Atualizar informações do consultor
+                document.getElementById('consultantName').textContent = `Consultor: ${consultant.nome || 'EJA Educa Brasil'}`;
+                document.getElementById('consultantNumber').textContent = `WhatsApp: ${consultant.numero}`;
+                
+                // Configurar link do WhatsApp
+                const whatsappUrl = `https://wa.me/55${consultant.numero}?text=${encodeURIComponent('Olá! Vim através do site do EJA Educa Brasil. Quero concluir meu Ensino Médio EAD.')}`;
+                document.getElementById('whatsappBtn').href = whatsappUrl;
+                
+                // Redirecionamento automático após 3 segundos
+                setTimeout(() => {
+                    window.open(whatsappUrl, '_blank');
+                }, 3000);
+            }
+        };
+
+        // Inicializar quando o DOM estiver pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => EJAWidget.init());
+        } else {
+            EJAWidget.init();
+        }
+
+        // Expor globalmente para uso externo
+        window.EJAWidget = EJAWidget;
+    </script>
+</body>
+</html>

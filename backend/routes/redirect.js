@@ -48,16 +48,27 @@ router.get("/next-redirect", async (req, res) => {
     // Atualizar contador de ativos
     const totalAtivos = await updateActiveCount(plataforma);
     
+    // Fallback quando não há consultores ativos: tentar selecionar qualquer registro da plataforma
+    // Caso não exista registro algum, usar número de backup via ENV (se configurado)
+    let preselectedConsultor = null;
     if (totalAtivos === 0) {
-      return res.status(404).json({
-        success: false,
-        error: "Nenhum consultor ativo encontrado para esta plataforma"
-      });
+      const anyResult = await pool.query(`
+        SELECT cr.*, u.name, u.email, u.utm_consultor 
+        FROM consultores_redirect cr
+        JOIN users u ON cr.user_id = u.id
+        WHERE cr.plataforma = $1
+        ORDER BY cr.ordem_atual ASC, cr.ultimo_uso ASC, cr.created_at ASC
+        LIMIT 1
+      `, [plataforma]);
+
+      if (anyResult.rows.length > 0) {
+        preselectedConsultor = anyResult.rows[0];
+      }
     }
 
     // Buscar próximo consultor disponível
     const consultorResult = await pool.query(`
-      SELECT cr.*, u.name, u.email 
+      SELECT cr.*, u.name, u.email, u.utm_consultor 
       FROM consultores_redirect cr
       JOIN users u ON cr.user_id = u.id
       WHERE cr.plataforma = $1 
@@ -67,38 +78,98 @@ router.get("/next-redirect", async (req, res) => {
       LIMIT 1
     `, [plataforma]);
 
+    let consultor;
     if (consultorResult.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: "Nenhum consultor disponível no momento"
-      });
+      // Fallback: se todos estiverem reservados, selecionar mesmo assim o próximo ativo
+      const fallbackResult = await pool.query(`
+        SELECT cr.*, u.name, u.email, u.utm_consultor 
+        FROM consultores_redirect cr
+        JOIN users u ON cr.user_id = u.id
+        WHERE cr.plataforma = $1 
+          AND cr.ativo = true
+        ORDER BY cr.ordem_atual ASC, cr.ultimo_uso ASC
+        LIMIT 1
+      `, [plataforma]);
+
+      if (fallbackResult.rows.length === 0) {
+        // Fallback adicional: usar consultor previamente selecionado (mesmo inativo) se existir
+        if (preselectedConsultor) {
+          consultor = preselectedConsultor;
+        } else {
+          // Fallback final: número de backup via ENV
+          const envBackup = process.env[`REDIRECT_BACKUP_${plataforma.toUpperCase()}`] || process.env.REDIRECT_BACKUP_DEFAULT;
+          if (!envBackup) {
+            return res.status(404).json({
+              success: false,
+              error: "Nenhum consultor disponível no momento"
+            });
+          }
+
+          // Gerar token e logar sem consultor_id
+          const token = crypto.randomBytes(32).toString('hex');
+          const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
+
+          await pool.query(`
+            INSERT INTO redirect_logs 
+            (consultor_id, plataforma, numero, status, token, ip_origem, user_agent, expira_em)
+            VALUES (NULL, $1, $2, 'consultado', $3, $4, $5, $6)
+          `, [plataforma, envBackup, token, clientIP, userAgent, expiresAt]);
+
+          return res.json({
+            success: true,
+            data: {
+              numero: envBackup,
+              plataforma: plataforma,
+              consultor: null,
+              token: token,
+              expires_at: expiresAt.toISOString(),
+              expires_in_minutes: 10
+            }
+          });
+        }
+      } else {
+        consultor = fallbackResult.rows[0];
+      }
+    } else {
+      consultor = consultorResult.rows[0];
+    }
+    
+    // Gerar token e definir janela de expiração do token (10 minutos)
+    const token = crypto.randomBytes(32).toString('hex');
+    const now = new Date();
+    const reservadoAte = new Date(now.getTime() + 10 * 60 * 1000); // 10 minutos
+
+    // Se o consultor já está reservado (reserva atual ainda válida), não estender a reserva
+    // Apenas atualizar ultimo_uso para manter ordem/estatística. Caso contrário, reservar normalmente.
+    const isCurrentlyReserved = consultor.reservado_ate && new Date(consultor.reservado_ate) > now;
+
+    if (isCurrentlyReserved) {
+      await pool.query(`
+        UPDATE consultores_redirect 
+        SET ultimo_uso = CURRENT_TIMESTAMP
+        WHERE id = $1
+      `, [consultor.id]);
+    } else {
+      await pool.query(`
+        UPDATE consultores_redirect 
+        SET reservado_ate = $1, reservado_por = $2, ultimo_uso = CURRENT_TIMESTAMP
+        WHERE id = $3
+      `, [reservadoAte, clientIP, consultor.id]);
     }
 
-    const consultor = consultorResult.rows[0];
-    
-    // Reservar consultor por 10 minutos
-    const reservadoAte = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
-    const token = crypto.randomBytes(32).toString('hex');
-    
-    await pool.query(`
-      UPDATE consultores_redirect 
-      SET reservado_ate = $1, reservado_por = $2, ultimo_uso = CURRENT_TIMESTAMP
-      WHERE id = $3
-    `, [reservadoAte, clientIP, consultor.id]);
-
-    // Atualizar ordem round-robin
-    await pool.query(`
-      UPDATE consultores_redirect 
-      SET ordem_atual = ordem_atual + 1 
-      WHERE plataforma = $1 AND ativo = true
-    `, [plataforma]);
-    
-    // Resetar ordem do consultor selecionado para o final
-    await pool.query(`
-      UPDATE consultores_redirect 
-      SET ordem_atual = 0 
-      WHERE id = $1
-    `, [consultor.id]);
+    // Atualizar ordem round-robin corretamente:
+    // Empurra o consultor selecionado para o fim, atribuindo ordem_atual = (max + 1)
+    if (consultor.ativo) {
+      await pool.query(`
+        UPDATE consultores_redirect 
+        SET ordem_atual = (
+          SELECT COALESCE(MAX(ordem_atual), 0) + 1 
+          FROM consultores_redirect 
+          WHERE plataforma = $1 AND ativo = true
+        )
+        WHERE id = $2
+      `, [plataforma, consultor.id]);
+    }
 
     // Criar log de consulta
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
@@ -116,7 +187,8 @@ router.get("/next-redirect", async (req, res) => {
         consultor: {
           id: consultor.user_id,
           name: consultor.name,
-          email: consultor.email
+          email: consultor.email,
+          utm_consultor: consultor.utm_consultor || null
         },
         token: token,
         expires_at: expiresAt.toISOString(),
@@ -151,7 +223,7 @@ router.post("/confirm-redirect", async (req, res) => {
     const logResult = await pool.query(`
       SELECT rl.*, cr.id as consultor_id
       FROM redirect_logs rl
-      JOIN consultores_redirect cr ON rl.consultor_id = cr.id
+      LEFT JOIN consultores_redirect cr ON rl.consultor_id = cr.id
       WHERE rl.token = $1 
         AND rl.numero = $2 
         AND rl.plataforma = $3 
@@ -178,13 +250,15 @@ router.post("/confirm-redirect", async (req, res) => {
     `, [JSON.stringify(lead_data || {}), log.id]);
 
     // Incrementar contador de usos do consultor
-    await pool.query(`
-      UPDATE consultores_redirect 
-      SET total_usos = total_usos + 1,
-          reservado_ate = NULL,
-          reservado_por = NULL
-      WHERE id = $1
-    `, [log.consultor_id]);
+    if (log.consultor_id) {
+      await pool.query(`
+        UPDATE consultores_redirect 
+        SET total_usos = total_usos + 1,
+            reservado_ate = NULL,
+            reservado_por = NULL
+        WHERE id = $1
+      `, [log.consultor_id]);
+    }
 
     res.json({
       success: true,

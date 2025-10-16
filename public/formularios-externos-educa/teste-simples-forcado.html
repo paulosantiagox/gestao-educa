@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Widget EJA - Forçado</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #009639;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            display: inline-block;
+        }
+        .test-button:hover {
+            background: #007a2e;
+        }
+        #console-output {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste Widget EJA - Versão Forçada</h1>
+        <p>Esta versão força a criação e exibição do popup diretamente.</p>
+        
+        <button class="test-button" onclick="testeSimples()">🎯 Teste Simples</button>
+        <button class="test-button" onclick="testeForcado()">💪 Teste Forçado</button>
+        
+        <div id="console-output"></div>
+    </div>
+
+    <script>
+        // Console personalizado
+        const originalLog = console.log;
+        const originalError = console.error;
+        const output = document.getElementById('console-output');
+        
+        function addLog(message, type = 'log') {
+            const color = type === 'error' ? '#ff0000' : '#00ff00';
+            output.innerHTML += `<div style="color: ${color}">[${new Date().toLocaleTimeString()}] ${message}</div>`;
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            addLog(args.join(' '), 'log');
+            originalLog.apply(console, args);
+        };
+        
+        console.error = function(...args) {
+            addLog(args.join(' '), 'error');
+            originalError.apply(console, args);
+        };
+
+        // Função de teste simples
+        function testeSimples() {
+            console.log('=== TESTE SIMPLES ===');
+            
+            // Criar iframe diretamente
+            const iframe = document.createElement('iframe');
+            iframe.src = 'https://gestao-educa.autoflixtreinamentos.com/formularios-externos-educa/eja-popup-widget.html';
+            iframe.style.cssText = `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                border: none !important;
+                z-index: 999999 !important;
+                background: rgba(0, 0, 0, 0.7) !important;
+            `;
+            
+            document.body.appendChild(iframe);
+            console.log('Iframe criado e adicionado ao DOM');
+            console.log('Total de iframes:', document.querySelectorAll('iframe').length);
+        }
+
+        // Função de teste forçado
+        function testeForcado() {
+            console.log('=== TESTE FORÇADO ===');
+            
+            // Remover iframes existentes
+            document.querySelectorAll('iframe').forEach(iframe => iframe.remove());
+            
+            // Criar div de fundo
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                background: rgba(0, 0, 0, 0.8) !important;
+                z-index: 999999 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            `;
+            
+            // Criar iframe dentro do overlay
+            const iframe = document.createElement('iframe');
+            iframe.src = 'https://gestao-educa.autoflixtreinamentos.com/formularios-externos-educa/eja-popup-widget.html';
+            iframe.style.cssText = `
+                width: 90% !important;
+                height: 90% !important;
+                border: none !important;
+                border-radius: 10px !important;
+                background: white !important;
+            `;
+            
+            overlay.appendChild(iframe);
+            document.body.appendChild(overlay);
+            
+            // Adicionar botão de fechar
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '✕';
+            closeBtn.style.cssText = `
+                position: absolute !important;
+                top: 20px !important;
+                right: 20px !important;
+                background: #ff0000 !important;
+                color: white !important;
+                border: none !important;
+                border-radius: 50% !important;
+                width: 40px !important;
+                height: 40px !important;
+                font-size: 20px !important;
+                cursor: pointer !important;
+                z-index: 1000000 !important;
+            `;
+            closeBtn.onclick = () => overlay.remove();
+            overlay.appendChild(closeBtn);
+            
+            console.log('Popup forçado criado com sucesso!');
+            console.log('Overlay adicionado ao DOM');
+            console.log('Iframe dentro do overlay criado');
+        }
+
+        console.log('Página carregada - Pronto para testes!');
+    </script>
+</body>
+</html>

@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EJA Popup Nativo - Exemplo de Uso</title>
+</head>
+<body>
+    <div style="padding: 20px; font-family: Arial, sans-serif;">
+        <h1>🎓 EJA Popup Nativo - Teste</h1>
+        <p>Clique no botão abaixo para abrir o popup:</p>
+        
+        <!-- Botão de trigger -->
+        <button class="eja-native-trigger" style="background: #28a745; color: white; padding: 15px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;">
+            📚 Quero me formar no EJA!
+        </button>
+    </div>
+
+    <!-- CÓDIGO DO POPUP NATIVO - PODE SER COPIADO PARA QUALQUER PÁGINA -->
+    <style>
+        /* CSS isolado com prefixos únicos */
+        .eja-native-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 999999;
+            backdrop-filter: blur(3px);
+            animation: eja-fadeIn 0.3s ease-out;
+        }
+
+        .eja-native-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 450px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: eja-slideIn 0.4s ease-out;
+        }
+
+        .eja-native-header {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
+            position: relative;
+            text-align: center;
+        }
+
+        .eja-native-flag {
+            display: inline-block;
+            width: 30px;
+            height: 20px;
+            background: linear-gradient(to bottom, #009739 33%, #fedd00 33%, #fedd00 66%, #012169 66%);
+            border-radius: 3px;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        .eja-native-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .eja-native-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 24px;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .eja-native-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .eja-native-content {
+            padding: 25px;
+        }
+
+        .eja-native-message {
+            background: #f8f9fa;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .eja-native-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .eja-native-input {
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .eja-native-input:focus {
+            outline: none;
+            border-color: #28a745;
+            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+        }
+
+        .eja-native-submit {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .eja-native-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+        }
+
+        .eja-native-submit:active {
+            transform: translateY(0);
+        }
+
+        .eja-native-submit:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .eja-native-loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .eja-native-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #28a745;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: eja-spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        .eja-native-result {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .eja-native-success {
+            color: #28a745;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .eja-native-consultant {
+            background: #e8f5e8;
+            border: 1px solid #28a745;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .eja-native-consultant-name {
+            font-weight: bold;
+            color: #155724;
+            margin-bottom: 5px;
+        }
+
+        .eja-native-whatsapp {
+            background: #25d366;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .eja-native-whatsapp:hover {
+            background: #128c7e;
+            transform: scale(1.05);
+        }
+
+        /* Animações */
+        @keyframes eja-fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes eja-slideIn {
+            from { 
+                opacity: 0;
+                transform: translate(-50%, -60%);
+                scale: 0.9;
+            }
+            to { 
+                opacity: 1;
+                transform: translate(-50%, -50%);
+                scale: 1;
+            }
+        }
+
+        @keyframes eja-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .eja-native-popup {
+                width: 95%;
+                max-height: 95vh;
+                margin: 10px;
+            }
+            
+            .eja-native-header {
+                padding: 15px;
+            }
+            
+            .eja-native-title {
+                font-size: 16px;
+            }
+            
+            .eja-native-content {
+                padding: 20px;
+            }
+            
+            .eja-native-input {
+                font-size: 16px; /* Evita zoom no iOS */
+            }
+        }
+
+        @media (max-width: 480px) {
+            .eja-native-popup {
+                width: 98%;
+                border-radius: 10px;
+            }
+            
+            .eja-native-header {
+                padding: 12px;
+                border-radius: 10px 10px 0 0;
+            }
+            
+            .eja-native-content {
+                padding: 15px;
+            }
+            
+            .eja-native-form {
+                gap: 12px;
+            }
+        }
+    </style>
+
+    <!-- HTML do Popup -->
+    <div id="eja-native-overlay" class="eja-native-overlay">
+        <div class="eja-native-popup">
+            <div class="eja-native-header">
+                <span class="eja-native-flag"></span>
+                <h2 class="eja-native-title">EJA Educa Brasil</h2>
+                <button class="eja-native-close" onclick="EJANativePopup.close()">&times;</button>
+            </div>
+            
+            <div class="eja-native-content">
+                <div class="eja-native-message">
+                    <strong>🎓 Termine seus estudos com o EJA!</strong><br>
+                    Preencha o formulário abaixo e receba informações completas sobre como concluir o Ensino Fundamental e Médio de forma rápida e reconhecida pelo MEC.
+                </div>
+
+                <form id="eja-native-form" class="eja-native-form">
+                    <input type="text" name="nome" placeholder="Seu nome completo" class="eja-native-input" required>
+                    <input type="email" name="email" placeholder="Seu melhor e-mail" class="eja-native-input" required>
+                    <input type="tel" name="telefone" placeholder="WhatsApp (com DDD)" class="eja-native-input" required>
+                    <select name="escolaridade" class="eja-native-input" required>
+                        <option value="">Selecione sua escolaridade atual</option>
+                        <option value="fundamental_incompleto">Ensino Fundamental Incompleto</option>
+                        <option value="fundamental_completo">Ensino Fundamental Completo</option>
+                        <option value="medio_incompleto">Ensino Médio Incompleto</option>
+                        <option value="superior_incompleto">Superior Incompleto</option>
+                    </select>
+                    <button type="submit" class="eja-native-submit">
+                        📚 Quero me formar agora!
+                    </button>
+                </form>
+
+                <div id="eja-native-loading" class="eja-native-loading">
+                    <div class="eja-native-spinner"></div>
+                    <p>Enviando seus dados...</p>
+                </div>
+
+                <div id="eja-native-result" class="eja-native-result">
+                    <div class="eja-native-success">✅ Dados enviados com sucesso!</div>
+                    <p>Em breve você receberá todas as informações no seu WhatsApp.</p>
+                    
+                    <div class="eja-native-consultant">
+                        <div class="eja-native-consultant-name">👨‍🎓 Consultor Educacional</div>
+                        <div>Paulo Silva - Especialista EJA</div>
+                        <a href="#" id="eja-native-whatsapp-link" class="eja-native-whatsapp" target="_blank">
+                            💬 Falar no WhatsApp
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript do Popup Nativo
+        window.EJANativePopup = {
+            // Configurações
+            config: {
+                webhookUrl: 'https://gestao-educa.autoflixtreinamentos.com/api/webhook/lead-externo',
+                consultorWhatsApp: '5511999999999', // Número do consultor
+                consultorNome: 'Paulo Silva'
+            },
+
+            // Abrir popup
+            open: function() {
+                const overlay = document.getElementById('eja-native-overlay');
+                if (overlay) {
+                    overlay.style.display = 'block';
+                    document.body.style.overflow = 'hidden'; // Previne scroll da página
+                    
+                    // Adiciona dados UTM se disponíveis
+                    this.addUTMData();
+                }
+            },
+
+            // Fechar popup
+            close: function() {
+                const overlay = document.getElementById('eja-native-overlay');
+                if (overlay) {
+                    overlay.style.display = 'none';
+                    document.body.style.overflow = ''; // Restaura scroll da página
+                    
+                    // Reset do formulário
+                    this.resetForm();
+                }
+            },
+
+            // Adicionar dados UTM
+            addUTMData: function() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const utmData = {};
+                
+                ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'].forEach(param => {
+                    const value = urlParams.get(param);
+                    if (value) utmData[param] = value;
+                });
+                
+                // Armazena UTM data para envio
+                this.utmData = utmData;
+            },
+
+            // Resetar formulário
+            resetForm: function() {
+                const form = document.getElementById('eja-native-form');
+                const loading = document.getElementById('eja-native-loading');
+                const result = document.getElementById('eja-native-result');
+                
+                if (form) form.style.display = 'flex';
+                if (loading) loading.style.display = 'none';
+                if (result) result.style.display = 'none';
+                
+                const formElement = document.getElementById('eja-native-form');
+                if (formElement) formElement.reset();
+            },
+
+            // Enviar formulário
+            submitForm: async function(formData) {
+                const form = document.getElementById('eja-native-form');
+                const loading = document.getElementById('eja-native-loading');
+                const result = document.getElementById('eja-native-result');
+                const whatsappLink = document.getElementById('eja-native-whatsapp-link');
+
+                // Mostrar loading
+                form.style.display = 'none';
+                loading.style.display = 'block';
+
+                try {
+                    // Preparar dados para envio
+                    const submitData = {
+                        nome: formData.get('nome'),
+                        email: formData.get('email'),
+                        telefone: formData.get('telefone'),
+                        escolaridade: formData.get('escolaridade'),
+                        origem: 'popup-nativo',
+                        url_origem: window.location.href,
+                        user_agent: navigator.userAgent,
+                        timestamp: new Date().toISOString(),
+                        ...this.utmData
+                    };
+
+                    // Enviar para webhook
+                    const response = await fetch(this.config.webhookUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(submitData)
+                    });
+
+                    if (response.ok) {
+                        // Sucesso - mostrar resultado
+                        loading.style.display = 'none';
+                        result.style.display = 'block';
+                        
+                        // Configurar link do WhatsApp
+                        const telefone = formData.get('telefone').replace(/\D/g, '');
+                        const mensagem = encodeURIComponent(`Olá! Vim através do site e gostaria de saber mais sobre o EJA. Meu nome é ${formData.get('nome')}.`);
+                        whatsappLink.href = `https://wa.me/${this.config.consultorWhatsApp}?text=${mensagem}`;
+                        
+                        // Auto-fechar após 10 segundos
+                        setTimeout(() => {
+                            this.close();
+                        }, 10000);
+                        
+                    } else {
+                        throw new Error('Erro no servidor');
+                    }
+                    
+                } catch (error) {
+                    console.error('Erro ao enviar formulário:', error);
+                    
+                    // Em caso de erro, ainda mostra o resultado (fallback)
+                    loading.style.display = 'none';
+                    result.style.display = 'block';
+                    
+                    // Configurar link do WhatsApp mesmo com erro
+                    const telefone = formData.get('telefone').replace(/\D/g, '');
+                    const mensagem = encodeURIComponent(`Olá! Vim através do site e gostaria de saber mais sobre o EJA. Meu nome é ${formData.get('nome')}.`);
+                    whatsappLink.href = `https://wa.me/${this.config.consultorWhatsApp}?text=${mensagem}`;
+                }
+            },
+
+            // Inicializar
+            init: function() {
+                // Event listeners para botões de trigger
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('eja-native-trigger') || 
+                        e.target.hasAttribute('data-eja-popup')) {
+                        e.preventDefault();
+                        this.open();
+                    }
+                });
+
+                // Event listener para fechar clicando fora
+                document.addEventListener('click', (e) => {
+                    const overlay = document.getElementById('eja-native-overlay');
+                    if (e.target === overlay) {
+                        this.close();
+                    }
+                });
+
+                // Event listener para ESC
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        this.close();
+                    }
+                });
+
+                // Event listener para formulário
+                const form = document.getElementById('eja-native-form');
+                if (form) {
+                    form.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        const formData = new FormData(form);
+                        this.submitForm(formData);
+                    });
+                }
+            }
+        };
+
+        // Inicializar quando o DOM estiver pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                EJANativePopup.init();
+            });
+        } else {
+            EJANativePopup.init();
+        }
+    </script>
+</body>
+</html>

@@ -11,6 +11,16 @@ echo "🚀 Iniciando deploy com cache-busting..."
 TIMESTAMP=$(date +%s)
 echo "📅 Timestamp: $TIMESTAMP"
 
+# 0. Carregar variáveis do .env (inclui REDIRECT_BACKUP_*)
+if [ -f .env ]; then
+  echo "🔑 Carregando variáveis do .env..."
+  set -a
+  source .env
+  set +a
+else
+  echo "⚠️ Arquivo .env não encontrado; seguindo com variáveis do ambiente atual"
+fi
+
 # 1. Limpar build anterior
 echo "🧹 Limpando build anterior..."
 rm -rf dist/

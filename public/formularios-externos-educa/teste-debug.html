@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Debug - EJA Widget</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .debug-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #007bff;
+        }
+        .test-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .test-button:hover {
+            background: #218838;
+        }
+        #console-output {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Teste Debug - EJA Widget</h1>
+        
+        <div class="debug-info">
+            <h3>Instruções:</h3>
+            <ol>
+                <li>Abra o console do navegador (F12)</li>
+                <li>Clique no botão abaixo</li>
+                <li>Observe os logs tanto no console quanto na área abaixo</li>
+            </ol>
+        </div>
+
+        <button class="test-button eja-popup-trigger">🎓 Teste Widget EJA</button>
+        <button class="test-button" onclick="testeManual()">🔧 Teste Manual</button>
+        <button class="test-button" onclick="verificarWidget()">🔍 Verificar Widget</button>
+
+        <div id="console-output"></div>
+    </div>
+
+    <script>
+        // Console personalizado para mostrar na página
+        const consoleOutput = document.getElementById('console-output');
+        const originalLog = console.log;
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            consoleOutput.innerHTML += args.join(' ') + '\n';
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        };
+
+        function testeManual() {
+            console.log('=== TESTE MANUAL INICIADO ===');
+            
+            // Verificar se o widget existe
+            if (window.EJAExternalWidget) {
+                console.log('✅ EJAExternalWidget encontrado');
+                console.log('Widget isOpen:', window.EJAExternalWidget.isOpen);
+                console.log('Widget iframe:', window.EJAExternalWidget.iframe);
+                
+                // Tentar abrir manualmente
+                console.log('Tentando abrir widget manualmente...');
+                window.EJAExternalWidget.openWidget();
+            } else {
+                console.log('❌ EJAExternalWidget NÃO encontrado');
+            }
+            
+            // Verificar função global
+            if (window.openEJAWidget) {
+                console.log('✅ openEJAWidget encontrado');
+                console.log('Tentando chamar openEJAWidget...');
+                window.openEJAWidget();
+            } else {
+                console.log('❌ openEJAWidget NÃO encontrado');
+            }
+        }
+
+        function verificarWidget() {
+            console.log('=== VERIFICAÇÃO DO WIDGET ===');
+            
+            // Verificar se o script foi carregado
+            console.log('EJAWidgetLoaded:', window.EJAWidgetLoaded);
+            console.log('EJAExternalWidget:', !!window.EJAExternalWidget);
+            console.log('openEJAWidget:', !!window.openEJAWidget);
+            
+            // Verificar botões
+            const triggers = document.querySelectorAll('.eja-popup-trigger, #eja-popup-trigger, [data-eja-popup]');
+            console.log('Botões encontrados:', triggers.length);
+            
+            // Verificar iframe no DOM
+            const iframes = document.querySelectorAll('.eja-widget-iframe');
+            console.log('iframes no DOM:', iframes.length);
+            
+            if (iframes.length > 0) {
+                const iframe = iframes[0];
+                console.log('iframe src:', iframe.src);
+                console.log('iframe classes:', iframe.className);
+                console.log('iframe style display:', getComputedStyle(iframe).display);
+                console.log('iframe style opacity:', getComputedStyle(iframe).opacity);
+                console.log('iframe style visibility:', getComputedStyle(iframe).visibility);
+            }
+        }
+
+        // Log inicial
+        console.log('=== PÁGINA CARREGADA ===');
+        console.log('Aguardando carregamento do widget...');
+        
+        // Verificar após 2 segundos
+        setTimeout(() => {
+            console.log('=== VERIFICAÇÃO AUTOMÁTICA ===');
+            verificarWidget();
+        }, 2000);
+    </script>
+
+    <!-- Widget Script -->
+    <script src="eja-widget-embed.js"></script>
+</body>
+</html>

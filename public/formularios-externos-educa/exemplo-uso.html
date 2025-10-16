@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exemplo de Uso - EJA Widget</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #009639;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .example-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #009639;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        
+        .highlight {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #009639;
+            margin: 15px 0;
+        }
+        
+        .utm-info {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+            margin: 15px 0;
+        }
+        
+        .test-button {
+            background: #009639;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            box-shadow: 0 4px 8px rgba(0,150,57,0.3);
+            transition: all 0.3s;
+        }
+        
+        .test-button:hover {
+            background: #007a2e;
+            transform: translateY(-2px);
+        }
+        
+        .test-button.gold {
+            background: #FFD700;
+            color: #333;
+            box-shadow: 0 4px 8px rgba(255,215,0,0.3);
+        }
+        
+        .test-button.gradient {
+            background: linear-gradient(45deg, #009639, #FFD700);
+            color: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 EJA Widget - Exemplo de Uso</h1>
+        
+        <div class="highlight">
+            <strong>📋 Como usar:</strong><br>
+            1. Incorpore o JavaScript na sua página<br>
+            2. Adicione botões com a classe <code>eja-popup-trigger</code><br>
+            3. O popup abrirá automaticamente ao clicar<br>
+            4. Teste com parâmetros UTM na URL
+        </div>
+
+        <div class="example-section">
+            <h3>1️⃣ Código JavaScript para Incorporar</h3>
+            <p>Cole este código no final da sua página HTML:</p>
+            <div class="code-block">
+&lt;!-- EJA Widget - Incorporar no final da página --&gt;
+&lt;script src="https://gestao-educa.autoflixtreinamentos.com/formularios-externos-educa/eja-widget-embed.js"&gt;&lt;/script&gt;
+            </div>
+        </div>
+
+        <div class="example-section">
+            <h3>2️⃣ Teste o Widget - Clique nos Botões Abaixo</h3>
+            <p>Clique em qualquer botão para abrir diretamente o popup do EJA:</p>
+            
+            <div class="button-container">
+                <button class="eja-popup-trigger test-button">
+                    🎓 Concluir Ensino Médio EAD
+                </button>
+                
+                <button class="eja-popup-trigger test-button gold">
+                    📚 Termine seus Estudos Agora
+                </button>
+                
+                <button class="eja-popup-trigger test-button gradient">
+                    🇧🇷 EJA Educa Brasil
+                </button>
+            </div>
+
+            <h4>Exemplos de Código para Implementar:</h4>
+            <div class="code-block">
+&lt;!-- Usando Class --&gt;
+&lt;button class="eja-popup-trigger"&gt;Concluir Ensino Médio&lt;/button&gt;
+
+&lt;!-- Usando ID --&gt;
+&lt;a href="#" id="eja-popup-trigger"&gt;Termine seus estudos EAD&lt;/a&gt;
+
+&lt;!-- Usando Data Attribute --&gt;
+&lt;div data-eja-popup&gt;🎓 EJA Educa Brasil&lt;/div&gt;
+
+&lt;!-- Chamada Programática --&gt;
+&lt;button onclick="openEJAWidget()"&gt;Abrir Widget&lt;/button&gt;
+            </div>
+        </div>
+
+        <div class="example-section">
+            <h3>3️⃣ Parâmetros UTM Suportados</h3>
+            <p>O widget captura automaticamente estes parâmetros da URL:</p>
+            <div class="utm-info">
+                <strong>Parâmetros UTM:</strong><br>
+                • utm_source - Fonte do tráfego<br>
+                • utm_medium - Meio de marketing<br>
+                • utm_campaign - Nome da campanha<br>
+                • utm_term - Termo de pesquisa<br>
+                • utm_content - Conteúdo do anúncio<br>
+                • fbclid - ID do Facebook<br>
+                • gclid - ID do Google Ads<br>
+                • var1, var2, var3 - Variáveis customizadas
+            </div>
+        </div>
+
+        <div class="example-section">
+            <h3>4️⃣ Fluxo Completo</h3>
+            <p>Quando o usuário clica no botão, acontece:</p>
+            <ol>
+                <li>Popup abre com formulário brasileiro</li>
+                <li>Usuário preenche: Nome, Email, DDI e WhatsApp</li>
+                <li>Sistema captura parâmetros UTM da URL</li>
+                <li>Dados são enviados para webhook N8N</li>
+                <li>Consultor é distribuído via round-robin</li>
+                <li>Mostra dados do consultor</li>
+                <li>Redireciona para WhatsApp automaticamente</li>
+            </ol>
+        </div>
+
+        <div class="highlight">
+            <strong>🔧 Funções Globais Disponíveis:</strong><br>
+            • <code>openEJAWidget()</code> - Abre o widget programaticamente<br>
+            • <code>closeEJAWidget()</code> - Fecha o widget programaticamente
+        </div>
+    </div>
+
+    <!-- Incorporar o widget -->
+    <script src="https://gestao-educa.autoflixtreinamentos.com/formularios-externos-educa/eja-widget-embed.js"></script>
+</body>
+</html>
