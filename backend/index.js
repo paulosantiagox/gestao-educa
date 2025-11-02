@@ -20,7 +20,9 @@ import webhook from "./routes/webhook.js";
 import leads from "./routes/leads.js";
 import tracking from "./routes/tracking.js";
 import redirect from "./routes/redirect.js";
+import redirectV2 from "./routes/redirect-v2.js";
 import consultoresRedirectRoutes from "./routes/consultores-redirect.js";
+import leadsPublic from "./routes/leads-public.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -65,7 +67,9 @@ app.use("/api/webhook", webhook);
 app.use("/api/leads", leads);
 app.use("/api/tracking", tracking);
 app.use("/api/public", redirect);
+app.use("/api/public-v2", redirectV2);
 app.use("/api/consultores-redirect", consultoresRedirectRoutes);
+app.use("/api/leads-public", leadsPublic);
 
 // Rotas sem /api/ que retornam JSON (REMOVER ESTAS)
 // app.use("/consultores-redirect", consultoresRedirectRoutes);
@@ -86,6 +90,7 @@ app.get("/api/ping", (_req, res) => res.json({ ok: true }));
 // ===== ARQUIVOS PÚBLICOS (ANTES do front estático) =====
 const publicDir = path.resolve(__dirname, "public");
 app.use('/api/tracking/script.js', express.static(path.join(publicDir, 'tracking-script.js')));
+app.use('/api/public-v2/script.js', express.static(path.join(publicDir, 'redirect-v2.js')));
 
 // Middleware para debug de rotas
 app.use((req, res, next) => {

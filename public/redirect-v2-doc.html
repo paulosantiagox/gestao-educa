@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Redirect V2 - Exemplo de uso</title>
+  </head>
+  <body>
+    <h1>Redirect V2</h1>
+    <p>Este é um exemplo simples de uso do script V2 sem impactar o atual.</p>
+    <button id="btnWhatsapp">Falar com consultor</button>
+
+    <script src="/api/public-v2/script.js"></script>
+    <script>
+      window.initRedirectV2({
+        buttonSelector: '#btnWhatsapp',
+        platform: 'whatsapp',
+        leadData: { origem: 'redirect-v2-doc' }
+      });
+    </script>
+  </body>
+</html>

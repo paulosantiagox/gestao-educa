@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Externo - Leads Educa</title>
+  <link rel="icon" href="/favicon.svg" />
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: #121735;
+      --text: #e6e8ff;
+      --muted: #9aa2ff;
+      --accent: #2dd16f;
+    }
+    html, body { height: 100%; }
+    body { margin: 0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji"; background: var(--bg); color: var(--text); }
+    .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    h1 { font-size: 22px; margin: 0; }
+    .card { background: var(--card); border-radius: 16px; padding: 16px; box-shadow: 0 20px 40px rgba(0,0,0,.25); }
+    .filters { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+    .filters input, .filters select { background: #0d132a; color: var(--text); border: 1px solid #1c2447; border-radius: 10px; padding: 8px 10px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px; text-align: left; font-size: 14px; border-bottom: 1px solid #1c2447; }
+    th { color: var(--muted); font-weight: 600; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    .empty { padding: 12px; color: var(--muted); }
+    .day-card { background: #0d132a; border: 1px solid #1c2447; border-radius: 12px; }
+    .day-header { display:flex; justify-content:space-between; align-items:center; padding: 12px 14px; border-bottom:1px solid #1c2447; }
+    .day-header .date { font-weight:600; }
+    .chips { display:flex; gap:8px; flex-wrap:wrap; padding: 12px; }
+    .chip { background:#141b39; border:1px solid #222b52; color: var(--text); border-radius: 999px; padding:6px 10px; font-size:12px; }
+    .chip .count { color: var(--accent); font-weight:700; margin-left:6px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Dashboard Externo - Leads Educa</h1>
+      <div style="font-size:12px;color:var(--muted)">Leads por consultor em data selecionada</div>
+    </header>
+
+    <div class="card">
+      <div class="filters">
+        <label>
+          Data:
+          <input id="date" type="date" />
+        </label>
+        <button id="loadBtn">Carregar</button>
+      </div>
+
+      <div class="grid">
+        <div id="day"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'https://gestao-educa.autoflixtreinamentos.com/api/leads-public/consultores-por-dia';
+    function fmtDate(dateStr){
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('pt-BR');
+    }
+    function renderDay(date, rows){
+      const container = document.getElementById('day');
+      if (!rows || !rows.length){
+        container.innerHTML = '<div class="empty">Sem dados para a data selecionada.</div>';
+        return;
+      }
+      const total = rows.reduce((a,c)=>a+Number(c.total),0);
+      const chips = rows.map(r => `<span class="chip">${r.consultor} <span class="count">${r.total}</span></span>`).join('');
+      container.innerHTML = `
+        <div class="day-card">
+          <div class="day-header">
+            <div class="date">${fmtDate(date)}</div>
+            <div style="font-size:12px;color:var(--muted)">${total} leads</div>
+          </div>
+          <div class="chips">${chips}</div>
+        </div>
+      `;
+    }
+    function load(){
+      const date = document.getElementById('date').value;
+      const params = new URLSearchParams();
+      if (date) params.set('date', date);
+      const url = API + (params.toString() ? ('?' + params.toString()) : '');
+      const container = document.getElementById('day');
+      container.innerHTML = '<div class="empty">Carregando...</div>';
+      fetch(url, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(res => {
+          renderDay(res?.date, res?.data || []);
+        })
+        .catch(err => {
+          console.error('Erro:', err);
+          container.innerHTML = '<div class="empty">Erro ao carregar dados.</div>';
+        });
+    }
+    document.getElementById('loadBtn').addEventListener('click', load);
+    // Atualização em tempo real (30s)
+    setInterval(load, 30000);
+    // Inicializa filtros com mês/ano atual
+    (function init(){
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth()+1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      document.getElementById('date').value = `${yyyy}-${mm}-${dd}`;
+      load();
+    })();
+  </script>
+</body>
+</html>
