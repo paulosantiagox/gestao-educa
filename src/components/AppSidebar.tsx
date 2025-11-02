@@ -62,7 +62,6 @@ const menuItems = [
     title: "Principal",
     items: [
       { title: "Dashboard", url: "/", icon: LayoutDashboard },
-      { title: "Ranking de Vendas", url: "/sales-ranking", icon: Trophy },
     ],
   },
   {
@@ -92,12 +91,6 @@ const menuItems = [
   //     { title: "Importar Leads", url: "/leads/import", icon: Upload },
   //   ],
   // },
-  {
-    title: "Analytics",
-    items: [
-      { title: "Tracking Dashboard", url: "/tracking", icon: Activity },
-    ],
-  },
   {
     title: "Sistema",
     items: [
